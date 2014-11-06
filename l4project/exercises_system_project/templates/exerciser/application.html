@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+
+{% load static %}
+
+<html>
+	{% load poll_extras %}
+    <head>
+		<!-- Some inline CSS to control the showing and hiding of fragments. -->
+		<style type="text/css">
+			
+			.fragment {
+				display: none;
+			}
+			
+		</style>
+		
+        <title>Exerciser</title>
+    </head>
+    <body>
+		<a href='/exerciser/'>Home</a>
+		<!-- Links for next and previous steps! -->
+		<a id="btn_prev" href="#">Previous</a> | <a id="btn_next" href="#">Next</a> | <a id="btn_reset" href="#">Reset</a>
+            
+        <h1>{{ application_name }}</h1>
+        {% if application %}
+            {% if panels %}
+            <ul>
+				{% for panel in panels %}
+				</br> </br> </br>
+				<div> {{panel.document.name}} </div>
+				<!---<div> {{panel.getFragments}} </div> --->
+				<div>
+					{% for fragment in panel.getFragments %}
+						{% autoescape off %}
+							<span id = fragment_{{fragment.id}} class = "fragment">{{ fragment.text }}</span>
+						{% endautoescape %}
+					{% endfor %}
+				</div>
+				{% endfor %}
+
+            </ul>
+			
+        
+			{% else %}
+                <strong>Application is empty.</strong>
+            {% endif %}
+        {% else %}
+            The specified application {{ application_name }} does not exist!
+        {% endif %}
+    </body>
+	
+	<script type="text/javascript" src="/static/jquery-2.1.1.js"></script>
+	<script type="text/javascript" src="/static/change.js"></script>
+	
+	<script type="text/javascript">
+		// Stores the sequence of events - nested arrays. Each nested array is [FRAG_ID, STATE]. So [1,'show'] means show fragment with ID 1.
+		// Two levels of nesting - the first one is the actual step, and each subsequent array is an action to perform (in the form above).
+		{% autoescape off %}
+			var steps = {{steps}};
+		{% endautoescape %}
+	</script>
+	
+</html>

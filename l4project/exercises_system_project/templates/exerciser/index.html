@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <title>Exerciser</title>
+    </head>
+
+    <body>
+        <h1>Welcome</h1>
+		
+        {% if applications %}
+            <ul>
+                {% for application in applications %}
+                <li><a href="/exerciser/application/{{ application.url }}">{{ application.name }}</a></li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <strong>There are no applications present.</strong>
+        {% endif %}
+		
+        <a href="/exerciser/about/">About</a><br />
+    </body>
+
+</html>
