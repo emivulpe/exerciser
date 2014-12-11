@@ -153,12 +153,27 @@ LOGGING = {
             '()': 'django.utils.log.RequireDebugFalse'
         }
     },
+	'formatters': {
+        'verbose': {
+            'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt' : "%d/%b/%Y %H:%M:%S"
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
     'handlers': {
         'mail_admins': {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
-        }
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'C:\Users\Emi\mysite.log',
+            'formatter': 'verbose'
+        },
     },
     'loggers': {
         'django.request': {
@@ -166,5 +181,20 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
+        'exerciser': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+        },
     }
 }
+
+
+
+#maybe delete if it doesn't work
+TEMPLATE_CONTEXT_PROCESSORS = ("django.contrib.auth.context_processors.auth",
+	"django.core.context_processors.debug",
+	"django.core.context_processors.i18n",
+	"django.core.context_processors.media",
+	"django.core.context_processors.static",
+	"django.contrib.messages.context_processors.messages",
+	"exerciser.context_processor.applications")

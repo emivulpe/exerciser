@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+    <head>
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<!-- Bootstrap -->
+		<link href="{% static 'css/bootstrap-fluid-adj.css' %}" rel="stylesheet">
+		<link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" media="screen">
+		<link href="{% static 'css/bootstrap-responsive.css' %}" rel="stylesheet">
+		<link href="{% static 'css/dialogue-css.css' %}" rel="stylesheet">
+				<link href="{% static 'css/css.css' %}" rel="stylesheet">
+
+        <title>Exerciser- {% block title %}Exercise!{% endblock %}</title>
+
+		 {% block style %} {% endblock %}
+    </head>
+
+    <body>
+		<div class="navbar navbar-inverse navbar-fixed-top">
+			<div class="navbar-inner">
+			<div class="hero-unit" style = "padding : 0px; margin : 0px; background-color : transparent">
+				<div class = "row">
+					<div class="span4">
+					<ul class="nav nav-tabs navbar-left">
+						<li><a href="/exerciser/">Exerciser</a></li>
+						<li class="dropdown">
+							<a class="dropdown-toggle" data-toggle="dropdown" href="#">Applications<b class="caret"></b></a>
+							{% if applications %}
+								<ul class="dropdown-menu">
+									{% for application in applications %}
+									<li><a href="/exerciser/application/{{ application.url }}">{{ application.name }}</a></li>
+									{% endfor %}
+								</ul>
+							{% else %}
+								<strong>There are no applications present.</strong>
+							{% endif %}
+						</li>
+					</ul>
+					</div>
+					<div class = "span4">
+					<div class="nav nav-tabs" style = "position: absolute; left: 50%; margin-left: -100px; color : red;">{% block app_name %} {% endblock %}</div>
+					</div>
+					<div class = "span4">
+					<ul class="nav nav-tabs pull-right" >
+						{% block app_controls %} {% endblock %}
+					</ul>
+					</div>
+				</div>
+				</div>
+			</div>
+		</div>
+		<div class="container-fluid">
+			<div class="row-fluid">
+				<!--/span-->
+				<div class="span12" id = "interface" style="width: 100%;">
+					{% block body_block %}
+					{% endblock %}
+				</div>
+				<!--/span-->
+			</div>
+			<!--/row-->
+		</div>
+		<!--/.fluid-container-->
+
+		<script type="text/javascript" src="/static/jquery-2.1.1.js"></script>
+		<script type="text/javascript" src="/static/bootstrap/bootstrap/js/bootstrap.js"></script>
+    </body>
+</html>

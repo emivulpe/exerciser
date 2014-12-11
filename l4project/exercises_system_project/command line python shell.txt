@@ -1,0 +1,26 @@
+C:\Users\Emi>python
+Python 2.7.8 (default, Jun 30 2014, 16:03:49) [MSC v.1500 32 bit (Intel)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import django
+>>> django.get_version()
+'1.5.4'
+>>> import os
+>>> import sys
+>>> sys.path.append("C:\Users\Emi\Desktop\lvl4project\project\emilia\exercises_system_project")
+
+>>> os.environ.setdefault("DJANGO_SETTINGS_MODULE", "exercises_system_project.settings")
+'exercises_system_project.settings'
+>>> import exerciser.views
+>>>
+>>> import exerciser.views
+>>> myfunction()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+NameError: name 'myfunction' is not defined
+>>> views.myfunction()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+NameError: name 'views' is not defined
+>>> from exerciser import views
+>>> views.myfunction()
+>>>

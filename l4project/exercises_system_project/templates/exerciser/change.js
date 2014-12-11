@@ -42,7 +42,7 @@ function doAction(fragment, action, direction) {
 		action = undoMapping[action];
 	}
 	
-	console.log("WHAAAA");
+	//console.log("WHAAAA");
 	
 	if (action == "show") {
 		object.show();
@@ -51,11 +51,14 @@ function doAction(fragment, action, direction) {
 		object.hide();
 	}
 	else if (action == "highlight") {
-		console.log("HEYYY");
+		//console.log("HEYYY");
 		object.css("background-color", "yellow");
 	}
 	else if (action == "unhighlight") {
 		object.css("background-color", "transparent");
+	}
+	else if (action == "question") {
+		ShowDialog();
 	}
 }
 
@@ -68,3 +71,30 @@ $('#btn_next').click(function() {
 $('#btn_prev').click(function() {
 	goToStep("back");
 });
+
+$(document).ready(function ()
+{
+	$("#btnClose").click(function (e){
+		HideDialog();
+		e.preventDefault();
+	});
+
+	$("#btnSubmit").click(function (e){
+		var brand = $("#brands input:radio:checked").val();
+		$("#output").html("<b>Your favorite mobile brand: </b>" + brand);
+		HideDialog();
+		e.preventDefault();
+	});
+
+});
+
+function ShowDialog(){
+	$("#overlay").show();
+	$("#dialog").fadeIn(300);
+	$("#overlay").unbind("click");
+}
+
+function HideDialog(){
+	$("#overlay").hide();
+	$("#dialog").fadeOut(300);
+} 

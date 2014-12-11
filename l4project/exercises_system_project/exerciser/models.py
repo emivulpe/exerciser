@@ -61,10 +61,19 @@ class Step(models.Model):
 
     def __unicode__(self):
         return str(self.order)
+		
+class Question(models.Model):
+    document = models.ForeignKey(Document)
+    step = models.ForeignKey(Step)
+    questionText = models.TextField()
+
+    def __unicode__(self):
+        return self.questionText
 
 class Change(models.Model):
 	step = models.ForeignKey(Step)
 	fragment = models.ForeignKey(Fragment,  blank=True, null=True)
+	question = models.ForeignKey(Question,  blank=True, null=True)
 	document = models.ForeignKey(Document)
 	operation = models.CharField(max_length=128)
 
@@ -81,6 +90,13 @@ class Change(models.Model):
 			for fragment in fragments:
 				result.append([fragment.id, 'show'])
 			return result
+		elif self.operation == 'Ask Answer':
+			question_text = self.question.questionText
+			options = Option.objects.filter(question = self.question)
+			option_list = []
+			for option in options:
+				option_list.append(option.content)
+			return [[question_text, 'question', option_list]]
 		else:
 			return [[self.fragment.id, 'hide']]#default behaviour
 		
@@ -94,13 +110,6 @@ class Explanation(models.Model):
     def __unicode__(self):
         return self.text
 		
-class Question(models.Model):
-    document = models.ForeignKey(Document)
-    step = models.ForeignKey(Step)
-    questionText = models.TextField()
-
-    def __unicode__(self):
-        return self.questionText
 
 #class MultipleChoiceQuestion(Question):
 #    correctAnswer = models.CharField(max_length = 128)
@@ -115,7 +124,7 @@ class Option(models.Model):
 
 
     def __unicode__(self):
-        return " ".join(("Question: ", self.question.questionText, " | Option: ", str(self.number), ". ", self.content))
+        return " ".join(("Option: ", str(self.number), ". ", self.content))
 
 		
 class Panel(models.Model):

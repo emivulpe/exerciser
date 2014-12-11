@@ -1,0 +1,181 @@
+{% extends 'exerciser/base.html' %}
+{% load poll_extras %}
+{% block style %}
+		
+
+{% endblock %}		
+{% block app_name %}{{application_name}}{% endblock %}
+{% block app_controls %}<li><a id="btn_prev" href="#">Previous</a></li><li><a id="btn_next" href="#">Next</a></li><li><a id="btn_reset" href="#">Reset</a></li>{% endblock %}
+
+{% block body_block %}
+		
+
+	{% if application %}
+		{% if panels %}				
+			<div class ="row" id = "outer_panel" style = "margin-left : 5px;  position : relative;background:green;">
+				{% for panel in panels %}
+					<div class="resizable panel_container" style = "background:blue;width : {{panel_size}}%; min-width : 50px; height : 100%; float : left;position : relative;">
+						<div class="panel" style = "background:yellow;">
+							{% for fragment in panel.getFragments %}
+								{% autoescape off %}
+									<span id = fragment_{{fragment.id}} class = "fragment">{{ fragment.text }}</span>
+								{% endautoescape %}
+							{% endfor %}
+						</div>
+						<!---<div class="ui-resizable-handle ui-resizable-e" id = "egrip" style="z-index: 90;background:blue;"></div>
+						<div class="ui-resizable-handle ui-resizable-w" style="z-index: 90;background:yellow;"></div>
+--->
+					</div>
+				{% endfor %}
+
+			</div>
+			<div class = "row" id = "outer_explanation" style = "background:cyan;height:20vh;">
+				<div class = "resizable explanation_container" style = "background:orange;margin-left : 5px; width : 100%; height : 100%; min-height : 10vh;position:relative;">
+					<!---<div class="ui-resizable-handle ui-resizable-n" id = "north" style="z-index: 90;background:red;"></div>
+--->				<div id="explanation" style = "background:red;"></div>
+				</div>
+			</div>			
+		{% else %}
+			<strong>Application is empty.</strong>
+		{% endif %}
+	{% else %}
+		The specified application {{ application_name }} does not exist!
+	{% endif %}
+			
+	<div id="overlay" class="web_dialog_overlay"></div>
+	<div id="dialog" class="web_dialog">
+		<table style="width: 100%; border: 0px;" cellpadding="3" cellspacing="0">
+			<tr>
+				<td class="web_dialog_title">Question</td>
+				<td class="web_dialog_title align_right">
+					<a href="#" id="btnClose">Close</a>
+				</td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td>&nbsp;</td>
+			</tr>
+			<tr>
+				<td colspan="2" style="padding-left: 15px;">
+					<span id = "question_text"> </span>
+				</td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td>&nbsp;</td>
+			</tr>
+			<tr>
+				<td colspan="2" style="padding-left: 15px;">
+					<form class = "options" id="options" action = "">
+					</form>
+				</td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td>&nbsp;</td>
+			</tr>
+			<tr>
+				<td colspan="2" style="text-align: center;">
+					<input id="btnSubmit" type="button" value="Submit" />
+				</td>
+			</tr>
+		</table>
+	</div>
+	<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/themes/base/jquery-ui.css"/>
+	<script type="text/javascript" src="/static/jquery-2.1.1.js"></script>
+	<script type="text/javascript" src="/static/change.js"></script>
+	
+	<script type="text/javascript" src="/static/jquery-ui.js"></script>
+
+
+	<script type="text/javascript">
+		// Stores the sequence of events - nested arrays. Each nested array is [FRAG_ID, STATE]. So [1,'show'] means show fragment with ID 1.
+		// Two levels of nesting - the first one is the actual step, and each subsequent array is an action to perform (in the form above).
+		{% autoescape off %}
+			var steps = {{steps}};
+		{% endautoescape %}
+	</script>
+	<script type="text/javascript">
+		// Stores the sequence of events - nested arrays. Each nested array is [FRAG_ID, STATE]. So [1,'show'] means show fragment with ID 1.
+		// Two levels of nesting - the first one is the actual step, and each subsequent array is an action to perform (in the form above).
+		{% autoescape off %}
+			var explanations = {{explanations}};
+		{% endautoescape %}
+	</script>
+	      <script  type="text/javascript">
+        ; $(function($) {
+            $( ".resizable").resizable();
+         });
+//		$(function($) {
+ //           var total_panel_width = $( "#outer_panel").width();
+//			var num_panels = $( ".panel" ).length;
+//			var paddings = num_panels * (
+//         });
+/*		 
+$(".panel_container").each(function() {
+
+   var old_panel_width = $(this).width();
+   var new_panel_width = 0.96 * old_panel_width;
+   var padding = (0.04 * old_panel_width)/2;
+   var old_explanation_width = $("#explanation").width();
+   var new_explanation_width = old_explanation_width - padding;
+   $(this).css("width",new_panel_width);
+   $(this).css("margin-left",padding);
+   $(this).css("margin-right",padding);
+   $("#explanation").css("width",new_explanation_width);
+   $("#explanation").css("margin-left",padding);
+   $("#explanation").css("margin-right",padding);
+
+
+});		 
+		 
+*/
+		 $(".panel_container").bind('resize', function(e) {
+		 
+			var parent_width = $(this).parent().width();
+			
+			var total_prev_width = 0;
+			var num_prev_panels = $(this).prevAll().length;
+			$(this).prevAll().each(function(index) {
+				total_prev_width += $(this).width()
+			});
+			var num_next_panels = $(this).nextAll().length;
+			var total_min_width = 0;
+			$(this).nextAll().each(function(index) {
+				total_min_width += parseInt($(this).css("min-width"),10);
+			});
+			var num_other_panels = $(this).siblings().length;
+			console.log(total_min_width);
+			var current_panel_max_width_limit = parent_width - total_prev_width - total_min_width;
+			var other_panels_max_width_limit = (parent_width - current_panel_max_width_limit);
+			$(this).css("max-width",current_panel_max_width_limit);
+			$(this).nextAll().css("max-width","");
+
+			console.log(num_next_panels);
+			var current_element_width = $(this).width();
+			var next_elements_new_width = (parent_width - current_element_width - total_prev_width) / (num_next_panels);
+			$(this).nextAll().width(next_elements_new_width);
+
+			});
+	
+			$(".explanation_container").bind('resize', function(e) {
+				//$("#outer_explanation").height($("#explanation_container").height());
+				console.log($("#interface").height());
+								console.log($(".explanation_container").height());
+
+				$(".panel").height($("#interface").height()-$(".explanation_container").height() -40);
+				$(".panel_container").height($("#interface").height()-$(".explanation_container").height()-40);
+				$//("#outer_panel").height($("#interface").height()-$("#explanation").height() - 40);
+
+			});
+
+$(".explanation_container").resizable(
+		{handles: "n"}
+	);
+$(".panel_container:not(:last)").resizable({
+  handles: "e"
+});
+
+$(".panel_container").last().removeClass("resizable");
+      </script>
+{% endblock %}

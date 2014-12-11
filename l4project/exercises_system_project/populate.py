@@ -34,11 +34,10 @@ def add_document(attributesDict):
 def add_fragment(doc, attributesDict):
 	id = attributesDict['ID']
 	text = attributesDict['value']
-	text = text.strip()
+	text = text.replace(' ','&nbsp')
 	if text.endswith(';'):
 		text = text[:text.rfind(";"):] + "<br/>"
-	
-	#text = original_text[:original_text.rfind(";"):]
+
 	type = attributesDict['type']
 	order = json.loads(attributesDict['order'])
 	f = Fragment.objects.get_or_create(document = doc,id = id, text = text, type = type, order = order)[0]

@@ -78,9 +78,12 @@ def add_change(step, element):
 				print(child.tag)
 		if operation != 'Ask Answer':
 			c = Change.objects.get_or_create(document = document, step = step, fragment = fragment, operation = operation)[0]
+		else:
+			c = Change.objects.get_or_create(document = document, step = step, question = question, operation = operation)[0]
 			
 def add_explanation(step, element):
 	text = element.text
+	text = text.replace('\n','<br>').replace('\r', '<br>');
 	e = Explanation.objects.get_or_create(step = step, text = text)[0]
 	return e
 	

@@ -1,0 +1,88 @@
+{% extends 'exerciser/base.html' %}
+{% load poll_extras %}
+{% block style %}
+		<style type="text/css">
+			
+			.fragment {
+				display: none;
+			}
+			
+		</style>
+		<style>
+			table, th, td {
+				border: 1px solid black;
+				padding: 5px;
+				font-size: medium;
+			}
+			table {
+				border-spacing: 15px;
+				
+
+			}
+		</style>
+{% endblock %}		
+
+{% block body_block %}
+		<div class="hero-unit">
+			<a href='/exerciser/'>Home</a>
+			<!-- Links for next and previous steps! -->
+			<a id="btn_prev" href="#">Previous</a> | <a id="btn_next" href="#">Next</a> | <a id="btn_reset" href="#">Reset</a>
+			<table width="100%" height="50%" style = "table-layout:fixed">	
+			<caption>{{ application_name }}</caption>
+			{% if application %}
+				{% if panels %}
+				<ul>
+
+					<tr style = "vertical-align:top">					
+					{% for panel in panels %}
+					<td style = "word-wrap:normal">
+					<div> {{panel.document.name}} </div>
+					<!---<div> {{panel.getFragments}} </div> --->
+					<div>
+						{% for fragment in panel.getFragments %}
+							{% autoescape off %}
+								<span id = fragment_{{fragment.id}} class = "fragment" style="white-space:pre-wrap;">{{ fragment.text }}</span>
+							{% endautoescape %}
+						{% endfor %}
+					</div>
+					</td>
+					
+					{% endfor %}
+					</tr>
+					<tr>
+						{% autoescape off %}
+						<td id = "explanation" colspan={{ num_panels }}></td>
+						{% endautoescape %}
+					</tr>
+					</table>
+				</ul>
+				
+			
+				{% else %}
+					<strong>Application is empty.</strong>
+				{% endif %}
+			{% else %}
+				The specified application {{ application_name }} does not exist!
+			{% endif %}
+		</div>
+
+
+	
+	<script type="text/javascript" src="/static/jquery-2.1.1.js"></script>
+	<script type="text/javascript" src="/static/change.js"></script>
+	
+	<script type="text/javascript">
+		// Stores the sequence of events - nested arrays. Each nested array is [FRAG_ID, STATE]. So [1,'show'] means show fragment with ID 1.
+		// Two levels of nesting - the first one is the actual step, and each subsequent array is an action to perform (in the form above).
+		{% autoescape off %}
+			var steps = {{steps}};
+		{% endautoescape %}
+	</script>
+	<script type="text/javascript">
+		// Stores the sequence of events - nested arrays. Each nested array is [FRAG_ID, STATE]. So [1,'show'] means show fragment with ID 1.
+		// Two levels of nesting - the first one is the actual step, and each subsequent array is an action to perform (in the form above).
+		{% autoescape off %}
+			var explanations = {{explanations}};
+		{% endautoescape %}
+	</script>
+{% endblock %}
