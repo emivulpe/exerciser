@@ -1,0 +1,8 @@
+eld and dle
+
+right click a file in the repository 
+tortoise git->add
+add all the files you want to commit
+commit
+push
+...
