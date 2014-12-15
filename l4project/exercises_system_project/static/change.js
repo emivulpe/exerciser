@@ -4,20 +4,15 @@ var lastTime = d.getTime();
 var csrftoken = getCookie('csrftoken');
 var direction = "next";
 var answer = "";
-var options = "";
-var lastAction = "";
-var answers = {};
-var wasQuestion = false;
-var action;
 var explanation_dict={}
-var question ="";
 
-//console.log(csrftoken);
+
+
 $("#btn_prev").hide();
 
 
 function goToStep(direction) {
-	console.log(Object.keys(answers).length);
+
 	direction = direction;
 
 	if (direction == "back") {
@@ -42,25 +37,16 @@ function goToStep(direction) {
 		for (var i = 0; i < steps[currentStep].length; i++) {
 			var currentAction = steps[currentStep][i];
 			var text = currentAction[0];
-			action = currentAction[1];
-			if(action == "question"){
-				wasQuestion = true;
-			}
-				// If we want to go back, we need to reverse the action!
+			var action = currentAction[1];
+			// If we want to go back, we need to reverse the action!
 			if (direction == "back") {
 				action = undoMapping[action];
 			}
 			
 			if (action == "question"){
-				if(direction == "next" && answers[currentStep.toString()] == undefined){
-					//console.log(currentStep.toString().concat(answers[currentStep.toString()]));
-					console.log(currentStep);
-					question = text;
-					options = currentAction[2];
+				if(direction == "next" && explanation_dict[currentStep] == undefined){
+					var options = currentAction[2];
 					askQuestion(text, options);
-					//console.log(answers[currentStep]);
-
-					//console.log("step " + (currentStep + 1));
 				}
 			}
 			else{
@@ -69,7 +55,6 @@ function goToStep(direction) {
 			
 		}
 		if(action != "question"){
-			//console.log("step " + (currentStep + 1));
 			var now = new Date().getTime();
 			$.post("/exerciser/log_info/",
 			{
@@ -81,8 +66,7 @@ function goToStep(direction) {
 			});
 			lastTime = now;
 		}
-		console.log(action);
-		console.log(direction);
+
 		
 		if (direction == "next" && explanation_dict[currentStep] == undefined) {
 		
@@ -97,7 +81,6 @@ function goToStep(direction) {
 					explanationText += "<br>" + options[option_num];
 				}
 			}
-			console.log(explanationText);
 			$('#explanation').html(explanationText);
 			explanation_dict[currentStep] = explanationText;
 			currentStep++;
@@ -130,7 +113,6 @@ function doReset() {
 	$("*[id^='fragment_']").css("background-color", "transparent");
 	$("*[id^='fragment_']").hide();
 	$('#explanation').html('');
-	wasQuestion = false;
 	$("#btn_prev").hide();
 	currentStep = 0;
 }
@@ -174,18 +156,12 @@ function askQuestion(questionText, options){
 
 // Use JQuery to pick up when the user pushes the next button.
 $('#btn_next').click(function() {
-	wasQuestion = false;
-	//console.log(wasQuestion);
 	goToStep("next");
-	//console.log(wasQuestion);
 });
 
 // And again, bind an event to the previous button.
 $('#btn_prev').click(function() {
-	wasQuestion = false;
-	//console.log(wasQuestion);
 	goToStep("back");
-	//console.log(wasQuestion);
 });
 
 $('#btn_reset').click(function() {
@@ -202,15 +178,7 @@ $(document).ready(function ()
 
 	$("#btnSubmit").click(function (e){
 		answer = $(".options input[type='radio']:checked").val();
-		//console.log(currentStep.concat(answers[currentStep]));
-		answers[currentStep-1] = answer;
-		console.log(answers[currentStep.toString()]);
-		console.log(answers);
-		//console.log("dict works ".concat(answers));
-		//console.log($(".options input[type='radio']:checked"));
-		//console.log(answer);
 		explanation_dict[currentStep-1] = " You answered: " + answer + "<br>" + explanation_dict[currentStep-1];
-		//$("#output").html("<b>The user selected answer: </b>" + answer);
 		HideDialog();
 		e.preventDefault();
 		var now = new Date().getTime();
@@ -222,10 +190,8 @@ $(document).ready(function ()
 			csrfmiddlewaretoken : csrftoken
 		});
 		lastTime = now;
-		action = ""; //reset action
 		answer = " You answered: " + answer + "<br>";
 		goToStep("next");
-		//$( "#explanation" ).prepend( "<p>You answered: ".concat(answer).concat("</p>") );
 	});
 
 });
