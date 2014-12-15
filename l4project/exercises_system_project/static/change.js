@@ -6,22 +6,21 @@ var direction = "next";
 var answer = "";
 var explanation_dict={}
 
-
-
 $("#btn_prev").hide();
 
 
 function goToStep(direction) {
 
+	var totalSteps = steps.length; // Total number of possible steps
+	$("*[id^='fragment_']").css("background-color", "transparent");
+	$('#explanation').html("");
 	direction = direction;
 
 	if (direction == "back") {
 		currentStep--;
 	}
-	$("*[id^='fragment_']").css("background-color", "transparent");
-	$('#explanation').html("");
 
-	var totalSteps = steps.length; // Total number of possible steps
+
 	if (currentStep == totalSteps-1 && direction == "next"){
 		$("#btn_next").hide();
 	}
@@ -143,14 +142,11 @@ function doAction(fragment, action) {
 function askQuestion(questionText, options){
 	$('#question_text').text(questionText);
 	$("#options").empty();
-	var explanationText ="." + questionText;
 	for (var option_num = 0; option_num < options.length; option_num++){
 		var option = options[option_num];
 		option_elem = "<input class = 'option' id='option".concat(option_num,"' name='option' type='radio' value = \"", option, "\"/>",option,"<br>");
 		$("#options").append(option_elem);
-		explanationText += option;
 	}
-	explanationText += ".";
 	ShowDialog();
 }
 
