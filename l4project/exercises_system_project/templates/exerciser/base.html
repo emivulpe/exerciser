@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 {% load static %}
-<html>
+<html style = "margin-top:0px;">
     <head>
 	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<!-- Bootstrap -->
@@ -8,20 +8,17 @@
 		<link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" media="screen">
 		<link href="{% static 'css/bootstrap-responsive.css' %}" rel="stylesheet">
 		<link href="{% static 'css/dialogue-css.css' %}" rel="stylesheet">
-				<link href="{% static 'css/css.css' %}" rel="stylesheet">
+		<link href="{% static 'css/css.css' %}" rel="stylesheet">
 
         <title>Exerciser- {% block title %}Exercise!{% endblock %}</title>
 
 		 {% block style %} {% endblock %}
     </head>
 
-    <body style = "line-height : 1.25; font-size:small;">
-		<div class="navbar navbar-inverse navbar-fixed-top">
-			<div class="navbar-inner">
-			<div class="hero-unit" style = "padding : 0px; margin : 0px; background-color : transparent">
-				<div class = "row">
-					<div class="span4">
-					<ul class="nav nav-tabs navbar-left">
+    <body style = "line-height : 1.25; font-size:small;margin-top:0px;">
+		<section class = "header" style = "position:relative;width:100%;height:10vh;background:orange;">
+				<div class = "control f" style = "position: relative;float:left;height:100%;">
+					<ul class="nav nav-tabs navbar-left" style="height:100%;">
 						<li><a href="/exerciser/">Exerciser</a></li>
 						<li class="dropdown">
 							<a class="dropdown-toggle" data-toggle="dropdown" href="#">Applications<b class="caret"></b></a>
@@ -36,33 +33,39 @@
 							{% endif %}
 						</li>
 					</ul>
-					</div>
-					<div class = "span4">
-					<div class="nav nav-tabs" style = "position: absolute; left: 50%; margin-left: -100px; color : red;">{% block app_name %} {% endblock %}</div>
-					</div>
-					<div class = "span4">
-					<ul class="nav nav-tabs pull-right" >
+				</div>
+				<div class="nav-tabs control s" style = "text-align:center;top: 20px;transform: translate(-50%, -50%);position: absolute;left: 50%; margin-right: -50%;float:left;">
+					{% block app_name %} {% endblock %}
+				</div>
+				<div class="control t" style = "position: absolute;right:0%;float:left;">
+					<ul class="nav nav-tabs pull-right" style="margin-bottom:0px;">
 						{% block app_controls %} {% endblock %}
 					</ul>
-					</div>
 				</div>
-				</div>
-			</div>
-		</div>
-		<div class="container-fluid">
+		</section>
+<!--		<div class="container-fluid">
 			<div class="row-fluid">
-				<!--/span-->
-				<div class="span12" id = "interface" style="width: 100%;">
+				/span-->
+				<section id = "interface" style="width: 100%;height:80vh;position:relative;">
 					{% block body_block %}
 					{% endblock %}
-				</div>
+				</section>
 				<!--/span-->
-			</div>
+			<!---</div>--->
 			<!--/row-->
-		</div>
+		<!---</div>--->
 		<!--/.fluid-container-->
 
 		<script type="text/javascript" src="/static/jquery-2.1.1.js"></script>
 		<script type="text/javascript" src="/static/bootstrap/bootstrap/js/bootstrap.js"></script>
-    </body>
+		<script>
+		
+		$( window ).resize(function() {
+			var numControls = $(".control").length;
+			$(".control").each(function(){
+				$(this).width($(window).width()/numControls);
+			});
+		});
+		</script>
+   </body>
 </html>
