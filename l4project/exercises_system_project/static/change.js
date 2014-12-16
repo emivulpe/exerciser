@@ -218,3 +218,15 @@ function getCookie(name) {
     }
     return cookieValue;
 }
+
+
+document.onkeydown = function(e) {
+    switch (e.keyCode) {
+        case 37:
+            goToStep("back");
+            break;
+        case 39:
+            goToStep("next");
+            break;
+    }
+};
