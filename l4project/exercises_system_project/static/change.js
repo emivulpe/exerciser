@@ -144,7 +144,7 @@ function askQuestion(questionText, options){
 	$("#options").empty();
 	for (var option_num = 0; option_num < options.length; option_num++){
 		var option = options[option_num];
-		option_elem = "<input class = 'option' id='option".concat(option_num,"' name='option' type='radio' value = \"", option, "\"/>",option,"<br>");
+		option_elem = "<input  class = 'option' id='option" + option_num + "'style = 'display: inline-block; vertical-align: middle; ' name='option' type='radio' value = '" + option + "' />" +  "<label style = 'display: inline-block; vertical-align: middle; ' for='option" + option_num +"'>" + option + "</label><br>";
 		$("#options").append(option_elem);
 	}
 	ShowDialog();
