@@ -12,7 +12,7 @@
 
 	{% if application %}
 		{% if panels %}				
-			<div class="row" id = "outer_panel" style = "height:70%;margin:1vh;">
+			<div class="row" id = "outer_panel" style = "height:70%;margin:5px;">
 				<table id="panel_container" style = "height:100%;width:100%;">
 					<tr>
 						{% for panel in panels %}
@@ -29,9 +29,9 @@
 					</tr>		
 				</table>
 			</div>
-			<div class="row" style = "margin:1vh;height : 30%;">
-				<div class = "resizable explanation_container" style = "width : 100%; height : 100%;position : relative;">
-					<div id = "explanation" > </div>
+			<div class="row" style = "margin:5px;height : 30%;">
+				<div class = "resizable explanation_container" style = " height : 100%;">
+					<div id = "explanation"> </div>
 					<div class="ui-resizable-handle ui-resizable-n" id = "north" style="z-index: 90;background:red;"></div>
 				</div>
 			</div>
@@ -81,11 +81,10 @@
 			</tr>
 		</table>
 	</div>
-	<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/themes/base/jquery-ui.css"/>
+
 	<script type="text/javascript" src="/static/jquery-2.1.1.js"></script>
 	<script type="text/javascript" src="/static/change.js"></script>
 	<script type="text/javascript" src="/static/colResizable-1.4.min.js"></script>
-
 	<script type="text/javascript" src="/static/jquery-ui.js"></script>
 
 	<script type="text/javascript">
@@ -95,6 +94,7 @@
 			var steps = {{steps}};
 		{% endautoescape %}
 	</script>
+	
 	<script type="text/javascript">
 		// Stores the sequence of events - nested arrays. Each nested array is [FRAG_ID, STATE]. So [1,'show'] means show fragment with ID 1.
 		// Two levels of nesting - the first one is the actual step, and each subsequent array is an action to perform (in the form above).
@@ -104,54 +104,23 @@
 	</script>
 	
     <script  type="text/javascript">
+		
 		$(function($) {
 			$( ".resizable").resizable();
         });
+
+
+		$(".explanation_container").bind('resize', function(e) {
+			$("#panel_container").height($("#interface").height()-$(".explanation_container").height());
+			console.log("expl ".concat($(".explanation_container").height()));
+			console.log("interface ".concat($("#interface").height()));
+			console.log("test ".concat($(".explanation_container").height() / $("#interface").height() * 100));
+		});
 		
-		 $(".panel_container").bind('resize', function(e) {
-			var parent_width = $(this).parent().width();
-			var num_panels = $( ".panel" ).length;
-			console.log(num_panels);
-			var current_element_width = $(this).width();
-			var other_elements_width = (parent_width - current_element_width) / (num_panels - 1);
-			$(this).siblings().width(other_elements_width);
-
-			});
-			
-			
-			var explanationHeightInPercentage = 30;
-			$(".explanation_container").bind('resize', function(e) {
-				//$(".panel").height($("#interface").height()-$(".explanation_container").height() - 40);
-				$("#panel_container").height($("#interface").height()-$(".explanation_container").height());
-				explanationHeightInPercentage = $(".explanation_container").height() / $("#interface").height() * 100;
-				console.log("expl ".concat($(".explanation_container").height()));
-				console.log("interface ".concat($("#interface").height()));
-				console.log("test ".concat($(".explanation_container").height() / $("#interface").height() * 100));
-
-				console.log("expl % ".concat(explanationHeightInPercentage));
-
-			});
-var explanationMaxHeight = 0.6 * $("#interface").height();
-$(".explanation_container").resizable(
-		
-		{
-		 maxHeight: explanationMaxHeight,
-		handles: {n: document.getElementById("north")}
-		}
-	);
-$(".panel_container").resizable(
-		{handles: { e:document.getElementsByClassName("ui-resizable-handle ui-resizable-e")[0]}}
-	);
-	
-	
-		$( window ).resize(function() {
-			$(".explanation_container").height($("#interface").height() * explanationHeightInPercentage / 100);
-			$("#panel_container").height($("#interface").height() * (100 - explanationHeightInPercentage) / 100);
-			explanationMaxHeight = 0.6 * $("#interface").height();
-		//	console.log("interface ".concat($("#interface").height()));
-		//	console.log("expl % ".concat(explanationHeightInPercentage));
-		//	console.log("explanation ".concat($(".explanation_container").height()));
-		//	console.log("panel ".concat($("#panel_container").height()));
+		var explanationMaxHeight = 0.6 * $("#interface").height();
+		$(".explanation_container").resizable({
+			maxHeight: explanationMaxHeight,
+			handles: {n: document.getElementById("north")}
 		});
 	
 
@@ -171,5 +140,5 @@ $(".panel_container").resizable(
 		
 	
 	
-      </script>
+    </script>
 {% endblock %}

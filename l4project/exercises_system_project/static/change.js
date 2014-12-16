@@ -147,6 +147,11 @@ function askQuestion(questionText, options){
 		var option_elem = "<input  class = 'option' id='option" + option_num + "'style = 'display: inline-block; vertical-align: middle; ' name='option' type='radio' value = '" + option + "' />" +  "<label style = 'display: inline-block; vertical-align: middle; ' for='option" + option_num +"'>" + option + "</label><br>";		
 		$("#options").append(option_elem);
 	}
+	//if no options provided, add a text box for answers
+	if (options.length == 0){
+		var textAreaElement = "<textarea style = 'width:95%;height:150px' name='answer' form='usrform'>Enter text here...</textarea>";
+		$("#options").append(textAreaElement);
+	}
 	ShowDialog();
 }
 
