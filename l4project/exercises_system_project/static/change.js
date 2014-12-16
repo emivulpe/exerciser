@@ -5,13 +5,13 @@ var csrftoken = getCookie('csrftoken');
 var direction = "next";
 var answer = "";
 var explanation_dict={}
-
+var totalSteps = 1;
 $("#btn_prev").hide();
 
 
 function goToStep(direction) {
 
-	var totalSteps = steps.length; // Total number of possible steps
+	totalSteps = steps.length; // Total number of possible steps
 	$("*[id^='fragment_']").css("background-color", "transparent");
 	$('#explanation').html("");
 	direction = direction;
@@ -144,7 +144,7 @@ function askQuestion(questionText, options){
 	$("#options").empty();
 	for (var option_num = 0; option_num < options.length; option_num++){
 		var option = options[option_num];
-		option_elem = "<input  class = 'option' id='option" + option_num + "'style = 'display: inline-block; vertical-align: middle; ' name='option' type='radio' value = '" + option + "' />" +  "<label style = 'display: inline-block; vertical-align: middle; ' for='option" + option_num +"'>" + option + "</label><br>";
+		var option_elem = "<input  class = 'option' id='option" + option_num + "'style = 'display: inline-block; vertical-align: middle; ' name='option' type='radio' value = '" + option + "' />" +  "<label style = 'display: inline-block; vertical-align: middle; ' for='option" + option_num +"'>" + option + "</label><br>";		
 		$("#options").append(option_elem);
 	}
 	ShowDialog();
@@ -173,7 +173,7 @@ $(document).ready(function ()
 	});
 
 	$("#btnSubmit").click(function (e){
-		answer = $(".options input[type='radio']:checked").val();
+		answer = $(".options input:checked + label").text();
 		explanation_dict[currentStep-1] = " You answered: " + answer + "<br>" + explanation_dict[currentStep-1];
 		HideDialog();
 		e.preventDefault();
@@ -223,10 +223,14 @@ function getCookie(name) {
 document.onkeydown = function(e) {
     switch (e.keyCode) {
         case 37:
-            goToStep("back");
+			if(currentStep > 0 && $("#dialog").is(':hidden')){
+				goToStep("back");
+			}
             break;
         case 39:
-            goToStep("next");
+			if(currentStep < totalSteps && $("#dialog").is(':hidden')){ //if the action is question that hasn't been asked yet, i.e. the explanation_dict is still empty for that step
+				goToStep("next");
+			}
             break;
     }
 };

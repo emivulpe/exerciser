@@ -86,7 +86,7 @@ def application(request, application_name_url):
 			stepChanges.append(changesToAdd)
 			expl = Explanation.objects.filter(step = step)
 			for explanation in expl:
-				explanations.append(json.dumps(explanation.text))
+				explanations.append(json.dumps((explanation.text).replace('"',"&quot")))
 			
 		"""
 		explanations_str = []
