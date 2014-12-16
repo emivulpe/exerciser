@@ -169,7 +169,6 @@ $('#btn_reset').click(function() {
 	doReset();
 });
 
-
 $(document).ready(function ()
 {
 	$("#btnClose").click(function (e){
