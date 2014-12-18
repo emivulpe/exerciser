@@ -9,6 +9,8 @@
 		<link href="{% static 'css/bootstrap-responsive.css' %}" rel="stylesheet">
 		<link href="{% static 'css/dialogue-css.css' %}" rel="stylesheet">
 		<link href="{% static 'css/css.css' %}" rel="stylesheet">
+		<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.0/themes/base/jquery-ui.css" rel="stylesheet" />
+		<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/themes/base/jquery-ui.css"/>
 
         <title>Exerciser- {% block title %}Exercise!{% endblock %}</title>
 
@@ -17,44 +19,38 @@
 
     <body style = "line-height : 1.25; font-size:small;margin-top:0px;">
 		<section class = "header" style = "position:relative;width:100%;height:10vh;background:orange;">
-				<div class = "control f" style = "position: relative;float:left;height:100%;">
-					<ul class="nav nav-tabs navbar-left" style="height:100%;">
-						<li><a href="/exerciser/">Exerciser</a></li>
-						<li class="dropdown">
-							<a class="dropdown-toggle" data-toggle="dropdown" href="#">Applications<b class="caret"></b></a>
-							{% if applications %}
-								<ul class="dropdown-menu">
-									{% for application in applications %}
-									<li><a href="/exerciser/application/{{ application.url }}">{{ application.name }}</a></li>
-									{% endfor %}
-								</ul>
-							{% else %}
-								<strong>There are no applications present.</strong>
-							{% endif %}
-						</li>
-					</ul>
-				</div>
-				<div class="nav-tabs control s" style = "text-align:center;top: 20px;transform: translate(-50%, -50%);position: absolute;left: 50%; margin-right: -50%;float:left;">
-					{% block app_name %} {% endblock %}
-				</div>
-				<div class="control t" style = "position: absolute;right:0%;float:left;">
-					<ul class="nav nav-tabs pull-right" style="margin-bottom:0px;">
-						{% block app_controls %} {% endblock %}
-					</ul>
-				</div>
+			<div class = "control f" style = "position: relative;float:left;height:100%;">
+				<ul class="nav nav-tabs navbar-left" style="height:100%;">
+					<li><a href="/exerciser/">Exerciser</a></li>
+					<li class="dropdown">
+						<a class="dropdown-toggle" data-toggle="dropdown" href="#">Applications<b class="caret"></b></a>
+						{% if applications %}
+							<ul class="dropdown-menu">
+								{% for application in applications %}
+								<li><a href="/exerciser/application/{{ application.url }}">{{ application.name }}</a></li>
+								{% endfor %}
+							</ul>
+						{% else %}
+							<strong>There are no applications present.</strong>
+						{% endif %}
+					</li>
+				</ul>
+			</div>
+			<div class="nav-tabs control s" style = "text-align:center;top: 20px;transform: translate(-50%, -50%);position: absolute;left: 50%; margin-right: -50%;float:left;">
+				{% block app_name %} {% endblock %}
+			</div>
+			<div class="control t" style = "position: absolute;right:0%;float:left;">
+				<ul class="nav nav-tabs pull-right" style="margin-bottom:0px;">
+					{% block app_controls %} {% endblock %}
+				</ul>
+			</div>
 		</section>
-<!--		<div class="container-fluid">
-			<div class="row-fluid">
-				/span-->
-				<section id = "interface" style="width: 100%;height:80vh;position:relative;">
-					{% block body_block %}
-					{% endblock %}
-				</section>
-				<!--/span-->
-			<!---</div>--->
-			<!--/row-->
-		<!---</div>--->
-		<!--/.fluid-container-->
+
+		<div id = "interface" style="width: 100%;height:80vh;max-height:80vh;position:relative;">
+			{% block body_block %}
+			{% endblock %}
+		</div>
+
 
 		<script type="text/javascript" src="/static/jquery-2.1.1.js"></script>
 		<script type="text/javascript" src="/static/bootstrap/bootstrap/js/bootstrap.js"></script>
@@ -68,4 +64,5 @@
 		});
 		</script>
    </body>
+   
 </html>
