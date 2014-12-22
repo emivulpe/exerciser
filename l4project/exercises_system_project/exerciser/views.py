@@ -104,3 +104,24 @@ def application(request, application_name_url):
 
 	# Go render the response and return it to the client.
 	return render_to_response('exerciser/application.html', context_dict, context)
+	
+def teacher_interface(request):
+	# Request the context of the request.
+	# The context contains information such as the client's machine details, for example.
+	context = RequestContext(request)
+
+	# application_list = Application.objects.all()
+	
+	# Construct a dictionary to pass to the template engine as its context.
+	# Note the key boldmessage is the same as {{ boldmessage }} in the template!
+	# context_dict = {'applications' : application_list}
+
+	# for application in application_list:
+	#	application.url = application.name.replace(' ', '_')
+	
+	# Return a rendered response to send to the client.
+	# We make use of the shortcut function to make our lives easier.
+	# Note that the first parameter is the template we wish to use.
+	return render_to_response('exerciser/teacher_interface.html', {}, context)
+
+	
