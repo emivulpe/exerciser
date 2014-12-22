@@ -138,6 +138,8 @@ INSTALLED_APPS = (
     'exerciser'
 )
 
+LOGIN_URL = '/exerciser/login/'
+
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
 # A sample logging configuration. The only tangible logging
