@@ -153,3 +153,17 @@ class Panel(models.Model):
 	def getFragments(self):
 		return Fragment.objects.filter(document = self.document)
 	 
+class UsageRecords(models.Model):
+	usergroup = models.CharField(max_length=100)
+	session_id = models.CharField(max_length=100)
+	example_name = models.CharField(max_length=100)
+	time_on_step = models.FloatField()
+	step = models.PositiveSmallIntegerField()
+	direction = models.CharField(max_length=10)
+	timestamp = models.DateTimeField('timestamp', null=True, blank=True)
+
+
+	
+class QuestionsData(models.Model):
+	record = models.OneToOneField(UsageRecords)
+	answer = models.TextField()

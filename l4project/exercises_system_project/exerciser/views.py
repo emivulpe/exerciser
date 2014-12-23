@@ -1,8 +1,9 @@
 from django.template import RequestContext
 from django.shortcuts import render_to_response
-from exerciser.models import Application, Panel, Process, Document, Change, Step, Explanation
+from exerciser.models import Application, Panel, Process, Document, Change, Step, Explanation, UsageRecords, QuestionsData
 import json 
 import logging
+import datetime
 from django.views.decorators.csrf import requires_csrf_token
 import django.conf as conf
 from exerciser.forms import UserForm
@@ -15,8 +16,27 @@ from django.contrib.auth import logout
 logger = logging.getLogger(__name__)
 
 
+
+@requires_csrf_token
+def log_info_db(request):
+	time_on_step = request.POST['time']
+	current_step = request.POST['step']
+	direction = request.POST['direction']
+	session_id = request.session.session_key
+	usergroup = request.POST['usergroup']
+	example_name = request.POST['example_name']
+	timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+	record = UsageRecords(usergroup = usergroup, session_id = session_id,example_name = example_name, time_on_step = time_on_step, step = current_step, direction = direction, timestamp = timestamp)
+	record.save()
+	print("test")
+	return HttpResponse("{}",content_type = "application/json")
+	
+	
+
+
 @requires_csrf_token
 def log_info(request):
+	print("test3")
 	time = request.POST['time']
 	current_step = request.POST['step']
 	direction = request.POST['direction']
