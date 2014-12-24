@@ -4,22 +4,43 @@
 
     <h1>Welcome</h1>
 			
-	<form action="demo_form.asp">
-	<table> 
-	<tr>
-	<td>
-	School number: 
-	</td>
-	<td>
-	<input type="text" name="FirstName"></td></tr>
-	<tr>
-	<td>
-	Pupil ID: </td>
-	<td><input type="text" name="LastName"></td></tr>
-	</table>
-	<input type="submit" value="Submit">
+	<form>
+	Group ID: 
+	<input id = "group" type="text" name="GroupName"></td></tr>
+	<input  id = "submit" type="submit" value="Submit">
 	</form>
 		
     <a href="/exerciser/about/">About</a><br />
+	<script type="text/javascript" src="/static/jquery-2.1.1.js"></script>
+	<script> 
+		$("#submit").click(function (e){
+			var csrftoken = getCookie('csrftoken');
+			var group = $("#group").val();
+			console.log(group);
+			$.post("/exerciser/register_group_with_session/",
+			{
+			group : group,
+			csrfmiddlewaretoken : csrftoken
+			
+			});
+		});
+		
+		
+		function getCookie(name) {
+			var cookieValue = null;
+			if (document.cookie && document.cookie != '') {
+				var cookies = document.cookie.split(';');
+				for (var i = 0; i < cookies.length; i++) {
+					var cookie = jQuery.trim(cookies[i]);
+					// Does this cookie string begin with the name we want?
+					if (cookie.substring(0, name.length + 1) == (name + '=')) {
+						cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+						break;
+					}
+				}
+			}
+			return cookieValue;
+		}
 
+	</script>
 {% endblock %}

@@ -72,8 +72,8 @@ class Question(models.Model):
 
 class Change(models.Model):
 	step = models.ForeignKey(Step)
-	fragment = models.ForeignKey(Fragment,  blank=True, null=True)
-	question = models.ForeignKey(Question,  blank=True, null=True)
+	fragment = models.ForeignKey(Fragment, blank=True, null=True)
+	question = models.ForeignKey(Question, blank=True, null=True)
 	document = models.ForeignKey(Document)
 	operation = models.CharField(max_length=128)
 
@@ -152,15 +152,21 @@ class Panel(models.Model):
 		return mappings
 	def getFragments(self):
 		return Fragment.objects.filter(document = self.document)
-	 
+
+class Group(models.Model):
+	user = models.OneToOneField(User)
+	can_analyse = models.BooleanField(default=False)
+		
+		
 class UsageRecords(models.Model):
-	usergroup = models.CharField(max_length=100)
+	usergroup = models.ForeignKey(User, blank=True, null=True)
 	session_id = models.CharField(max_length=100)
 	example_name = models.CharField(max_length=100)
 	time_on_step = models.FloatField()
 	step = models.PositiveSmallIntegerField()
 	direction = models.CharField(max_length=10)
 	timestamp = models.DateTimeField('timestamp', null=True, blank=True)
+
 
 
 	

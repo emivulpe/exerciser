@@ -1,10 +1,24 @@
 {% extends 'exerciser/base.html' %}
 {% load poll_extras %}
+{% load chartit %}
 	
+<!-- code to include the highcharts and jQuery libraries goes here -->
+<!-- load_charts filter takes a comma-separated list of id's where -->
+<!-- the charts need to be rendered to                             -->
+{% block scripts %}
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+		<script src="/static/js/highcharts.js"></script>
+		<script src="/static/js/exporting.js"></script>	
+		{{ some_chart|load_charts:"container" }}
+{% endblock %}
+
+
 
 
 {% block body_block %}
-		
+
+
+
 
 {% if user.is_authenticated %}
 <a href="/exerciser/restricted/">Restricted Page</a><br />
@@ -13,6 +27,7 @@
 <a href="/exerciser/register/">Register Here</a><br />
 <a href="/exerciser/login/">Login</a><br />
 {% endif %}
+<div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"> </div>
 
 
 {% endblock %}

@@ -54,15 +54,14 @@ function goToStep(direction) {
 			
 		}
 		if(action != "question"){
-			var now = new Date().getTime();
+			var now = new Date().getTime();			
 			$.post("/exerciser/log_info_db/",
 			{
 			time : (now - lastTime) / 1000,
 			step : currentStep + 1,
 			direction : direction,
 			csrfmiddlewaretoken : csrftoken,
-			usergroup : "usergroup",
-			example_name : "example_name"
+			example_name : app_name
 			});
 			lastTime = now;
 		}

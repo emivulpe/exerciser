@@ -103,6 +103,12 @@
 		{% endautoescape %}
 	</script>
 	
+	<script type="text/javascript">
+		{% autoescape off %}
+			var app_name = "{{application_name}}";
+		{% endautoescape %}
+	</script>
+	
     <script  type="text/javascript">
 		
 		$(function($) {

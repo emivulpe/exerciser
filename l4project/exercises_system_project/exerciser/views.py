@@ -1,16 +1,53 @@
 from django.template import RequestContext
 from django.shortcuts import render_to_response
-from exerciser.models import Application, Panel, Process, Document, Change, Step, Explanation, UsageRecords, QuestionsData
+from exerciser.models import Application, Panel, Process, Document, Change, Step, Explanation, UsageRecords, QuestionsData, Group
 import json 
 import logging
 import datetime
 from django.views.decorators.csrf import requires_csrf_token
 import django.conf as conf
-from exerciser.forms import UserForm
+from exerciser.forms import UserForm, GroupForm
 from django.contrib.auth import authenticate, login
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
+from django.contrib.auth.models import User
+from chartit import DataPool, Chart
+
+def test_chart_view(request):
+    #Step 1: Create a DataPool with the data we want to retrieve.
+    data = \
+        DataPool(
+           series=
+            [{'options': {
+              'source': UsageRecords.objects.all()},
+              'terms': [
+                'step',
+                'time_on_step',]}
+             ])
+    #Step 2: Create the Chart object
+    cht = Chart(
+            datasource = data,
+            series_options =
+              [{'options':{
+                  'type': 'line',
+                  'stacking': False},
+                'terms':{
+                  'step': [
+                    'time_on_step',]
+                  }}],
+            chart_options =
+              {'title': {
+                   'text': 'Test chart'},
+               'xAxis': {
+                    'title': {
+                       'text': 'Step number'}}})
+
+    #Step 3: Send the chart object to the template.
+    return render_to_response({'some_chart': cht})
+
+
+
 
 
 logger = logging.getLogger(__name__)
@@ -23,10 +60,16 @@ def log_info_db(request):
 	current_step = request.POST['step']
 	direction = request.POST['direction']
 	session_id = request.session.session_key
-	usergroup = request.POST['usergroup']
 	example_name = request.POST['example_name']
+	print example_name
 	timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-	record = UsageRecords(usergroup = usergroup, session_id = session_id,example_name = example_name, time_on_step = time_on_step, step = current_step, direction = direction, timestamp = timestamp)
+	usergroup_name = request.session.get('group', None)
+	print(usergroup_name)
+	if usergroup_name != None:
+		user = User.objects.filter(username = usergroup_name)
+		record = UsageRecords(usergroup = user[0], session_id = session_id,example_name = example_name, time_on_step = time_on_step, step = current_step, direction = direction, timestamp = timestamp)
+	else:
+		record = UsageRecords(session_id = session_id,example_name = example_name, time_on_step = time_on_step, step = current_step, direction = direction, timestamp = timestamp)
 	record.save()
 	print("test")
 	return HttpResponse("{}",content_type = "application/json")
@@ -45,6 +88,14 @@ def log_info(request):
 	logging.basicConfig(filename=filename,level=logging.INFO)
 	logger.info("Time: " + time + " " + "[" + direction + "] Going to step " + current_step + answer)
 	return HttpResponse("{}",content_type = "application/json")
+	
+@requires_csrf_token
+def register_group_with_session(request):
+	print("register")
+	group = request.POST['group']
+	request.session['group'] = group
+	return HttpResponse("{}",content_type = "application/json")
+
 	
 	
 def index(request):
@@ -129,21 +180,52 @@ def teacher_interface(request):
 	# The context contains information such as the client's machine details, for example.
 	context = RequestContext(request)
 
-	# application_list = Application.objects.all()
+	application_list = Application.objects.all()
 	
 	# Construct a dictionary to pass to the template engine as its context.
 	# Note the key boldmessage is the same as {{ boldmessage }} in the template!
-	# context_dict = {'applications' : application_list}
+	context_dict = {'applications' : application_list}
 
 	# for application in application_list:
 	#	application.url = application.name.replace(' ', '_')
 	
+	#Step 1: Create a DataPool with the data we want to retrieve.
+	data = \
+		DataPool(
+		series=
+			[{'options': {
+			'source': UsageRecords.objects.all()},
+			'terms': [
+				'step',
+				'time_on_step',]}
+			])
+	#Step 2: Create the Chart object
+	cht = Chart(
+			datasource = data,
+			series_options =
+			  [{'options':{
+				'type': 'line',
+				'stacking': False},
+				'terms':{
+				'step': [
+					'time_on_step',]
+				}}],
+			chart_options =
+			  {'title': {
+				'text': 'divad loves emi'},
+			'xAxis': {
+					'title': {
+					'text': 'Step number'}}})
+	
+	context_dict['some_chart'] = cht
+	
 	# Return a rendered response to send to the client.
 	# We make use of the shortcut function to make our lives easier.
 	# Note that the first parameter is the template we wish to use.
-	return render_to_response('exerciser/teacher_interface.html', {}, context)
+	return render_to_response('exerciser/teacher_interface.html', context_dict, context)
 
 def register(request):
+
     # Like before, get the request's context.
     context = RequestContext(request)
 
@@ -156,6 +238,7 @@ def register(request):
         # Attempt to grab information from the raw form information.
         # Note that we make use of both UserForm and UserProfileForm.
         user_form = UserForm(data=request.POST)
+        group_form = GroupForm(data=request.POST)
 
         # If the form is valid...
         if user_form.is_valid():
@@ -166,6 +249,15 @@ def register(request):
             # Once hashed, we can update the user object.
             user.set_password(user.password)
             user.save()
+            
+            # Now sort out the GroupProfile instance.
+            # Since we need to set the user attribute ourselves, we set commit=False.
+            # This delays saving the model until we're ready to avoid integrity problems.
+            group = group_form.save(commit=False)
+            group.user = user
+
+            # Now we save the UserProfile model instance.
+            group.save()
 
             # Update our variable to tell the template registration was successful.
             registered = True
@@ -174,20 +266,21 @@ def register(request):
         # Print problems to the terminal.
         # They'll also be shown to the user.
         else:
-            print user_form.errors
+            print user_form.errors, group_form.errors
 
     # Not a HTTP POST, so we render our form using two ModelForm instances.
     # These forms will be blank, ready for user input.
     else:
         user_form = UserForm()
+        group_form = GroupForm()
 
     # Render the template depending on the context.
     return render_to_response(
             'exerciser/register.html',
-            {'user_form': user_form, 'registered': registered},
+            {'user_form': user_form, 'group_form': group_form,'registered': registered},
             context)	
-			
-			
+
+
 def user_login(request):
     # Like before, obtain the context for the user's request.
     context = RequestContext(request)
