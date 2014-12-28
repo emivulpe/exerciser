@@ -159,9 +159,9 @@ class Group(models.Model):
 		
 		
 class UsageRecords(models.Model):
+	application = models.ForeignKey(Application)
 	usergroup = models.ForeignKey(User, blank=True, null=True)
 	session_id = models.CharField(max_length=100)
-	example_name = models.CharField(max_length=100)
 	time_on_step = models.FloatField()
 	step = models.PositiveSmallIntegerField()
 	direction = models.CharField(max_length=10)

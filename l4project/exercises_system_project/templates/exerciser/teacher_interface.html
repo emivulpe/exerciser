@@ -27,8 +27,77 @@
 <a href="/exerciser/register/">Register Here</a><br />
 <a href="/exerciser/login/">Login</a><br />
 {% endif %}
+
+<select id="application_list" onchange="redrawGraph()">
+
+	{% for application in applications %}
+		  <option value="{{application.name}}">{{application.name}}</option>
+	{% endfor %}
+</select>
+
+<button id="button" class="autocompare">Set new data</button>
 <div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"> </div>
 
+<script>
+function redrawGraph() {
+	var csrftoken = getCookie('csrftoken');
+    var selected_app = document.getElementById("application_list").value;
+    alert("You selected: " + selected_app);
+	$.post("/exerciser/teacher_interface/",
+	{
+		application : selected_app,
+		csrfmiddlewaretoken : csrftoken
+	});
+}
 
+
+
+// make sure it appears on one place ONLY
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
+
+$(function ($) {
+
+
+    // the button action
+    $('#button').click(function () {
+	
+		var selected_app = document.getElementById("application_list").value;
+
+		var request = $.get('/exerciser/update_graph/', {app_name:selected_app})
+		
+		request.done(function(selected_data) {
+			// when we get here, the request has succeeded.
+			// this should mean that data is now the data from the ajax request (i.e. from the view above)
+				
+			var chart = $('#container').highcharts();
+			chart.series[0].setData(selected_data);
+			console.log("R"+selected_data);
+        });
+		
+       //chart.series[0].setData([129.2, 144.0, 176.0, 135.6, 148.5, 216.4, 194.1, 95.6, 54.4, 29.9, 71.5, 106.4]);
+			
+
+    });
+});
+
+
+
+</script>
 {% endblock %}
 

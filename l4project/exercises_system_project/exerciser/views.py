@@ -2,6 +2,7 @@ from django.template import RequestContext
 from django.shortcuts import render_to_response
 from exerciser.models import Application, Panel, Process, Document, Change, Step, Explanation, UsageRecords, QuestionsData, Group
 import json 
+import simplejson 
 import logging
 import datetime
 from django.views.decorators.csrf import requires_csrf_token
@@ -13,41 +14,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.contrib.auth.models import User
 from chartit import DataPool, Chart
-
-def test_chart_view(request):
-    #Step 1: Create a DataPool with the data we want to retrieve.
-    data = \
-        DataPool(
-           series=
-            [{'options': {
-              'source': UsageRecords.objects.all()},
-              'terms': [
-                'step',
-                'time_on_step',]}
-             ])
-    #Step 2: Create the Chart object
-    cht = Chart(
-            datasource = data,
-            series_options =
-              [{'options':{
-                  'type': 'line',
-                  'stacking': False},
-                'terms':{
-                  'step': [
-                    'time_on_step',]
-                  }}],
-            chart_options =
-              {'title': {
-                   'text': 'Test chart'},
-               'xAxis': {
-                    'title': {
-                       'text': 'Step number'}}})
-
-    #Step 3: Send the chart object to the template.
-    return render_to_response({'some_chart': cht})
-
-
-
 
 
 logger = logging.getLogger(__name__)
@@ -61,15 +27,15 @@ def log_info_db(request):
 	direction = request.POST['direction']
 	session_id = request.session.session_key
 	example_name = request.POST['example_name']
-	print example_name
+	application = Application.objects.filter(name=example_name)[0]
 	timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 	usergroup_name = request.session.get('group', None)
 	print(usergroup_name)
 	if usergroup_name != None:
 		user = User.objects.filter(username = usergroup_name)
-		record = UsageRecords(usergroup = user[0], session_id = session_id,example_name = example_name, time_on_step = time_on_step, step = current_step, direction = direction, timestamp = timestamp)
+		record = UsageRecords(application = application, usergroup = user[0], session_id = session_id, time_on_step = time_on_step, step = current_step, direction = direction, timestamp = timestamp)
 	else:
-		record = UsageRecords(session_id = session_id,example_name = example_name, time_on_step = time_on_step, step = current_step, direction = direction, timestamp = timestamp)
+		record = UsageRecords(application = application, session_id = session_id, time_on_step = time_on_step, step = current_step, direction = direction, timestamp = timestamp)
 	record.save()
 	print("test")
 	return HttpResponse("{}",content_type = "application/json")
@@ -174,7 +140,23 @@ def application(request, application_name_url):
 
 	# Go render the response and return it to the client.
 	return render_to_response('exerciser/application.html', context_dict, context)
+
+
+def update_teacher_interface_graph_data(request):
+		# do what you need to do to get the data
+		# maybe you need to pass a querystring to this view so you can work out what app to select stuff for
+		app_name=request.GET['app_name']
+		selected_application=Application.objects.filter(name=app_name)[0]
+		selected_data_source = UsageRecords.objects.filter(application=selected_application)
+		selected_data=[]
+		for record in selected_data_source:
+			print "update"
+			selected_data.append([record.step,record.time_on_step])
+		return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")	
 	
+	
+	
+@requires_csrf_token	
 def teacher_interface(request):
 	# Request the context of the request.
 	# The context contains information such as the client's machine details, for example.
@@ -188,13 +170,26 @@ def teacher_interface(request):
 
 	# for application in application_list:
 	#	application.url = application.name.replace(' ', '_')
+	print "fde"
+	if request.POST.get('application'):
+		selected_application_name= request.POST['application']
+		selected_application=Application.objects.filter(name=selected_application_name)[0]
+	else:
+		selected_application = application_list[0]
+	selected_data_source =  UsageRecords.objects.filter(application=selected_application)
+	selected_data=[]
+	for record in selected_data_source:
+		print "update"
+		selected_data.append([record.step,record.time_on_step])
+	
+	print selected_data
 	
 	#Step 1: Create a DataPool with the data we want to retrieve.
 	data = \
 		DataPool(
 		series=
 			[{'options': {
-			'source': UsageRecords.objects.all()},
+			'source': selected_data_source},
 			'terms': [
 				'step',
 				'time_on_step',]}
@@ -212,13 +207,16 @@ def teacher_interface(request):
 				}}],
 			chart_options =
 			  {'title': {
-				'text': 'divad loves emi'},
+				'text': selected_application.name},
 			'xAxis': {
 					'title': {
 					'text': 'Step number'}}})
 	
 	context_dict['some_chart'] = cht
+	print selected_application,"YEY"
 	
+	context_dict['test_data'] = [129.2, 144.0, 176.0, 135.6, 148.5, 216.4, 194.1, 95.6, 54.4, 29.9, 71.5, 106.4]
+	context_dict['data'] = selected_data
 	# Return a rendered response to send to the client.
 	# We make use of the shortcut function to make our lives easier.
 	# Note that the first parameter is the template we wish to use.
