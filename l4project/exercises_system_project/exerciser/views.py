@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 @requires_csrf_token
 def log_info_db(request):
+	print "log"
 	time_on_step = request.POST['time']
 	current_step = request.POST['step']
 	direction = request.POST['direction']
@@ -31,9 +32,12 @@ def log_info_db(request):
 	timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 	usergroup_name = request.session.get('group', None)
 	print(usergroup_name)
+	user=[]
 	if usergroup_name != None:
 		user = User.objects.filter(username = usergroup_name)
-		record = UsageRecords(application = application, usergroup = user[0], session_id = session_id, time_on_step = time_on_step, step = current_step, direction = direction, timestamp = timestamp)
+	if len(user)>0:
+		user = user[0]
+		record = UsageRecords(application = application, usergroup = user, session_id = session_id, time_on_step = time_on_step, step = current_step, direction = direction, timestamp = timestamp)
 	else:
 		record = UsageRecords(application = application, session_id = session_id, time_on_step = time_on_step, step = current_step, direction = direction, timestamp = timestamp)
 	record.save()
@@ -146,12 +150,22 @@ def update_teacher_interface_graph_data(request):
 		# do what you need to do to get the data
 		# maybe you need to pass a querystring to this view so you can work out what app to select stuff for
 		app_name=request.GET['app_name']
-		selected_application=Application.objects.filter(name=app_name)[0]
-		selected_data_source = UsageRecords.objects.filter(application=selected_application)
+		group_name=request.GET['group']
+		print group_name
+		
+		######## add checks if this group exists???? #######
+		selected_group = User.objects.filter(username = group_name)
+		
+		
+		selected_application=Application.objects.filter(name=app_name)
 		selected_data=[]
-		for record in selected_data_source:
-			print "update"
-			selected_data.append([record.step,record.time_on_step])
+		if len(selected_group)>0 and len(selected_application)>0:
+			selected_group = selected_group[0]
+			selected_application = selected_application[0]
+			selected_data_source = UsageRecords.objects.filter(application=selected_application,usergroup=selected_group)
+			for record in selected_data_source:
+				print "update"
+				selected_data.append([record.step,record.time_on_step])
 		return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")	
 	
 	

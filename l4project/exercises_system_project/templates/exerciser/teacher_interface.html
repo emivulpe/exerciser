@@ -34,7 +34,9 @@
 		  <option value="{{application.name}}">{{application.name}}</option>
 	{% endfor %}
 </select>
-
+<form action="demo_form.asp">
+  Group ID: <input type="text" name="group">
+</form>
 <button id="button" class="autocompare">Set new data</button>
 <div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"> </div>
 
@@ -78,8 +80,8 @@ $(function ($) {
     $('#button').click(function () {
 	
 		var selected_app = document.getElementById("application_list").value;
-
-		var request = $.get('/exerciser/update_graph/', {app_name:selected_app})
+		var group_id=$('input:text[name=group]').val();
+		var request = $.get('/exerciser/update_graph/', {app_name:selected_app, group:group_id})
 		
 		request.done(function(selected_data) {
 			// when we get here, the request has succeeded.

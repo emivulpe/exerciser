@@ -153,11 +153,15 @@ class Panel(models.Model):
 	def getFragments(self):
 		return Fragment.objects.filter(document = self.document)
 
-class Group(models.Model):
+class Teacher(models.Model):
 	user = models.OneToOneField(User)
 	can_analyse = models.BooleanField(default=False)
 		
-		
+class Group(models.Model):
+	teacher = models.ForeignKey(Teacher)
+	name = models.CharField(max_length=100)
+	
+	
 class UsageRecords(models.Model):
 	application = models.ForeignKey(Application)
 	usergroup = models.ForeignKey(User, blank=True, null=True)
