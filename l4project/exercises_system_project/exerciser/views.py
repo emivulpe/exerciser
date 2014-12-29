@@ -185,17 +185,21 @@ def update_teacher_interface_graph_data(request):
 		selected_application=Application.objects.filter(name=app_name)
 		selected_data=[]
 		if len(selected_group)>0 and len(selected_application)>0:
+
 			selected_group = selected_group[0]
 			selected_application = selected_application[0]
 			selected_data_source = UsageRecords.objects.filter(application=selected_application,usergroup=selected_group)
 			
 			#### Getting averages ##########
 			num_steps = selected_data_source.aggregate(max = Max('step'))
-			for step in range(1, num_steps['max']+1):
-				record = UsageRecords.objects.filter(application=selected_application,usergroup=selected_group, step = step)
-				average = record.aggregate(time = Avg('time_on_step'))
-				selected_data.append([average['time']])
-				print "hehe",step,average['time']
+			print "here"
+			if num_steps['max'] != None:
+				for step in range(1, num_steps['max']+1):
+					print "in"
+					record = UsageRecords.objects.filter(application=selected_application,usergroup=selected_group, step = step)
+					average = record.aggregate(time = Avg('time_on_step'))
+					selected_data.append([average['time']])
+					print "hehe",step,average['time']
 			################################
 			#for record in selected_data_source:
 			#	print "update"

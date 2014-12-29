@@ -67,8 +67,10 @@ $(function ($) {
 		console.log(selected_app);
 		console.log(group_id);
 		var request = $.get('/exerciser/update_graph/', {app_name:selected_app, group:group_id})
-		
+		//console.log("here");
 		request.done(function(selected_data) {
+		console.log("here");
+
 			// when we get here, the request has succeeded.
 			// this should mean that data is now the data from the ajax request (i.e. from the view above)
 				
@@ -76,6 +78,7 @@ $(function ($) {
 			chart.setTitle({ text: selected_app }, { text: "Group " + group_id});
 			chart.series[0].setData(selected_data);
 			categories = [];
+
 			for (i = 0; i < selected_data.length; i++) { 
 				console.log(i);
 				categories[i]=i+1;
