@@ -9,7 +9,7 @@
 		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
 		<script src="/static/js/highcharts.js"></script>
 		<script src="/static/js/exporting.js"></script>	
-		{{ some_chart|load_charts:"container" }}
+<!--		{{ some_chart|load_charts:"container" }} -->
 {% endblock %}
 
 
@@ -40,6 +40,22 @@
 
 <script>
 
+
+$(function ($) {
+    $('#container').highcharts({
+        title: {
+            text: 'Chart without categories, falls back to numbers'
+        },
+        xAxis: {
+        },
+        series: [{
+            data: [29.9, 71.5, 106.4, 129.2, 144.0, 176.0, 135.6, 148.5, 216.4, 194.1, 95.6, 54.4]
+        }]
+    });
+});
+
+
+
 $(function ($) {
 
 
@@ -59,6 +75,14 @@ $(function ($) {
 			var chart = $('#container').highcharts();
 			chart.setTitle({ text: selected_app }, { text: "Group " + group_id});
 			chart.series[0].setData(selected_data);
+			categories = [];
+			for (i = 0; i < selected_data.length; i++) { 
+				console.log(i);
+				categories[i]=i+1;
+				console.log(categories[i]);
+			}
+			console.log(categories[0]);
+			chart.xAxis[0].setCategories(categories);
 			console.log("R"+selected_data);
         });
 		

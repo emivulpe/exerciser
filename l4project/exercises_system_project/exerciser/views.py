@@ -14,6 +14,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.contrib.auth.models import User
 from chartit import DataPool, Chart
+from django.db.models import Avg
+from django.db.models import Count, Max
 
 
 logger = logging.getLogger(__name__)
@@ -175,19 +177,29 @@ def update_teacher_interface_graph_data(request):
 		print "in update graph"
 		print "group",group_name
 		print "app",app_name
-		######## add checks if this group exists???? #######
+		
+
+		
+		
 		selected_group = Group.objects.filter(name = group_name)
-		
-		
 		selected_application=Application.objects.filter(name=app_name)
 		selected_data=[]
 		if len(selected_group)>0 and len(selected_application)>0:
 			selected_group = selected_group[0]
 			selected_application = selected_application[0]
 			selected_data_source = UsageRecords.objects.filter(application=selected_application,usergroup=selected_group)
-			for record in selected_data_source:
-				print "update"
-				selected_data.append([record.step,record.time_on_step])
+			
+			#### Getting averages ##########
+			num_steps = selected_data_source.aggregate(max = Max('step'))
+			for step in range(1, num_steps['max']+1):
+				record = UsageRecords.objects.filter(application=selected_application,usergroup=selected_group, step = step)
+				average = record.aggregate(time = Avg('time_on_step'))
+				selected_data.append([average['time']])
+				print "hehe",step,average['time']
+			################################
+			#for record in selected_data_source:
+			#	print "update"
+			#	selected_data.append([record.step,record.time_on_step])
 		return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")	
 	
 	
