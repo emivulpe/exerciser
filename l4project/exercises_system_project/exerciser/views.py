@@ -201,9 +201,6 @@ def update_teacher_interface_graph_data(request):
 					selected_data.append([average['time']])
 					print "hehe",step,average['time']
 			################################
-			#for record in selected_data_source:
-			#	print "update"
-			#	selected_data.append([record.step,record.time_on_step])
 		return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")	
 	
 	
@@ -337,35 +334,8 @@ def statistics(request):
 	groups = Group.objects.filter(teacher=teacher)
 	print len(groups)
 	
-	#Step 1: Create a DataPool with the data we want to retrieve.
-	data = \
-		DataPool(
-		series=
-			[{'options': {
-			'source': UsageRecords.objects.all()},
-			'terms': [
-				'step',
-				'time_on_step',]}
-			])
-	#Step 2: Create the Chart object
-	cht = Chart(
-			datasource = data,
-			series_options =
-			  [{'options':{
-				'type': 'line',
-				'stacking': False},
-				'terms':{
-				'step': [
-					'time_on_step',]
-				}}],
-			chart_options =
-			  {'title': {
-				'text': "app name"},
-			'xAxis': {
-					'title': {
-					'text': 'Step number'}}})
 	
-	context_dict = {'some_chart' : cht, 'groups' : groups}
+	context_dict = {'groups' : groups}
 	print "YEY"
     	return render_to_response('exerciser/graph_viewer.html', context_dict, context)
 	
