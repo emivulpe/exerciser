@@ -39,7 +39,7 @@
 
 <script>
 
-
+/*
 $(function ($) {
     $('#container').highcharts({
         title: {
@@ -48,12 +48,12 @@ $(function ($) {
         xAxis: {
         },
         series: [{
-            data: [29.9, 71.5, 106.4, 129.2, 144.0, 176.0, 135.6, 148.5, 216.4, 194.1, 95.6, 54.4]
+            data: []
         }]
     });
 });
 
-
+*/
 
 $(function ($) {
 
@@ -73,6 +73,35 @@ $(function ($) {
 			// when we get here, the request has succeeded.
 			// this should mean that data is now the data from the ajax request (i.e. from the view above)
 				
+				
+				
+			if(selected_data.length>0){
+				categories = [];
+
+				for (i = 0; i < selected_data.length; i++) { 
+					categories[i]=i+1;
+				}
+				$('#container').highcharts({
+					title: {
+						text: selected_app
+					},
+					subtitle: {
+						text: "Group " + group_id
+					},
+					xAxis: {
+						categories:categories
+					},
+					series: [{
+						data: selected_data
+					}]
+				});
+			}
+			else{
+			    $('#container').find('.highcharts-container').hide();
+				$('#container').text("There are no statistics for the current selection");
+				
+			}
+			/*
 			var chart = $('#container').highcharts();
 			chart.setTitle({ text: selected_app }, { text: "Group " + group_id});
 			chart.series[0].setData(selected_data);
@@ -86,6 +115,7 @@ $(function ($) {
 			console.log(categories[0]);
 			chart.xAxis[0].setCategories(categories);
 			console.log("R"+selected_data);
+			*/
         });
 		
        //chart.series[0].setData([129.2, 144.0, 176.0, 135.6, 148.5, 216.4, 194.1, 95.6, 54.4, 29.9, 71.5, 106.4]);
