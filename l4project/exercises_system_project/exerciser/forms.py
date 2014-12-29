@@ -1,4 +1,4 @@
-from exerciser.models import Group
+from exerciser.models import Teacher
 from django.contrib.auth.models import User
 from django import forms
 
@@ -11,5 +11,5 @@ class UserForm(forms.ModelForm):
 		
 class GroupForm(forms.ModelForm):
     class Meta:
-        model = Group
+        model = Teacher
         fields = ('can_analyse',)

@@ -1,6 +1,6 @@
 from django.template import RequestContext
 from django.shortcuts import render_to_response
-from exerciser.models import Application, Panel, Process, Document, Change, Step, Explanation, UsageRecords, QuestionsData, Group
+from exerciser.models import Application, Panel, Process, Document, Change, Step, Explanation, UsageRecords, QuestionsData, Group, Teacher
 import json 
 import simplejson 
 import logging
@@ -34,10 +34,12 @@ def log_info_db(request):
 	print(usergroup_name)
 	user=[]
 	if usergroup_name != None:
-		user = User.objects.filter(username = usergroup_name)
-	if len(user)>0:
-		user = user[0]
-		record = UsageRecords(application = application, usergroup = user, session_id = session_id, time_on_step = time_on_step, step = current_step, direction = direction, timestamp = timestamp)
+		print "not none"
+		group = Group.objects.filter(name = usergroup_name)
+	if len(group)>0:
+		print "yes"
+		group = group[0]
+		record = UsageRecords(application = application, usergroup = group, session_id = session_id, time_on_step = time_on_step, step = current_step, direction = direction, timestamp = timestamp)
 	else:
 		record = UsageRecords(application = application, session_id = session_id, time_on_step = time_on_step, step = current_step, direction = direction, timestamp = timestamp)
 	record.save()
@@ -45,6 +47,25 @@ def log_info_db(request):
 	return HttpResponse("{}",content_type = "application/json")
 	
 	
+def add_group(request):
+	context = RequestContext(request)
+	return render_to_response('exerciser/add_group.html', {}, context)
+
+	
+@requires_csrf_token	
+def create_group(request):
+	group_name = request.POST['group']
+	teacher_username = request.POST['teacher']
+	user = User.objects.filter(username = teacher_username)
+	teacher = Teacher.objects.filter(user=user)
+	print "create"
+	if len(user)>0 and len(teacher)>0:
+		user = user[0]
+		teacher = teacher[0]
+		group = Group(teacher = teacher, name = group_name)
+		group.save()
+		print "created"
+	return HttpResponse("{}",content_type = "application/json")
 
 
 @requires_csrf_token
@@ -151,10 +172,11 @@ def update_teacher_interface_graph_data(request):
 		# maybe you need to pass a querystring to this view so you can work out what app to select stuff for
 		app_name=request.GET['app_name']
 		group_name=request.GET['group']
-		print group_name
-		
+		print "in update graph"
+		print "group",group_name
+		print "app",app_name
 		######## add checks if this group exists???? #######
-		selected_group = User.objects.filter(username = group_name)
+		selected_group = Group.objects.filter(name = group_name)
 		
 		
 		selected_application=Application.objects.filter(name=app_name)
@@ -185,52 +207,7 @@ def teacher_interface(request):
 	# for application in application_list:
 	#	application.url = application.name.replace(' ', '_')
 	print "fde"
-	if request.POST.get('application'):
-		selected_application_name= request.POST['application']
-		selected_application=Application.objects.filter(name=selected_application_name)[0]
-	else:
-		selected_application = application_list[0]
-	selected_data_source =  UsageRecords.objects.filter(application=selected_application)
-	selected_data=[]
-	for record in selected_data_source:
-		print "update"
-		selected_data.append([record.step,record.time_on_step])
 	
-	print selected_data
-	
-	#Step 1: Create a DataPool with the data we want to retrieve.
-	data = \
-		DataPool(
-		series=
-			[{'options': {
-			'source': selected_data_source},
-			'terms': [
-				'step',
-				'time_on_step',]}
-			])
-	#Step 2: Create the Chart object
-	cht = Chart(
-			datasource = data,
-			series_options =
-			  [{'options':{
-				'type': 'line',
-				'stacking': False},
-				'terms':{
-				'step': [
-					'time_on_step',]
-				}}],
-			chart_options =
-			  {'title': {
-				'text': selected_application.name},
-			'xAxis': {
-					'title': {
-					'text': 'Step number'}}})
-	
-	context_dict['some_chart'] = cht
-	print selected_application,"YEY"
-	
-	context_dict['test_data'] = [129.2, 144.0, 176.0, 135.6, 148.5, 216.4, 194.1, 95.6, 54.4, 29.9, 71.5, 106.4]
-	context_dict['data'] = selected_data
 	# Return a rendered response to send to the client.
 	# We make use of the shortcut function to make our lives easier.
 	# Note that the first parameter is the template we wish to use.
@@ -296,7 +273,6 @@ def register(request):
 def user_login(request):
     # Like before, obtain the context for the user's request.
     context = RequestContext(request)
-
     # If the request is a HTTP POST, try to pull out the relevant information.
     if request.method == 'POST':
         # Gather the username and password provided by the user.
@@ -334,8 +310,48 @@ def user_login(request):
         return render_to_response('exerciser/login.html', {}, context)
 		
 @login_required
-def restricted(request):
-    return HttpResponse("Since you're logged in, you can see this text!")
+def statistics(request):
+
+	context = RequestContext(request)
+	teacher_username = request.user
+	print "teacher",teacher_username
+	
+	user = User.objects.filter(username=teacher_username)
+	teacher = Teacher.objects.filter (user=user)
+	groups = Group.objects.filter(teacher=teacher)
+	print len(groups)
+	
+	#Step 1: Create a DataPool with the data we want to retrieve.
+	data = \
+		DataPool(
+		series=
+			[{'options': {
+			'source': UsageRecords.objects.all()},
+			'terms': [
+				'step',
+				'time_on_step',]}
+			])
+	#Step 2: Create the Chart object
+	cht = Chart(
+			datasource = data,
+			series_options =
+			  [{'options':{
+				'type': 'line',
+				'stacking': False},
+				'terms':{
+				'step': [
+					'time_on_step',]
+				}}],
+			chart_options =
+			  {'title': {
+				'text': "app name"},
+			'xAxis': {
+					'title': {
+					'text': 'Step number'}}})
+	
+	context_dict = {'some_chart' : cht, 'groups' : groups}
+	print "YEY"
+    	return render_to_response('exerciser/graph_viewer.html', context_dict, context)
 	
 	
 # Use the login_required() decorator to ensure only those logged in can access the view.

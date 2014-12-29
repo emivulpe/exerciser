@@ -1,0 +1,47 @@
+{% extends 'exerciser/base.html' %}
+{% load poll_extras %}
+	
+
+{% block body_block %}
+		<a href="/exerciser/teacher_interface/">Home</a><br />
+
+        <h1>Register a Group with Exerciser</h1>
+
+       <form action="/exerciser/teacher_interface/">
+			Group ID: <input type="text" name="group">
+			<input id = "button" type="submit" value="Register">
+		</form>
+		<script type="text/javascript" src="/static/jquery-2.1.1.js"></script>
+		<script>
+		    $('#button').click(function () {
+				var group_name = $('input:text[name=group]').val();
+				var csrftoken = getCookie('csrftoken');
+				console.log("{{ user.username }}");
+				$.post("/exerciser/create_group/",
+				{
+					csrfmiddlewaretoken : csrftoken,
+					teacher : "{{ user.username }}",
+					group : group_name
+				});
+
+			});
+		
+		
+		function getCookie(name) {
+			var cookieValue = null;
+			if (document.cookie && document.cookie != '') {
+				var cookies = document.cookie.split(';');
+				for (var i = 0; i < cookies.length; i++) {
+					var cookie = jQuery.trim(cookies[i]);
+					// Does this cookie string begin with the name we want?
+					if (cookie.substring(0, name.length + 1) == (name + '=')) {
+						cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+						break;
+					}
+				}
+			}
+			return cookieValue;
+		}
+		</script>
+		
+{% endblock %}

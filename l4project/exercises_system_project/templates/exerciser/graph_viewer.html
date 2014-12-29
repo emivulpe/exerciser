@@ -1,0 +1,75 @@
+{% extends 'exerciser/base.html' %}
+{% load poll_extras %}
+{% load chartit %}
+	
+<!-- code to include the highcharts and jQuery libraries goes here -->
+<!-- load_charts filter takes a comma-separated list of id's where -->
+<!-- the charts need to be rendered to                             -->
+{% block scripts %}
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+		<script src="/static/js/highcharts.js"></script>
+		<script src="/static/js/exporting.js"></script>	
+		{{ some_chart|load_charts:"container" }}
+{% endblock %}
+
+
+
+
+{% block body_block %}
+
+<a href="/exerciser/teacher_interface/">Home</a><br />
+<a href="/exerciser/logout/">Logout</a><br />
+
+
+<select id="application_list">
+
+	{% for application in applications %}
+		  <option value="{{application.name}}">{{application.name}}</option>
+	{% endfor %}
+</select>
+
+<select id="group_list">
+
+	{% for group in groups %}
+		  <option value="{{group.name}}">Group {{group.name}}</option>
+	{% endfor %}
+</select>
+
+<button id="button" class="autocompare">Set new data</button>
+<div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"> </div>
+
+<script>
+
+$(function ($) {
+
+
+    // the button action
+    $('#button').click(function () {
+	
+		var selected_app = document.getElementById("application_list").value;
+		var group_id=document.getElementById("group_list").value;
+		console.log(selected_app);
+		console.log(group_id);
+		var request = $.get('/exerciser/update_graph/', {app_name:selected_app, group:group_id})
+		
+		request.done(function(selected_data) {
+			// when we get here, the request has succeeded.
+			// this should mean that data is now the data from the ajax request (i.e. from the view above)
+				
+			var chart = $('#container').highcharts();
+			chart.setTitle({ text: selected_app }, { text: "Group " + group_id});
+			chart.series[0].setData(selected_data);
+			console.log("R"+selected_data);
+        });
+		
+       //chart.series[0].setData([129.2, 144.0, 176.0, 135.6, 148.5, 216.4, 194.1, 95.6, 54.4, 29.9, 71.5, 106.4]);
+			
+
+    });
+});
+
+
+
+</script>
+{% endblock %}
+
