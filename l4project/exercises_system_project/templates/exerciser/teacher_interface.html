@@ -1,10 +1,35 @@
-{% extends 'exerciser/base.html' %}
+{% extends 'exerciser/teacher_interface_base.html' %}
 {% load poll_extras %}
+
+
 
 {% block body_block %}
 
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/exerciser/teacher_interface/">
+			<i class="fa fa-home fa-lg landing-icon fa-2x"></i><span class="landing-text">Home</span>
+			</a>
+        </div>
+
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+
+<header class="intro">
+    <div class="intro-body">
 
 
+<!--
 {% if user.is_authenticated %}
 <a href="/exerciser/statistics/">View Statistics</a><br />
 <a href="/exerciser/add_group/">Register Group</a><br />
@@ -14,6 +39,115 @@
 <a href="/exerciser/login/">Login</a><br />
 {% endif %}
 
+-->
+{% if user.is_authenticated %}
+        <div class="container">
+            <div class="row">
+				<div class="col-md-4 text-center">
+					<h1>Register a group</h1><br>
 
+				   <form>
+				   
+				   
+					<p><label for="id_username">Group ID:</label> <input type="text" name="group"></p>
+						<input id="button" type="submit" value="Register">
+					</form>
+				</div>
+				
+				<div class="col-md-4 text-center">
+					<h1 class="brand-heading" style="font-size: 36pt;"><a href="/exerciser/statistics/"><i class="fa fa-bar-chart landing-icon fa-lg fa-5x"></i><br><br><span class="landing-text">View Statistics</span></a></h1>
+				</div>
+				<div class="col-md-4 text-center">
+					<h1 class="brand-heading" style="font-size: 36pt;"><a href="/exerciser/logout/"><i class="fa fa-key landing-icon fa-lg fa-5x"></i><br><br><span class="landing-text">Logout</span></a></h1>
+				</div>
+            </div>			
+        </div>
+
+
+{% else %}
+<a href="/exerciser/register/">Register Here</a><br />
+<a href="/exerciser/login/">Login</a><br />
+        <div class="container">
+            <div class="row">
+				<div class="col-md-6 text-center">
+						{% if request.session.registered %}
+						<i class="fa fa-check"></i>
+						<strong>Thank you for registering! Please log in</strong>
+						{% else %}
+						<h1>Register here!</h1><br />
+
+						<form id="user_form" method="post" action="/exerciser/register/"
+								enctype="multipart/form-data">
+
+							{% csrf_token %}
+
+							<!-- Display each form. The as_p method wraps each element in a paragraph
+								 (<p>) element. This ensures each element appears on a new line,
+								 making everything look neater. -->
+							{{ user_form.as_p }}
+							{{ group_form.as_p }}
+
+							<!-- Provide a button to click to submit the form. -->
+							<input type="submit" name="submit" value="Register" />
+						</form>
+						{% endif %}
+				</div>
+				
+				<div class="col-md-6 text-center">
+					<h1>Login to Exerciser</h1>
+
+					<form id="login_form" method="post" action="/exerciser/login/"><br>
+						{% csrf_token %}
+						
+						
+						<p><label for="id_username">Username:</label> <input id="id_username" maxlength="30" name="username" type="text"></p>
+						
+						<p><label for="id_password">Password:</label> <input id="id_password" name="password" type="password"></p>
+						<input type="submit" value="submit" />
+					</form>
+				</div>
+            </div>			
+        </div>
+
+{% endif %}
+
+    </div>
+</header>
+
+
+
+		<script type="text/javascript" src="/static/jquery-2.1.1.js"></script>
+
+		<script>
+		    $('#button').click(function () {
+				console.log("click");
+				var group_name = $('input:text[name=group]').val();
+				var csrftoken = getCookie('csrftoken');
+				console.log("{{ user.username }}");
+				$.post("/exerciser/create_group/",
+				{
+					csrfmiddlewaretoken : csrftoken,
+					teacher : "{{ user.username }}",
+					group : group_name
+				});
+
+			});
+		
+		
+		function getCookie(name) {
+			var cookieValue = null;
+			if (document.cookie && document.cookie != '') {
+				var cookies = document.cookie.split(';');
+				for (var i = 0; i < cookies.length; i++) {
+					var cookie = jQuery.trim(cookies[i]);
+					// Does this cookie string begin with the name we want?
+					if (cookie.substring(0, name.length + 1) == (name + '=')) {
+						cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+						break;
+					}
+				}
+			}
+			return cookieValue;
+		}
+		</script>
 {% endblock %}
-

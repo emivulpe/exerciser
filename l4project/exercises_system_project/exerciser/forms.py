@@ -9,6 +9,12 @@ class UserForm(forms.ModelForm):
 		model = User
 		fields = ('username', 'password')
 		
+	def __init__(self, *args, **kwargs):
+		super(UserForm, self).__init__(*args, **kwargs)
+
+		for fieldname in ['username']:
+			self.fields[fieldname].help_text = None
+		
 class GroupForm(forms.ModelForm):
     class Meta:
         model = Teacher

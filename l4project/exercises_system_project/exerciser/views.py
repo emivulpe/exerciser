@@ -56,6 +56,7 @@ def add_group(request):
 	
 @requires_csrf_token	
 def create_group(request):
+	print "in create group"
 	group_name = request.POST['group']
 	teacher_username = request.POST['teacher']
 	user = User.objects.filter(username = teacher_username)
@@ -215,11 +216,20 @@ def teacher_interface(request):
 	
 	# Construct a dictionary to pass to the template engine as its context.
 	# Note the key boldmessage is the same as {{ boldmessage }} in the template!
-	context_dict = {'applications' : application_list}
 
 	# for application in application_list:
 	#	application.url = application.name.replace(' ', '_')
 	print "fde"
+	
+	
+	
+	# If it's a HTTP POST, we're interested in processing form data.
+
+	user_form = UserForm()
+	group_form = GroupForm()
+	
+	context_dict = {'applications' : application_list,'user_form': user_form, 'group_form': group_form}
+	
 	
 	# Return a rendered response to send to the client.
 	# We make use of the shortcut function to make our lives easier.
@@ -270,17 +280,10 @@ def register(request):
         else:
             print user_form.errors, group_form.errors
 
-    # Not a HTTP POST, so we render our form using two ModelForm instances.
-    # These forms will be blank, ready for user input.
-    else:
-        user_form = UserForm()
-        group_form = GroupForm()
-
+    print registered
+    request.session['registered'] = registered
     # Render the template depending on the context.
-    return render_to_response(
-            'exerciser/register.html',
-            {'user_form': user_form, 'group_form': group_form,'registered': registered},
-            context)	
+    return HttpResponseRedirect('/exerciser/teacher_interface')
 
 
 def user_login(request):
