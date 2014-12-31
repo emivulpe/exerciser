@@ -100,8 +100,11 @@
 		<script type="text/javascript" src="/static/jquery-2.1.1.js"></script>
 
 		<script>
-		
-		
+$( 'button' ).each(function(){
+    $(this).closest('form').find("input[type=text], textarea").val("");
+	console.log("DA");
+	$("#id_username").val('');
+});
 			$('#register_group').submit(function(e) {
 				e.preventDefault();	
 			});
