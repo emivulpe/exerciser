@@ -18,7 +18,6 @@
 			width: 100%;
 			height: auto;
 			padding: 100px 0;
-			text-align: center;
 		}
 		 
 
@@ -53,7 +52,11 @@
 		<!-- /.container -->
 	</nav>
 
-	{% block body_block %}
-	{% endblock %}
+	<header class="intro">
+		<div class="intro-body">
+		{% block body_block %}
+		{% endblock %}
+		</div>
+	</header>
 	</body>
 </html>

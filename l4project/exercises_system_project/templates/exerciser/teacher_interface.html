@@ -5,28 +5,6 @@
 
 {% block body_block %}
 
-<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
-    <div class="container">
-        <!-- Brand and toggle get grouped for better mobile display -->
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/exerciser/teacher_interface/">
-			<i class="fa fa-home fa-lg landing-icon fa-2x"></i><span class="landing-text">Home</span>
-			</a>
-        </div>
-
-        <!-- /.navbar-collapse -->
-    </div>
-    <!-- /.container -->
-</nav>
-
-<header class="intro">
-    <div class="intro-body">
 
 
 <!--
@@ -45,13 +23,19 @@
             <div class="row">
 				<div class="col-md-4 text-center">
 					<h1>Register a group</h1><br>
-
-				   <form>
-				   
-				   
-					<p><label for="id_username">Group ID:</label> <input type="text" name="group"></p>
-						<input id="button" type="submit" value="Register">
+				   <form id="register_group">
+						<p><label for="id_username">Group ID:</label> <input type="text" name="group"></p>
+						<input id="register_group_button" type="reset" value="Register">
 					</form>
+					<br>
+					<strong id="success_message"></strong>
+				<!--	{% if request.session.group_created %}
+						<i class="fa fa-check"></i>
+						<strong>Your group {{request.session.group_name}} was successfully created</strong>
+					{% else %}
+						<i class="fa fa-check"></i>
+						<strong>There was a problem creating group {{request.session.group_name}}. Please try with another ID</strong>
+					{% endif %} -->
 				</div>
 				
 				<div class="col-md-4 text-center">
@@ -65,14 +49,12 @@
 
 
 {% else %}
-<a href="/exerciser/register/">Register Here</a><br />
-<a href="/exerciser/login/">Login</a><br />
         <div class="container">
             <div class="row">
 				<div class="col-md-6 text-center">
 						{% if request.session.registered %}
-						<i class="fa fa-check"></i>
-						<strong>Thank you for registering! Please log in</strong>
+						<i class="fa fa-check" style="color:green"></i>
+						<strong style="color:green">Thank you for registering! Please log in</strong>
 						{% else %}
 						<h1>Register here!</h1><br />
 
@@ -88,7 +70,7 @@
 							{{ group_form.as_p }}
 
 							<!-- Provide a button to click to submit the form. -->
-							<input type="submit" name="submit" value="Register" />
+							<input id="register_user_button" type="submit" name="submit" value="Register" />
 						</form>
 						{% endif %}
 				</div>
@@ -103,7 +85,7 @@
 						<p><label for="id_username">Username:</label> <input id="id_username" maxlength="30" name="username" type="text"></p>
 						
 						<p><label for="id_password">Password:</label> <input id="id_password" name="password" type="password"></p>
-						<input type="submit" value="submit" />
+						<input id="login_button" type="submit" value="Submit"/>
 					</form>
 				</div>
             </div>			
@@ -111,29 +93,48 @@
 
 {% endif %}
 
-    </div>
-</header>
+
 
 
 
 		<script type="text/javascript" src="/static/jquery-2.1.1.js"></script>
 
 		<script>
-		    $('#button').click(function () {
+		
+		
+			$('#register_group').submit(function(e) {
+				e.preventDefault();	
+			});
+		    $('#register_group_button').click(function () {
 				console.log("click");
 				var group_name = $('input:text[name=group]').val();
 				var csrftoken = getCookie('csrftoken');
 				console.log("{{ user.username }}");
-				$.post("/exerciser/create_group/",
+				var request = $.post("/exerciser/create_group/",
 				{
 					csrfmiddlewaretoken : csrftoken,
 					teacher : "{{ user.username }}",
 					group : group_name
 				});
-
+				
+				request.done(function(test) {
+					if( $(".success_icon").length ){
+						$( ".success_icon" ).remove();
+					}
+					console.log(test);
+					if (test){
+						$("#success_message").before("<i class='fa fa-check success_icon' style='color:green'></i>");
+						$("#success_message").text(" You successfully created group " + group_name + "!");
+						$("#success_message").css("color","green");
+					}
+					else{
+						$("#success_message").before("<i class='fa fa-times success_icon' style='color:red'></i>");
+						$("#success_message").text("Sorry but group with name " + group_name + " already exists. Please choose another name!");
+						$("#success_message").css("color","red");
+					}
+				});
 			});
-		
-		
+
 		function getCookie(name) {
 			var cookieValue = null;
 			if (document.cookie && document.cookie != '') {

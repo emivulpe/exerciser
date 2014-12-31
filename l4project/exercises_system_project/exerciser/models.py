@@ -159,7 +159,7 @@ class Teacher(models.Model):
 		
 class Group(models.Model):
 	teacher = models.ForeignKey(Teacher)
-	name = models.CharField(max_length=100)
+	name = models.CharField(max_length=100, unique=True)
 	
 	
 class UsageRecords(models.Model):

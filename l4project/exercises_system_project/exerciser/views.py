@@ -62,13 +62,17 @@ def create_group(request):
 	user = User.objects.filter(username = teacher_username)
 	teacher = Teacher.objects.filter(user=user)
 	print "create"
+	success = False
 	if len(user)>0 and len(teacher)>0:
 		user = user[0]
 		teacher = teacher[0]
-		group = Group(teacher = teacher, name = group_name)
-		group.save()
-		print "created"
-	return HttpResponse("{}",content_type = "application/json")
+		print "eee", len(Group.objects.filter(teacher=teacher,name=group_name))==0
+		if len(Group.objects.filter(teacher=teacher,name=group_name))==0:
+			group = Group(teacher = teacher, name = group_name)
+			group.save()
+			success = True
+			print "created"
+	return HttpResponse(simplejson.dumps(success),content_type = "application/json")
 
 
 @requires_csrf_token
