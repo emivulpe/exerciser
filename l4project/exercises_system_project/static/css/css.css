@@ -23,6 +23,7 @@
 .panel{
 	height : 100%;
 	width : 100%;
+	margin-top: 10px;
 }
 
 .invisible {
@@ -45,4 +46,14 @@ body, html { /* set size of body to full page and remove margins */
 
 .navbar-brand {
 	float: none;
+}
+
+.nav.nav-center {
+	text-align:center;
+	top: 20px;
+	transform: translate(-50%, -50%);
+	position: absolute;
+	left: 50%;
+	margin-right: -50%;
+	float:left;
 }

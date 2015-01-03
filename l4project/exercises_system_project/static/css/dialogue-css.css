@@ -13,7 +13,7 @@
    opacity: .15;
    filter: alpha(opacity=15);
    -moz-opacity: .15;
-   z-index: 101;
+   z-index: 10000;
    display: none;
 }
 .web_dialog
@@ -29,7 +29,7 @@
    background-color: #ffffff;
    border: 2px solid #336699;
    padding: 0px;
-   z-index: 102;
+   z-index: 10001;
    font-family: Verdana;
    font-size: 10pt;
    word-wrap: nowrap;

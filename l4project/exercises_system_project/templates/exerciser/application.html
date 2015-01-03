@@ -1,38 +1,89 @@
 {% extends 'exerciser/base.html' %}
-{% load poll_extras %}
 {% block style %}
-		
 
-{% endblock %}		
+	#outer_panel{
+		height:70%;
+		margin:5px;
+	}
+
+	#panel_container{
+		height:100%;
+		width:100%;
+	}
+
+	#panel_row{
+		overflow:hidden;
+		text-align:left;
+		width : {{panel_size}}%;
+		height:100%;
+		border:1px solid black;
+	}
+
+	.fragment{
+		margin : 2px"
+	}
+
+	#explanation_row{
+		margin:5px;
+		height : 30%;
+	}
+
+	#explanation_container{
+		height : 100%;
+	}
+
+	#north{
+		z-index: 90;
+		background:red;
+	}
+
+	.question{
+		padding-left: 15px;
+	}
+
+	#question_submit{
+		text-align: center;
+	}
+
+	#question_dialogue{
+		width: 100%;
+		border: 0px;
+	}
+
+{% endblock %}
+
+
 {% block app_name %}{{application_name}}{% endblock %}
-{% block app_controls %}<li><a id="btn_prev" href="#">Previous</a></li><li><a id="btn_next" href="#">Next</a></li><li><a id="btn_reset" href="#">Reset</a></li>{% endblock %}
+{% block app_controls %}
+	<li><a id="btn_prev" href="#" style="position: relative; top: 2px;"><i class="fa fa-step-backward fa-lg landing-icon fa"></i>&nbsp;Previous</a></li>
+	<li><a id="btn_next" href="#" style="position: relative; top: 2px;">Next&nbsp;<i class="fa fa-step-forward fa-lg landing-icon fa"></i></a></li>
+	<li><a id="btn_reset" href="#" style="position: relative; top: 2px;">Reset&nbsp;<i class="fa fa-refresh fa-lg landing-icon fa"></i></a></li>
+{% endblock %}
 
 {% block body_block %}
-		
-
 	{% if application %}
-		{% if panels %}				
-			<div class="row" id = "outer_panel" style = "height:70%;margin:5px;">
-				<table id="panel_container" style = "height:100%;width:100%;">
+		{% if panels %}
+			<div class="row" id = "outer_panel">
+				<table id="panel_container">
 					<tr>
-						{% for panel in panels %}
-							<th class = "panel" style = "overflow:hidden;text-align:left;width : {{panel_size}}%;height:100%;border:1px solid black;">
-								<div class="panel">
-									{% for fragment in panel.getFragments %}
-										{% autoescape off %}
-											<span id = fragment_{{fragment.id}} class = "fragment" style = " margin : 2px">{{ fragment.text }}</span>
-										{% endautoescape %}
-									{% endfor %}
-								</div>
-							</th>
-						{% endfor %}
+					{% for panel in panels %}
+						<th class = "panel" id="panel_row">
+							<div class="panel">
+							{% for fragment in panel.getFragments %}
+								{% autoescape off %}
+								<span id = fragment_{{fragment.id}} class = "fragment">{{ fragment.text }}</span>
+								{% endautoescape %}
+							{% endfor %}
+							</div>
+						</th>
+					{% endfor %}
 					</tr>		
 				</table>
 			</div>
-			<div class="row" style = "margin:5px;height : 30%;">
-				<div class = "resizable explanation_container" style = " height : 100%;">
+			<div class="row" id="explanation_row">
+				<div class = "resizable" id="explanation_container">
 					<div id = "explanation"> </div>
-					<div class="ui-resizable-handle ui-resizable-n" id = "north" style="z-index: 90;background:red;"></div>
+					<div class="ui-resizable-handle ui-resizable-n" id = "north"></div>
 				</div>
 			</div>
 		{% else %}
@@ -44,19 +95,17 @@
 			
 	<div id="overlay" class="web_dialog_overlay"></div>
 	<div id="dialog" class="web_dialog">
-		<table style="width: 100%; border: 0px;" cellpadding="3" cellspacing="0">
+		<table id="question_dialogue" cellpadding="3" cellspacing="0">
 			<tr>
 				<td class="web_dialog_title">Question</td>
-				<td class="web_dialog_title align_right">
-					<a href="#" id="btnClose">Close</a>
-				</td>
+				<td class="web_dialog_title align_right"><a href="#" id="btnClose">Close</a></td>
 			</tr>
 			<tr>
 				<td>&nbsp;</td>
 				<td>&nbsp;</td>
 			</tr>
 			<tr>
-				<td colspan="2" style="padding-left: 15px;">
+				<td colspan="2" class="question">
 					<span id = "question_text"> </span>
 				</td>
 			</tr>
@@ -65,9 +114,8 @@
 				<td>&nbsp;</td>
 			</tr>
 			<tr>
-				<td colspan="2" style="padding-left: 15px;">
-					<form class = "options" id="options" action = "">
-					</form>
+				<td colspan="2" class="question">
+					<form class = "options" id="options" action = ""></form>
 				</td>
 			</tr>
 			<tr>
@@ -75,74 +123,57 @@
 				<td>&nbsp;</td>
 			</tr>
 			<tr>
-				<td colspan="2" style="text-align: center;">
+				<td colspan="2" id="question_submit">
 					<input id="btnSubmit" type="button" value="Submit" />
 				</td>
 			</tr>
 		</table>
 	</div>
+{% endblock %}
 
-	<script type="text/javascript" src="/static/jquery-2.1.1.js"></script>
-	<script type="text/javascript" src="/static/change.js"></script>
-	<script type="text/javascript" src="/static/colResizable-1.4.min.js"></script>
-	<script type="text/javascript" src="/static/jquery-ui.js"></script>
+{% block javascripts %}
+	<script type="text/javascript" src="/static/js/change.js"></script>
+	<script type="text/javascript" src="/static/js/colResizable-1.4.min.js"></script>
+	<script type="text/javascript" src="/static/js/jquery-ui.js"></script>
 
 	<script type="text/javascript">
-		// Stores the sequence of events - nested arrays. Each nested array is [FRAG_ID, STATE]. So [1,'show'] means show fragment with ID 1.
-		// Two levels of nesting - the first one is the actual step, and each subsequent array is an action to perform (in the form above).
+		// Steps - Stores the sequence of events - nested arrays. Each nested array is [FRAG_ID, STATE]. So [1,'show'] means show fragment with ID 1. Two levels of nesting - the first one is the actual step, and each subsequent array is an action to perform (in the form above).
+		// Explanations - Stores the sequence of events - nested arrays. Each nested array is [FRAG_ID, STATE]. So [1,'show'] means show fragment with ID 1. Two levels of nesting - the first one is the actual step, and each subsequent array is an action to perform (in the form above).
 		{% autoescape off %}
-			var steps = {{steps}};
+		var steps = {{steps}};
+		var explanations = {{explanations}};
+		var app_name = "{{application_name}}";
 		{% endautoescape %}
-	</script>
-	
-	<script type="text/javascript">
-		// Stores the sequence of events - nested arrays. Each nested array is [FRAG_ID, STATE]. So [1,'show'] means show fragment with ID 1.
-		// Two levels of nesting - the first one is the actual step, and each subsequent array is an action to perform (in the form above).
-		{% autoescape off %}
-			var explanations = {{explanations}};
-		{% endautoescape %}
-	</script>
-	
-	<script type="text/javascript">
-		{% autoescape off %}
-			var app_name = "{{application_name}}";
-		{% endautoescape %}
-	</script>
-	
-    <script  type="text/javascript">
 		
 		$(function($) {
 			$( ".resizable").resizable();
-        });
-
-
-		$(".explanation_container").bind('resize', function(e) {
-			$("#panel_container").height($("#interface").height()-$(".explanation_container").height());
-			console.log("expl ".concat($(".explanation_container").height()));
+		});
+		
+		$("#explanation_container").bind('resize', function(e) {
+			$("#panel_container").height($("#interface").height()-$("#explanation_container").height());
+			console.log("expl ".concat($("#explanation_container").height()));
 			console.log("interface ".concat($("#interface").height()));
-			console.log("test ".concat($(".explanation_container").height() / $("#interface").height() * 100));
+			console.log("test ".concat($("#explanation_container").height() / $("#interface").height() * 100));
 		});
 		
 		var explanationMaxHeight = 0.6 * $("#interface").height();
-		$(".explanation_container").resizable({
+		$("#explanation_container").resizable({
 			maxHeight: explanationMaxHeight,
 			handles: {n: document.getElementById("north")}
 		});
-	
-
+		
 		var onSampleResized = function(e){
 			var columns = $(e.currentTarget).find("th");
 			var msg = "columns widths: ";
 			columns.each(function(){ msg += $(this).width() + "px; "; })
 			$("#sample2Txt").html(msg);
 			
-		};	
-	
+		};
+		
 		$("#panel_container").colResizable({
 			liveDrag:true, 
 			gripInnerHtml:"<div class='grip'></div>", 
 			draggingClass:"dragging", 
 			onResize:onSampleResized});
-		
 	</script>
 {% endblock %}

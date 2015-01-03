@@ -1,130 +1,79 @@
 {% extends 'exerciser/teacher_interface_base.html' %}
-{% load poll_extras %}
 
-	
-<!-- code to include the highcharts and jQuery libraries goes here -->
-<!-- load_charts filter takes a comma-separated list of id's where -->
-<!-- the charts need to be rendered to                             -->
-{% block scripts %}
-		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
-		<script src="/static/js/highcharts.js"></script>
-		<script src="/static/js/exporting.js"></script>	
+{% block style %}
+#container{
+	min-width: 310px;
+	height: 400px;
+	margin: 0 auto;
+}
+
 {% endblock %}
-
-
-
-
 {% block body_block %}
 
+	<select id="application_list">
+		{% for application in applications %}
+			<option value="{{application.name}}">{{application.name}}</option>
+		{% endfor %}
+	</select>
 
+	<select id="group_list">
+		{% for group in groups %}
+			<option value="{{group.name}}">Group {{group.name}}</option>
+		{% endfor %}
+	</select>
 
-<select id="application_list">
+	<button id="button" class="autocompare">Set new data</button>
+	<i class="fa fa-info-circle"></i><span class="landing-text">Please select an application and a group you would like to view statistics for!</span>
+	<div id="container"> </div>
 
-	{% for application in applications %}
-		  <option value="{{application.name}}">{{application.name}}</option>
-	{% endfor %}
-</select>
+{% endblock %}
 
-<select id="group_list">
+{% block javascripts %}
+	<script src="/static/js/highcharts.js"></script>
+	<script src="/static/js/exporting.js"></script>	
+	<script>
 
-	{% for group in groups %}
-		  <option value="{{group.name}}">Group {{group.name}}</option>
-	{% endfor %}
-</select>
-
-<button id="button" class="autocompare">Set new data</button>
-<i class="fa fa-info-circle"></i><span class="landing-text">Please select an application and a group you would like to view statistics for!</span>
-<div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"> </div>
-
-<script>
-
-/*
-$(function ($) {
-    $('#container').highcharts({
-        title: {
-            text: 'Chart without categories, falls back to numbers'
-        },
-        xAxis: {
-        },
-        series: [{
-            data: []
-        }]
-    });
-});
-
-*/
-
-$(function ($) {
-
-
-    // the button action
-    $('#button').click(function () {
-	
-		var selected_app = document.getElementById("application_list").value;
-		var group_id=document.getElementById("group_list").value;
-		console.log(selected_app);
-		console.log(group_id);
-		var request = $.get('/exerciser/update_graph/', {app_name:selected_app, group:group_id})
-		//console.log("here");
-		request.done(function(selected_data) {
-		console.log("here");
-
-			// when we get here, the request has succeeded.
-			// this should mean that data is now the data from the ajax request (i.e. from the view above)
-				
-				
-				
-			if(selected_data.length>0){
-				categories = [];
-
-				for (i = 0; i < selected_data.length; i++) { 
-					categories[i]=i+1;
-				}
-				$('#container').highcharts({
-					title: {
-						text: selected_app
-					},
-					subtitle: {
-						text: "Group " + group_id
-					},
-					xAxis: {
-						categories:categories
-					},
-					series: [{
-						data: selected_data
-					}]
+		$(function ($) {
+			// the button action
+			$('#button').click(function () {
+				var selected_app = document.getElementById("application_list").value;
+				var group_id=document.getElementById("group_list").value;
+				console.log(selected_app);
+				console.log(group_id);
+				var request = $.get('/exerciser/update_graph/', {app_name:selected_app, group:group_id})
+				//console.log("here");
+				request.done(function(selected_data) {
+					console.log("here");
+					// when we get here, the request has succeeded.
+					// this should mean that data is now the data from the ajax request (i.e. from the view above)
+					if(selected_data.length>0){
+						categories = [];
+						for (i = 0; i < selected_data.length; i++) { 
+							categories[i]=i+1;
+						}
+						$('#container').highcharts({
+							title: {
+								text: selected_app
+							},
+							subtitle: {
+								text: "Group " + group_id
+							},
+							xAxis: {
+								categories:categories
+							},
+							series: [{
+								data: selected_data
+							}]
+						});
+					}
+					else{
+						$('#container').find('.highcharts-container').hide();
+						$('#container').text("There are no statistics for the current selection");
+					}
 				});
-			}
-			else{
-			    $('#container').find('.highcharts-container').hide();
-				$('#container').text("There are no statistics for the current selection");
-				
-			}
-			/*
-			var chart = $('#container').highcharts();
-			chart.setTitle({ text: selected_app }, { text: "Group " + group_id});
-			chart.series[0].setData(selected_data);
-			categories = [];
+			});
+		});
 
-			for (i = 0; i < selected_data.length; i++) { 
-				console.log(i);
-				categories[i]=i+1;
-				console.log(categories[i]);
-			}
-			console.log(categories[0]);
-			chart.xAxis[0].setCategories(categories);
-			console.log("R"+selected_data);
-			*/
-        });
-		
-       //chart.series[0].setData([129.2, 144.0, 176.0, 135.6, 148.5, 216.4, 194.1, 95.6, 54.4, 29.9, 71.5, 106.4]);
-			
-
-    });
-});
-
-
-
-</script>
+	</script>
 {% endblock %}
 

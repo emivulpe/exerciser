@@ -1,46 +1,65 @@
 {% extends 'exerciser/base.html' %}
-{% block title %}Exercise!{% endblock %}
-{% block body_block %}
 
-    <h1>Welcome</h1>
-			
-	<form>
-	Group ID: 
-	<input id = "group" type="text" name="GroupName"></td></tr>
-	<input  id = "submit" type="submit" value="Submit">
-	</form>
-		
-    <a href="/exerciser/about/">About</a><br />
-	<script type="text/javascript" src="/static/jquery-2.1.1.js"></script>
+{% block title %}Exercise!{% endblock %}
+
+{% block style %}
+	.brand-heading{
+		font-size: 36pt;
+	}
+{% endblock %}
+
+{% block body_block %}
+	<div class="container">
+		<div class="row">
+			<div class="col-md-6 text-center">
+				<h1>Specify your group</h1>
+				<br>
+				<form style="margin-top: 10px; margin-right: 5px; padding: 5px; font-size: 14pt; font-weight: bold;">Group ID: 
+					<input id = "group" type="text" name="GroupName" style="margin: 10px 5px 0 10px; padding: 5px; font-size: 12pt; font-weight: bold;" /><br />
+					Teacher ID: <input id = "teacher" type="text" name="TeacherId" style="margin-top: 10px; margin-right: 5px; padding: 5px; font-size: 12pt; font-weight: bold;" /><br />
+					<input  id = "submit" type="submit" value="Submit" style="margin-top: 10px; margin-right: 5px; padding: 5px; font-size: 14pt; font-weight: bold;" />
+				</form>
+				<br>
+				<strong id="success_message"></strong>
+			</div>
+				
+			<div class="col-md-6 text-center">
+				<h1 class="brand-heading"><a href="#"><i class="fa fa-info landing-icon fa-lg fa-5x"></i><br><br><span class="landing-text">About Info</span></a></h1>
+			</div>
+		</div>			
+	</div>
+{% endblock %}
+
+
+{% block javascripts %}
+	<script type="text/javascript" src="/static/js/cookieAccessor.js"></script>
 	<script> 
+	
+	
+		$('#group_form').submit(function(e) {
+			e.preventDefault();	
+		});
+		
 		$("#submit").click(function (e){
 			var csrftoken = getCookie('csrftoken');
 			var group = $("#group").val();
 			console.log(group);
-			$.post("/exerciser/register_group_with_session/",
+			var request = $.post("/exerciser/register_group_with_session/",
 			{
 			group : group,
 			csrfmiddlewaretoken : csrftoken
-			
+			});
+			request.done(function(success) {
+				console.log("weird");
+				if(success){
+					console.log("REG");
+					$("#success_message").text("You are currently registered with teacher ID ... and group ID " + group + ".");
+				}
 			});
 		});
 		
 		
-		function getCookie(name) {
-			var cookieValue = null;
-			if (document.cookie && document.cookie != '') {
-				var cookies = document.cookie.split(';');
-				for (var i = 0; i < cookies.length; i++) {
-					var cookie = jQuery.trim(cookies[i]);
-					// Does this cookie string begin with the name we want?
-					if (cookie.substring(0, name.length + 1) == (name + '=')) {
-						cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-						break;
-					}
-				}
-			}
-			return cookieValue;
-		}
+
 
 	</script>
 {% endblock %}

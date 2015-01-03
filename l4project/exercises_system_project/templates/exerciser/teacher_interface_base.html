@@ -7,28 +7,13 @@
 
 		<title>Teacher Interface</title>
 
-
 		<link rel="stylesheet" href="{% static 'font-awesome-4.2.0/css/font-awesome.min.css' %} ">
+		<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
+		<link rel="stylesheet" href="{% static 'css/teacher_interface.css' %}" />
 
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
-		<style>
-		
-		.intro {
-			display: table;
-			width: 100%;
-			height: auto;
-			padding: 100px 0;
-		}
-		 
-
-
-		</style>
 		{% block style %} {% endblock %}
-		{% block scripts %} {% endblock %}
+
 	</head>
-
-
-
 
 	<body>
 
@@ -46,7 +31,6 @@
 				<i class="fa fa-home fa-lg landing-icon fa-2x"></i><span class="landing-text">Home</span>
 				</a>
 			</div>
-
 			<!-- /.navbar-collapse -->
 		</div>
 		<!-- /.container -->
@@ -58,5 +42,8 @@
 		{% endblock %}
 		</div>
 	</header>
+	<script type="text/javascript" src="/static/js/jquery-2.1.1.js"></script>
+	{% block javascripts %}
+	{% endblock %}
 	</body>
 </html>
