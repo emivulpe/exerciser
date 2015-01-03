@@ -1,6 +1,6 @@
 from django.template import RequestContext
 from django.shortcuts import render_to_response
-from exerciser.models import Application, Panel, Process, Document, Change, Step, Explanation, UsageRecords, QuestionsData, Group, Teacher
+from exerciser.models import Application, Panel, Document, Change, Step, Explanation, UsageRecord, QuestionRecord, Group, Teacher, Question, Option
 import json 
 import simplejson 
 import datetime
@@ -30,48 +30,69 @@ def log_info_db(request):
 	example_name = request.POST['example_name']
 	application = Application.objects.filter(name=example_name)[0]
 	timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-	usergroup_name = request.session.get('group', None)
-	print(usergroup_name)
-	user=[]
-	if usergroup_name != None:
+
+	
+	record = UsageRecord(application = application, session_id = session_id, time_on_step = time_on_step, step = current_step, direction = direction, timestamp = timestamp)
+	
+	usergroup = request.session.get('teacher_group', None)
+	print(usergroup)
+	if usergroup != None:
 		print "not none"
+		teacher_username=usergroup[0]
+		usergroup_name=usergroup[1]
+		user=User.objects.filter(username=teacher_username)
+		teacher=Teacher.objects.filter(user=user)
 		group = Group.objects.filter(name = usergroup_name)
-	if len(group)>0:
-		print "yes"
-		group = group[0]
-		record = UsageRecords(application = application, usergroup = group, session_id = session_id, time_on_step = time_on_step, step = current_step, direction = direction, timestamp = timestamp)
-	else:
-		record = UsageRecords(application = application, session_id = session_id, time_on_step = time_on_step, step = current_step, direction = direction, timestamp = timestamp)
+		if len(group)>0 and len(teacher) > 0: #both have to be >0 because we can't record only group or teacher
+			print "yes"
+			teacher = teacher[0]
+			group = group[0]
+			record.usergroup = group
+			record.teacher = teacher
+
+
 	record.save()
 	print("test")
 	return HttpResponse("{}",content_type = "application/json")
 
 	
 	
-	
-def log_qustion_info_db(request):
+###### Similar to the other log. Refactor ############
+@requires_csrf_token
+def log_question_info_db(request):
 	print "log question"
 	time_on_question = request.POST['time']
 	current_step = request.POST['step']
 	session_id = request.session.session_key
 	example_name = request.POST['example_name']
-	answer = request.POST['answer']
+	answer_text = request.POST['answer']
+	
 	application = Application.objects.filter(name=example_name)[0]
+	step = Step.objects.filter(application=application, order=current_step)[0]
+	question = Question.objects.filter(step=step)[0]
+	answer = Option.objects.filter(question=question,content=answer_text)[0]
+	
 	timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-	usergroup_name = request.session.get('group', None)
-	print(usergroup_name)
-	user=[]
-	if usergroup_name != None:
+	usergroup= request.session.get('teacher_group', None)
+	
+	print(usergroup)
+	record = UsageRecord(application = application, session_id = session_id, time_on_step = time_on_question, step = current_step, timestamp = timestamp)
+	if usergroup != None:
 		print "not none"
+		teacher_username=usergroup[0]
+		usergroup_name=usergroup[1]
+		user=User.objects.filter(username=teacher_username)
+		teacher=Teacher.objects.filter(user=user)
 		group = Group.objects.filter(name = usergroup_name)
-	record = UsageRecords(application = application, session_id = session_id, time_on_step = time_on_question, step = current_step, direction = direction, timestamp = timestamp)
-	if len(group)>0:
-		print "yes"
-		group = group[0]
-		record.usergroup = group
-	question = QuestionsData(record=record,answer=answer)
+		if len(group)>0 and len(teacher) > 0: #both have to be >0 because we can't record only group or teacher
+			print "yes"
+			teacher = teacher[0]
+			group = group[0]
+			record.usergroup = group
+			record.teacher = teacher
 	record.save()
-	question.save()
+	question_record = QuestionRecord(record=record,answer=answer)
+	question_record.save()
 	print("test success")
 	return HttpResponse("{}",content_type = "application/json")
 	
@@ -110,9 +131,20 @@ def create_group(request):
 @requires_csrf_token
 def register_group_with_session(request):
 	print("register")
-	group = request.POST['group']
-	request.session['group'] = group
-	success=True
+	teacher_username = request.POST['teacher']
+	group_name = request.POST['group']
+	success=False
+	user = User.objects.filter(username=teacher_username)
+	if len(user) > 0 :
+
+		teacher = Teacher.objects.filter(user=user)
+		print "teacher exists ",group_name,len(Group.objects.filter(teacher=teacher, name=group_name))
+		if len(Group.objects.filter(teacher=teacher, name=group_name)) > 0:
+			print "group exists"
+			request.session['teacher_group'] = [teacher_username, group_name]
+			success = True
+
+	print "success",success
 	return HttpResponse(simplejson.dumps(success),content_type = "application/json")
 
 def index(request):
@@ -157,9 +189,8 @@ def application(request, application_name_url):
 		panels = Panel.objects.filter(application = application)
 		context_dict['panels'] = panels
 			
-		process = Process.objects.filter(application = application)
 		
-		steps = Step.objects.filter(process = process)
+		steps = Step.objects.filter(application=application)
 		stepChanges = []
 		explanations = []
 		for step in steps:
@@ -210,7 +241,7 @@ def update_teacher_interface_graph_data(request):
 
 			selected_group = selected_group[0]
 			selected_application = selected_application[0]
-			selected_data_source = UsageRecords.objects.filter(application=selected_application,usergroup=selected_group)
+			selected_data_source = UsageRecord.objects.filter(application=selected_application,usergroup=selected_group)
 			
 			#### Getting averages ##########
 			num_steps = selected_data_source.aggregate(max = Max('step'))
@@ -218,7 +249,7 @@ def update_teacher_interface_graph_data(request):
 			if num_steps['max'] != None:
 				for step in range(1, num_steps['max']+1):
 					print "in"
-					record = UsageRecords.objects.filter(application=selected_application,usergroup=selected_group, step = step)
+					record = UsageRecord.objects.filter(application=selected_application,usergroup=selected_group, step = step)
 					average = record.aggregate(time = Avg('time_on_step'))
 					selected_data.append([average['time']])
 					print "hehe",step,average['time']

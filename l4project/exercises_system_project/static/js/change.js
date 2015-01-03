@@ -182,7 +182,7 @@ $(document).ready(function ()
 		HideDialog();
 		e.preventDefault();
 		var now = new Date().getTime();
-		$.post("/exerciser/log_info/",
+		$.post("/exerciser/log_question_info_db/",
 		{	time : (now - lastTime) / 1000,
 			step : currentStep,
 			answer : answer,

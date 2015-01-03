@@ -14,7 +14,7 @@
 			<div class="col-md-6 text-center">
 				<h1>Specify your group</h1>
 				<br>
-				<form style="margin-top: 10px; margin-right: 5px; padding: 5px; font-size: 14pt; font-weight: bold;">Group ID: 
+				<form id="group_form" style="margin-top: 10px; margin-right: 5px; padding: 5px; font-size: 14pt; font-weight: bold;">Group ID: 
 					<input id = "group" type="text" name="GroupName" style="margin: 10px 5px 0 10px; padding: 5px; font-size: 12pt; font-weight: bold;" /><br />
 					Teacher ID: <input id = "teacher" type="text" name="TeacherId" style="margin-top: 10px; margin-right: 5px; padding: 5px; font-size: 12pt; font-weight: bold;" /><br />
 					<input  id = "submit" type="submit" value="Submit" style="margin-top: 10px; margin-right: 5px; padding: 5px; font-size: 14pt; font-weight: bold;" />
@@ -42,10 +42,12 @@
 		
 		$("#submit").click(function (e){
 			var csrftoken = getCookie('csrftoken');
+			var teacher = $("#teacher").val();
 			var group = $("#group").val();
 			console.log(group);
 			var request = $.post("/exerciser/register_group_with_session/",
 			{
+			teacher : teacher,
 			group : group,
 			csrfmiddlewaretoken : csrftoken
 			});
@@ -53,7 +55,11 @@
 				console.log("weird");
 				if(success){
 					console.log("REG");
-					$("#success_message").text("You are currently registered with teacher ID ... and group ID " + group + ".");
+					$("#success_message").text("You are currently registered with teacher ID " + teacher + " and group ID " + group + ".");
+				}
+				else{
+					console.log("no such group");
+					$("#success_message").text("Sorry, but teacher ID " + teacher + " and group ID " + group + " are invalid. Please, try again, or continue anonymously!");
 				}
 			});
 		});

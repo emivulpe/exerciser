@@ -10,10 +10,10 @@ def populate(filepath):
 	root = tree.getroot()
 	for process in root:
 		processAttrDict = process.attrib
-		p = add_process(processAttrDict)
+		application = get_application(processAttrDict)
 		for step in process:
 			stepAttrDict = step.attrib
-			s = add_step(p, stepAttrDict)
+			s = add_step(application, stepAttrDict)
 			for element in step: 
 				if element.tag == 'change':
 					add_change(s,element)
@@ -25,25 +25,15 @@ def populate(filepath):
     # Print out what we have added to the user.
 	
 	
-"""
-	for p in Process.objects.all():
-		for s in Step.objects.filter(process = p):
-			for c in Change.objects.filter(step = s):
-				print "Process {0}, Step {1}, Change {2}".format(str(p), str(s), str(c))
-			for q in Question.object.filter(step = s):
-				print "Process {0}, Step {1}, Question {2}".format(str(p), str(s), str(q))
-"""	
 
-def add_process(attributesDict):
-	name = attributesDict['name']
-	app = attributesDict['app']
-	application = Application.objects.get(name = app)
-	p = Process.objects.get_or_create(name = name,application=application)[0]
-	return p
+def get_application(attributesDict):
+	app_name = attributesDict['app']
+	application = Application.objects.get(name = app_name)
+	return application
 	
-def add_step(process, attributesDict):
+def add_step(application, attributesDict):
     order = attributesDict['num']
-    s = Step.objects.get_or_create(process = process, order = order)[0]
+    s = Step.objects.get_or_create(application=application, order = order)[0]
     return s
 
 #assumes that fragment and operation appear at most once. If more, the last value is taken
@@ -68,7 +58,7 @@ def add_change(step, element):
 				document = Document.objects.get(name = documentName)
 			elif child.tag == 'question':
 				questionText = child.attrib['content']
-				question = Question.objects.get_or_create(document = document, step = step, questionText = questionText)[0]
+				question = Question.objects.get_or_create(step = step, questionText = questionText)[0]
 				for option in child:
 					optionAttributesList = option.attrib
 					number = json.loads(optionAttributesList['num'])
@@ -104,5 +94,5 @@ def add_question(step, question):
 if __name__ == '__main__':
     print "Starting DocumentFragment population script..."
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'exercises_system_project.settings')
-    from exerciser.models import Process, Step, Change, Question, Explanation, Option, Fragment, Document, Application
+    from exerciser.models import Step, Change, Question, Explanation, Option, Fragment, Document, Application
     populate("C:\Users\Emi\Desktop\lvl4project\project\Current IWE\Resources\projects\cs1ct\Processes.xml")

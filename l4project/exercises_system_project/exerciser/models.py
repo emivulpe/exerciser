@@ -47,23 +47,15 @@ class UserProfile(models.Model):
         return self.user.username
 
 
-class Process(models.Model):
-    application = models.ForeignKey(Application)
-    name = models.CharField(max_length=128, unique=True)
-	
-
-    def __unicode__(self):
-        return self.name
 
 class Step(models.Model):
-    process = models.ForeignKey(Process)
+    application = models.ForeignKey(Application)
     order = models.IntegerField()
 
     def __unicode__(self):
         return str(self.order)
 		
 class Question(models.Model):
-    document = models.ForeignKey(Document)
     step = models.ForeignKey(Step)
     questionText = models.TextField()
 
@@ -162,8 +154,9 @@ class Group(models.Model):
 	name = models.CharField(max_length=100, unique=True)
 	
 	
-class UsageRecords(models.Model):
+class UsageRecord(models.Model):
 	application = models.ForeignKey(Application)
+	teacher = models.ForeignKey(Teacher, blank=True, null=True)
 	usergroup = models.ForeignKey(Group, blank=True, null=True)
 	session_id = models.CharField(max_length=100)
 	time_on_step = models.FloatField()
@@ -171,9 +164,6 @@ class UsageRecords(models.Model):
 	direction = models.CharField(max_length=10)
 	timestamp = models.DateTimeField('timestamp', null=True, blank=True)
 
-
-
-	
-class QuestionsData(models.Model):
-	record = models.OneToOneField(UsageRecords)
-	answer = models.TextField()
+class QuestionRecord(models.Model):
+	record = models.OneToOneField(UsageRecord)
+	answer = models.ForeignKey(Option)
