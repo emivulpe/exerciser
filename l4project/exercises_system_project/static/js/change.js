@@ -53,12 +53,12 @@ function goToStep(direction) {
 			}
 			
 		}
-		if(action != "question"){
+		if(action != "question" && currentStep > 0){
 			var now = new Date().getTime();			
 			$.post("/exerciser/log_info_db/",
 			{
 			time : (now - lastTime) / 1000,
-			step : currentStep + 1,
+			step : currentStep,
 			direction : direction,
 			csrfmiddlewaretoken : csrftoken,
 			example_name : app_name
@@ -182,13 +182,15 @@ $(document).ready(function ()
 		HideDialog();
 		e.preventDefault();
 		var now = new Date().getTime();
-		$.post("/exerciser/log_question_info_db/",
-		{	time : (now - lastTime) / 1000,
-			step : currentStep,
-			answer : answer,
-			example_name : app_name,
-			csrfmiddlewaretoken : csrftoken
-		});
+		if(currentStep>0){
+			$.post("/exerciser/log_question_info_db/",
+			{	time : (now - lastTime) / 1000,
+				step : currentStep,
+				answer : answer,
+				example_name : app_name,
+				csrfmiddlewaretoken : csrftoken
+			});
+		}
 		lastTime = now;
 		answer = " You answered: " + answer + "<br>";
 		goToStep("next");

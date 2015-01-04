@@ -10,9 +10,14 @@
 {% endblock %}
 {% block body_block %}
 
+	<select id="statistics_options">
+		<option value="time">Average Time</option>
+		<option value="answers">Question Answers</option>
+	</select>
+	
 	<select id="application_list">
 		{% for application in applications %}
-			<option value="{{application.name}}">{{application.name}}</option>
+			<option id="id_{{application.name}}" value="{{application.name}}">{{application.name}}</option>
 		{% endfor %}
 	</select>
 
@@ -22,7 +27,7 @@
 		{% endfor %}
 	</select>
 
-	<button id="button" class="autocompare">Set new data</button>
+	<button id="set_data_button" class="autocompare">Set new data</button>
 	<i class="fa fa-info-circle"></i><span class="landing-text">Please select an application and a group you would like to view statistics for!</span>
 	<div id="container"> </div>
 
@@ -32,45 +37,98 @@
 	<script src="/static/js/highcharts.js"></script>
 	<script src="/static/js/exporting.js"></script>	
 	<script>
-
+		{% autoescape off %}
+		var app_questions_dict = {{app_questions_dict}};
+		{% endautoescape %}
+		var apps_without_questions=[];
+		for (var application in app_questions_dict) {
+			if (app_questions_dict[application].length == 0){
+				apps_without_questions.push(application);
+			}
+		}
+		console.log(apps_without_questions);
 		$(function ($) {
+			$('#statistics_options').on('change', function() {
+				if (this.value=="answers"){
+					$( this ).after( "<select id='test'><option value='time'>Average Time</option>		<option value='answers'>Question Answers</option>	</select>" );
+					for (var index in apps_without_questions) {
+							console.log(application);
+							$("#id_"+apps_without_questions[index]).wrap('<span/>'); //hide it-no questions (cross-browser compatible)
+					}
+				}
+				else{
+					if ($("#test").length > 0){
+						$("#test").remove();
+					}
+					for (var index in apps_without_questions) {
+						$("#id_"+apps_without_questions[index]).unwrap(); //hide it-no questions (cross-browser compatible)
+					}
+
+					
+				}
+			});
+
+
 			// the button action
-			$('#button').click(function () {
+			$('#set_data_button').click(function () {
+				var option=document.getElementById("statistics_options").value;
 				var selected_app = document.getElementById("application_list").value;
 				var group_id=document.getElementById("group_list").value;
 				console.log(selected_app);
 				console.log(group_id);
-				var request = $.get('/exerciser/update_graph/', {app_name:selected_app, group:group_id})
+				var categories=[];
+				var sel_data=[];
+				var chartType="";
+				var question="";
+				if(option=="time"){
+					chartType="line";
+				}
+				else{
+					chartType="column";
+					question="Is the solution going to be principally a repetition, a conditional or a sequence?";
+				}
+				console.log("time");
+				var request = $.get('/exerciser/update_graph/', {app_name:selected_app, group:group_id, info_type:option,question:question})
 				//console.log("here");
 				request.done(function(selected_data) {
 					console.log("here");
 					// when we get here, the request has succeeded.
 					// this should mean that data is now the data from the ajax request (i.e. from the view above)
-					if(selected_data.length>0){
-						categories = [];
-						for (i = 0; i < selected_data.length; i++) { 
+					sel_data=selected_data;
+					console.log("sel" + sel_data);
+					console.log("data " + sel_data);
+					if(sel_data.length>0){
+						console.log("data>0");
+						for (i = 0; i < sel_data.length; i++) { 
 							categories[i]=i+1;
 						}
+										
 						$('#container').highcharts({
-							title: {
-								text: selected_app
-							},
-							subtitle: {
-								text: "Group " + group_id
-							},
-							xAxis: {
-								categories:categories
-							},
-							series: [{
-								data: selected_data
-							}]
+										chart: {
+											type: chartType
+										},
+										title: {
+											text: selected_app
+										},
+										subtitle: {
+											text: "Group " + group_id
+										},
+										xAxis: {
+											categories:categories
+										},
+										series: [{
+											data: sel_data
+										}]
 						});
 					}
+					
+							
 					else{
 						$('#container').find('.highcharts-container').hide();
 						$('#container').text("There are no statistics for the current selection");
 					}
 				});
+
 			});
 		});
 

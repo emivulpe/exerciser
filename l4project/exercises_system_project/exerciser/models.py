@@ -56,11 +56,12 @@ class Step(models.Model):
         return str(self.order)
 		
 class Question(models.Model):
+    application = models.ForeignKey(Application)
     step = models.ForeignKey(Step)
-    questionText = models.TextField()
+    question_text = models.TextField()
 
     def __unicode__(self):
-        return self.questionText
+        return self.question_text
 
 class Change(models.Model):
 	step = models.ForeignKey(Step)
@@ -83,7 +84,7 @@ class Change(models.Model):
 				result.append([fragment.id, 'show'])
 			return result
 		elif self.operation == 'Ask Answer':
-			question_text = self.question.questionText
+			question_text = self.question.question_text
 			options = Option.objects.filter(question = self.question)
 			option_list = []
 			for option in options:
@@ -107,7 +108,7 @@ class Explanation(models.Model):
 #    correctAnswer = models.CharField(max_length = 128)
 
 #    def __unicode__(self):
-#        return self.questionText
+#        return self.question_text
 
 class Option(models.Model):
     question = models.ForeignKey(Question)
@@ -163,7 +164,26 @@ class UsageRecord(models.Model):
 	step = models.PositiveSmallIntegerField()
 	direction = models.CharField(max_length=10)
 	timestamp = models.DateTimeField('timestamp', null=True, blank=True)
+	
+	def __unicode__(self):
+		if self.teacher != None:
+			teacher=self.teacher.user.username
+		else:
+			teacher="No teacher"
+		if self.usergroup != None:
+			group=self.usergroup.name
+		else:
+			group="No group"
+		return " ".join((self.application.name ," teacher: ",teacher," group: ",group))
 
-class QuestionRecord(models.Model):
+class QuestionRecord1(models.Model):
 	record = models.OneToOneField(UsageRecord)
+	answer = models.ForeignKey(Option)
+	
+class QuestionRecord(models.Model):
+	application = models.ForeignKey(Application)
+	question = models.ForeignKey(Question)
+	teacher = models.ForeignKey(Teacher, blank=True, null=True)
+	usergroup = models.ForeignKey(Group, blank=True, null=True)
+	session_id = models.CharField(max_length=100)
 	answer = models.ForeignKey(Option)

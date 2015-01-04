@@ -16,7 +16,7 @@ def populate(filepath):
 			s = add_step(application, stepAttrDict)
 			for element in step: 
 				if element.tag == 'change':
-					add_change(s,element)
+					add_change(application,s,element)
 				elif element.tag == 'explanation':
 					add_explanation(s,element)
 
@@ -37,7 +37,7 @@ def add_step(application, attributesDict):
     return s
 
 #assumes that fragment and operation appear at most once. If more, the last value is taken
-def add_change(step, element):
+def add_change(application, step, element):
 	fragment = None
 	operation = ''
 	document = ''
@@ -57,8 +57,8 @@ def add_change(step, element):
 				documentName = child.text
 				document = Document.objects.get(name = documentName)
 			elif child.tag == 'question':
-				questionText = child.attrib['content']
-				question = Question.objects.get_or_create(step = step, questionText = questionText)[0]
+				question_text = child.attrib['content']
+				question = Question.objects.get_or_create(application=application, step = step, question_text = question_text)[0]
 				for option in child:
 					optionAttributesList = option.attrib
 					number = json.loads(optionAttributesList['num'])
@@ -76,12 +76,12 @@ def add_explanation(step, element):
 	text = text.replace('\n','<br>').replace('\r', '<br>');
 	e = Explanation.objects.get_or_create(step = step, text = text)[0]
 	return e
-	
+"""	
 def add_question(step, question):
 	questionAttributesDict = question.attrib
-	questionText = questionAttributesDict['content']
+	question_text = questionAttributesDict['content']
 	questionType = questionAttributesDict['type']
-	q = Question.objects.get_or_create(step = step, questionText = questionText)[0]
+	q = Question.objects.get_or_create(step = step, question_text = question_text)[0]
 	if questionType == 'MULTI_CHOICE':
 		for option in question:
 			optionAttributesList = option.attrib
@@ -89,7 +89,7 @@ def add_question(step, question):
 			content = optionAttributesList['content']
 			o = Option.objects.get_or_create(question = q, number = number, content = content)[0]
 	return q
-	
+"""
 # Start execution here!
 if __name__ == '__main__':
     print "Starting DocumentFragment population script..."

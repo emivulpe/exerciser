@@ -15,9 +15,6 @@ from django.contrib.auth.models import User
 from chartit import DataPool, Chart
 from django.db.models import Avg
 from django.db.models import Count, Max
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 @requires_csrf_token
@@ -27,8 +24,8 @@ def log_info_db(request):
 	current_step = request.POST['step']
 	direction = request.POST['direction']
 	session_id = request.session.session_key
-	example_name = request.POST['example_name']
-	application = Application.objects.filter(name=example_name)[0]
+	application_name = request.POST['example_name']
+	application = Application.objects.filter(name=application_name)[0]
 	timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 	
@@ -64,10 +61,10 @@ def log_question_info_db(request):
 	time_on_question = request.POST['time']
 	current_step = request.POST['step']
 	session_id = request.session.session_key
-	example_name = request.POST['example_name']
+	application_name = request.POST['example_name']
 	answer_text = request.POST['answer']
 	
-	application = Application.objects.filter(name=example_name)[0]
+	application = Application.objects.filter(name=application_name)[0]
 	step = Step.objects.filter(application=application, order=current_step)[0]
 	question = Question.objects.filter(step=step)[0]
 	answer = Option.objects.filter(question=question,content=answer_text)[0]
@@ -76,7 +73,7 @@ def log_question_info_db(request):
 	usergroup= request.session.get('teacher_group', None)
 	
 	print(usergroup)
-	record = UsageRecord(application = application, session_id = session_id, time_on_step = time_on_question, step = current_step, timestamp = timestamp)
+	question_record=QuestionRecord(application=application,question=question,answer=answer)
 	if usergroup != None:
 		print "not none"
 		teacher_username=usergroup[0]
@@ -88,25 +85,12 @@ def log_question_info_db(request):
 			print "yes"
 			teacher = teacher[0]
 			group = group[0]
-			record.usergroup = group
-			record.teacher = teacher
-	record.save()
-	question_record = QuestionRecord(record=record,answer=answer)
+			question_record.usergroup = group
+			question_record.teacher = teacher
 	question_record.save()
 	print("test success")
 	return HttpResponse("{}",content_type = "application/json")
 	
-@requires_csrf_token
-def log_info(request):
-	print("test3")
-	time = request.POST['time']
-	current_step = request.POST['step']
-	direction = request.POST['direction']
-	answer = request.POST['answer']
-	filename ="C://Users//Emi//" +  request.session.session_key + ".txt"
-	logging.basicConfig(filename=filename,level=logging.INFO)
-	logger.info("Time: " + time + " " + "[" + direction + "] Going to step " + current_step + answer)
-	return HttpResponse("{}",content_type = "application/json")
 	
 @requires_csrf_token
 def create_group(request):
@@ -222,39 +206,57 @@ def application(request, application_name_url):
 	# Go render the response and return it to the client.
 	return render_to_response('exerciser/application.html', context_dict, context)
 
+	
+@login_required		
 def update_teacher_interface_graph_data(request):
 		# do what you need to do to get the data
 		# maybe you need to pass a querystring to this view so you can work out what app to select stuff for
 		app_name=request.GET['app_name']
 		group_name=request.GET['group']
+		
+		#####
+		info_type=request.GET['info_type']
+		
 		print "in update graph"
 		print "group",group_name
 		print "app",app_name
-		
 
-		
-		
+		teacher_username = request.user
+		user=User.objects.filter(username=teacher_username)
+		teacher=Teacher.objects.filter(user=user)
 		selected_group = Group.objects.filter(name = group_name)
 		selected_application=Application.objects.filter(name=app_name)
 		selected_data=[]
-		if len(selected_group)>0 and len(selected_application)>0:
-
+		if len(selected_group)>0 and len(selected_application)>0 and len(teacher)>0:
+			teacher = teacher[0]
 			selected_group = selected_group[0]
 			selected_application = selected_application[0]
-			selected_data_source = UsageRecord.objects.filter(application=selected_application,usergroup=selected_group)
+			usage_records = UsageRecord.objects.filter(application=selected_application,teacher=teacher,usergroup=selected_group)
 			
-			#### Getting averages ##########
-			num_steps = selected_data_source.aggregate(max = Max('step'))
-			print "here"
-			if num_steps['max'] != None:
-				for step in range(1, num_steps['max']+1):
-					print "in"
-					record = UsageRecord.objects.filter(application=selected_application,usergroup=selected_group, step = step)
-					average = record.aggregate(time = Avg('time_on_step'))
-					selected_data.append([average['time']])
-					print "hehe",step,average['time']
-			################################
+			if info_type=="time":
+				#### Getting averages ##########
+				num_steps = usage_records.aggregate(max = Max('step'))
+				print "here"
+				if num_steps['max'] != None:
+					for step in range(1, num_steps['max']+1):
+						print "in"
+						records = usage_records.filter(step = step)
+						average = records.aggregate(time = Avg('time_on_step'))
+						selected_data.append([average['time']])
+						print "hehe",step,average['time']
+				################################
+			else:
+				question_text=request.GET['question']
+				question=Question.objects.filter(application=selected_application,question_text=question_text)
+				question_records = QuestionRecord.objects.filter(application=selected_application, question=question, teacher=teacher,usergroup=selected_group)
+				test=question_records.values('answer').annotate(count=Count('answer')).order_by('answer')
+				print test,"test"
+				sv=[]
+				for r in test:
+					sv.append(r['count'])
+				selected_data=sv
 		return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")	
+	
 
 @requires_csrf_token
 def teacher_interface(request):
@@ -387,9 +389,16 @@ def statistics(request):
 	teacher = Teacher.objects.filter (user=user)
 	groups = Group.objects.filter(teacher=teacher)
 	print len(groups)
-	
-	
-	context_dict = {'groups' : groups}
+	applications = Application.objects.all();
+	questions={}
+	for application in applications:
+		questions_text=[]
+		app_questions = Question.objects.filter(application=application)
+		for app_question in app_questions:
+			questions_text.append(app_question.question_text)
+		questions[application.name]=questions_text
+	print questions
+	context_dict = {'groups' : groups, 'app_questions_dict' : simplejson.dumps(questions)}
 	print "YEY"
     	return render_to_response('exerciser/graph_viewer.html', context_dict, context)
 
