@@ -49,16 +49,32 @@
 		console.log(apps_without_questions);
 		$(function ($) {
 			$('#statistics_options').on('change', function() {
+				var sel_app = document.getElementById("application_list").value;
+
+			
+			
 				if (this.value=="answers"){
-					$( this ).after( "<select id='test'><option value='time'>Average Time</option>		<option value='answers'>Question Answers</option>	</select>" );
+					$( this ).after( "<select id='question_list'>	</select>" );
 					for (var index in apps_without_questions) {
-							console.log(application);
 							$("#id_"+apps_without_questions[index]).wrap('<span/>'); //hide it-no questions (cross-browser compatible)
 					}
+					$("#application_list > option:first").attr("selected", "selected"); 
+					sel_app = document.getElementById("application_list").value;
+					console.log("Sel app" + sel_app);
+					console.log($("#application_list > option:first").val()+"FC");
+					for (var question_index in app_questions_dict[sel_app]){
+						var question = app_questions_dict[sel_app][question_index];
+						var option="<option value='" + question +"' >"+question + "</option>";
+						console.log(question);
+						$("#question_list").append(option);
+
+					}
+					
+					
 				}
 				else{
-					if ($("#test").length > 0){
-						$("#test").remove();
+					if ($("#question_list").length > 0){
+						$("#question_list").remove();
 					}
 					for (var index in apps_without_questions) {
 						$("#id_"+apps_without_questions[index]).unwrap(); //hide it-no questions (cross-browser compatible)
@@ -85,7 +101,8 @@
 				}
 				else{
 					chartType="column";
-					question="Is the solution going to be principally a repetition, a conditional or a sequence?";
+					question=document.getElementById("question_list").value;
+					console.log("#############"+question+"###################");
 				}
 				console.log("time");
 				var request = $.get('/exerciser/update_graph/', {app_name:selected_app, group:group_id, info_type:option,question:question})
