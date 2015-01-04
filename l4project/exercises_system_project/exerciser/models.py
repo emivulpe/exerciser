@@ -104,12 +104,6 @@ class Explanation(models.Model):
         return self.text
 		
 
-#class MultipleChoiceQuestion(Question):
-#    correctAnswer = models.CharField(max_length = 128)
-
-#    def __unicode__(self):
-#        return self.question_text
-
 class Option(models.Model):
     question = models.ForeignKey(Question)
     number = models.IntegerField()
@@ -117,7 +111,7 @@ class Option(models.Model):
 
 
     def __unicode__(self):
-        return " ".join(("Option: ", str(self.number), ". ", self.content))
+        return " ".join(("ID",str(self.id),"Option: ", str(self.number), ". ", self.content))
 
 		
 class Panel(models.Model):

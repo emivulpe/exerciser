@@ -251,10 +251,15 @@ def update_teacher_interface_graph_data(request):
 				question_records = QuestionRecord.objects.filter(application=selected_application, question=question, teacher=teacher,usergroup=selected_group)
 				test=question_records.values('answer').annotate(count=Count('answer')).order_by('answer')
 				print test,"test"
+				print Option.objects.filter(id=17)
 				sv=[]
-				for r in test:
-					sv.append(r['count'])
-				selected_data=sv
+				sd=[]
+				for option in test:
+					option_text=Option.objects.filter(id=option['answer'])[0].content
+					sd.append({option_text:option['count']})
+					sv.append(option['count'])
+				print "SD", sd
+				selected_data=sd
 		return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")	
 	
 

@@ -10,9 +10,10 @@
 {% endblock %}
 {% block body_block %}
 
-	<select id="statistics_options">
-		<option value="time">Average Time</option>
-		<option value="answers">Question Answers</option>
+	<select id="group_list">
+		{% for group in groups %}
+			<option value="{{group.name}}">Group {{group.name}}</option>
+		{% endfor %}
 	</select>
 	
 	<select id="application_list">
@@ -20,13 +21,12 @@
 			<option id="id_{{application.name}}" value="{{application.name}}">{{application.name}}</option>
 		{% endfor %}
 	</select>
-
-	<select id="group_list">
-		{% for group in groups %}
-			<option value="{{group.name}}">Group {{group.name}}</option>
-		{% endfor %}
+	
+	<select id="statistics_options">
+		<option value="time">Average Time</option>
+		<option value="answers">Question Answers</option>
 	</select>
-
+	
 	<button id="set_data_button" class="autocompare">Set new data</button>
 	<i class="fa fa-info-circle"></i><span class="landing-text">Please select an application and a group you would like to view statistics for!</span>
 	<div id="container"> </div>
@@ -47,56 +47,61 @@
 			}
 		}
 		console.log(apps_without_questions);
+		
+		var selected_option=document.getElementById("statistics_options").value;
+		var selected_application=document.getElementById("application_list").value;
+		var selected_group=document.getElementById("group_list").value;
+		console.log(selected_option + selected_application + selected_group);
+	
 		$(function ($) {
-			$('#statistics_options').on('change', function() {
-				var sel_app = document.getElementById("application_list").value;
 
+			$('#application_list').on('change', function() {
+				selected_application = document.getElementById("application_list").value;
+				if(selected_option="answers"){
+					$("#question_list").empty();
+					addQuestions(selected_application);
+				}
+			});
 			
+			$('#group_list').on('change', function() {
+				selected_group = document.getElementById("group_list").value;
+			});
 			
+			$('#statistics_options').on('change', function() {
+				selected_option = document.getElementById("statistics_options").value;
 				if (this.value=="answers"){
-					$( this ).after( "<select id='question_list'>	</select>" );
+					$( this ).after( "<select id='question_list' style='max-width:250px'>	</select>" );
 					for (var index in apps_without_questions) {
 							$("#id_"+apps_without_questions[index]).wrap('<span/>'); //hide it-no questions (cross-browser compatible)
 					}
 					$("#application_list > option:first").attr("selected", "selected"); 
-					sel_app = document.getElementById("application_list").value;
-					console.log("Sel app" + sel_app);
+					selected_application = document.getElementById("application_list").value;
+					console.log("Sel app" + selected_application);
 					console.log($("#application_list > option:first").val()+"FC");
-					for (var question_index in app_questions_dict[sel_app]){
-						var question = app_questions_dict[sel_app][question_index];
-						var option="<option value='" + question +"' >"+question + "</option>";
-						console.log(question);
-						$("#question_list").append(option);
-
-					}
 					
-					
+					addQuestions(selected_application);
 				}
+				
 				else{
 					if ($("#question_list").length > 0){
 						$("#question_list").remove();
 					}
+					
 					for (var index in apps_without_questions) {
 						$("#id_"+apps_without_questions[index]).unwrap(); //hide it-no questions (cross-browser compatible)
 					}
-
-					
 				}
 			});
 
 
 			// the button action
 			$('#set_data_button').click(function () {
-				var option=document.getElementById("statistics_options").value;
-				var selected_app = document.getElementById("application_list").value;
-				var group_id=document.getElementById("group_list").value;
-				console.log(selected_app);
-				console.log(group_id);
+
 				var categories=[];
 				var sel_data=[];
 				var chartType="";
 				var question="";
-				if(option=="time"){
+				if(selected_option=="time"){
 					chartType="line";
 				}
 				else{
@@ -105,7 +110,7 @@
 					console.log("#############"+question+"###################");
 				}
 				console.log("time");
-				var request = $.get('/exerciser/update_graph/', {app_name:selected_app, group:group_id, info_type:option,question:question})
+				var request = $.get('/exerciser/update_graph/', {app_name:selected_application, group:selected_group, info_type:selected_option,question:question})
 				//console.log("here");
 				request.done(function(selected_data) {
 					console.log("here");
@@ -116,8 +121,27 @@
 					console.log("data " + sel_data);
 					if(sel_data.length>0){
 						console.log("data>0");
-						for (i = 0; i < sel_data.length; i++) { 
-							categories[i]=i+1;
+						if(selected_option=="time"){
+							for (i = 0; i < sel_data.length; i++) { 
+								categories[i]="Step"+(i+1);
+							}
+						}
+						else{
+							var option_categories=[];
+							var option_data=[];
+							for (i = 0; i < sel_data.length; i++) { 
+								for (var option in sel_data[i]) {
+								  option_categories.push(option);
+								  console.log(option);
+								  option_data.push(sel_data[i][option]);
+								  console.log(sel_data[i][option]);
+								}
+							}
+							sel_data=option_data;
+							categories=option_categories;
+							console.log(sel_data);
+							console.log(categories);
+							
 						}
 										
 						$('#container').highcharts({
@@ -125,10 +149,10 @@
 											type: chartType
 										},
 										title: {
-											text: selected_app
+											text: selected_application
 										},
 										subtitle: {
-											text: "Group " + group_id
+											text: "Group " + selected_group
 										},
 										xAxis: {
 											categories:categories
@@ -149,6 +173,15 @@
 			});
 		});
 
+		
+function addQuestions(selected_application){
+	for (var question_index in app_questions_dict[selected_application]){
+		var question = app_questions_dict[selected_application][question_index];
+		var option="<option value='" + question +"' >"+question + "</option>";
+		console.log(question);
+		$("#question_list").append(option);
+	}
+}
 	</script>
 {% endblock %}
 
