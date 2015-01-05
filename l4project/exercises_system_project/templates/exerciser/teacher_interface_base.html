@@ -17,7 +17,7 @@
 
 	<body>
 
-	<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+	<nav id="teacher_navbar" class="navbar navbar-default navbar-fixed-top" role="navigation">
 		<div class="container">
 			<!-- Brand and toggle get grouped for better mobile display -->
 			<div class="navbar-header">
@@ -36,13 +36,24 @@
 		<!-- /.container -->
 	</nav>
 
-	<header class="intro">
+	<header id="content_container"class="intro">
 		<div class="intro-body">
 		{% block body_block %}
 		{% endblock %}
 		</div>
 	</header>
 	<script type="text/javascript" src="/static/js/jquery-2.1.1.js"></script>
+	<script>
+		$("#content_container").css("padding-top",$("#teacher_navbar").height());
+		
+		$( window ).resize(function() {
+			var navHeight = $("#teacher_navbar").height();
+			console.log(navHeight);
+			$("#content_container").css("padding-top",navHeight);
+		});
+		
+		</script>
+	
 	{% block javascripts %}
 	{% endblock %}
 	</body>

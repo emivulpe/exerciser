@@ -9,27 +9,28 @@
 
 {% endblock %}
 {% block body_block %}
-
-	<select id="group_list">
+<div class="container" style="background:gray;width: 100%;">
+	<select id="group_list" style="margin: 10px 5px 0 10px; padding: 5px; font-size: 12pt; font-weight: bold;">
 		{% for group in groups %}
-			<option value="{{group.name}}">Group {{group.name}}</option>
+			<option value="{{group.name}}" >Group {{group.name}}</option>
 		{% endfor %}
 	</select>
 	
-	<select id="application_list">
+	<select id="application_list" style="margin: 10px 5px 10px 10px; padding: 5px; font-size: 12pt; font-weight: bold;">
 		{% for application in applications %}
 			<option id="id_{{application.name}}" value="{{application.name}}">{{application.name}}</option>
 		{% endfor %}
 	</select>
 	
-	<select id="statistics_options">
+	<select id="statistics_options" style="margin: 10px 5px 10px 10px; padding: 5px; font-size: 12pt; font-weight: bold;">
 		<option value="time">Average Time</option>
 		<option value="answers">Question Answers</option>
 	</select>
 	
-	<button id="set_data_button" class="autocompare">Set new data</button>
-	<i class="fa fa-info-circle"></i><span class="landing-text">Please select an application and a group you would like to view statistics for!</span>
-	<div id="container"> </div>
+	<button id="set_data_button" class="autocompare" style="margin: 10px 5px 10px 10px; padding: 5px; font-size: 12pt; font-weight: bold;">Set new data</button>
+	<i class="fa fa-info-circle"></i><span class="landing-text">Please select!</span>
+</div>
+	<div id="container" style="width:100%; min-height:80vh; text-align: center;font-size: 12pt; font-weight: bold;"> </div>
 
 {% endblock %}
 
@@ -37,6 +38,8 @@
 	<script src="/static/js/highcharts.js"></script>
 	<script src="/static/js/exporting.js"></script>	
 	<script>
+	
+	
 		{% autoescape off %}
 		var app_questions_dict = {{app_questions_dict}};
 		{% endautoescape %}
@@ -49,8 +52,9 @@
 		console.log(apps_without_questions);
 		
 
-	
-		$(function ($) {
+
+		$(function () {
+		
 			var selected_option=document.getElementById("statistics_options").value;
 			var selected_application=document.getElementById("application_list").value;
 			var selected_group=document.getElementById("group_list").value;
@@ -72,7 +76,7 @@
 			$('#statistics_options').on('change', function() {
 				selected_option = document.getElementById("statistics_options").value;
 				if (this.value=="answers"){
-					$( this ).after( "<select id='question_list' style='max-width:250px'>	</select>" );
+					$( this ).after( "<select id='question_list' style='max-width:250px;margin: 10px 5px 10px 10px; padding: 5px; font-size: 12pt; font-weight: bold;'>	</select>" );
 					for (var index in apps_without_questions) {
 							$("#id_"+apps_without_questions[index]).wrap('<span/>'); //hide it-no questions (cross-browser compatible)
 					}
@@ -99,6 +103,7 @@
 			// the button action
 			$('#set_data_button').click(function () {
 
+				$(".no_stats_info").remove();
 				var categories=[];
 				var sel_data=[];
 				var chartType="";
@@ -169,7 +174,7 @@
 							
 					else{
 						$('#container').find('.highcharts-container').hide();
-						$('#container').text("There are no statistics for the current selection");
+						$('#container').html("<div class='no_stats_info'><br\><br\><br\><br\><br\><br\><i class='fa fa-asterisk' style='color:red'></i><span style='color:red'>There are no statistics for the current selection</span><div>");
 					}
 				});
 
