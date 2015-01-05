@@ -127,7 +127,6 @@ def register_group_with_session(request):
 			print "group exists"
 			request.session['teacher_group'] = [teacher_username, group_name]
 			success = True
-
 	print "success",success
 	return HttpResponse(simplejson.dumps(success),content_type = "application/json")
 

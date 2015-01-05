@@ -12,6 +12,10 @@
 	<div class="container">
 		<div class="row">
 			<div class="col-md-6 text-center">
+				<br/><br/>
+				{% if request.session.teacher_group %}
+				<strong>You are registered with group id  {{request.session.teacher_group.1}} and teacher id {{request.session.teacher_group.0}}</strong><br/>
+				{% endif %}
 				<h1>Specify your group</h1>
 				<br>
 				<form id="group_form" style="margin-top: 10px; margin-right: 5px; padding: 5px; font-size: 14pt; font-weight: bold;">
@@ -19,7 +23,8 @@
 					Teacher ID: <input id = "teacher" type="text" name="TeacherId" style="margin-top: 10px; margin-right: 5px; padding: 5px; font-size: 12pt; font-weight: bold;" /><br />
 					<input  id = "submit" type="submit" value="Submit" style="margin-top: 10px; margin-right: 5px; padding: 5px; font-size: 14pt; font-weight: bold;" />
 				</form>
-				<br>
+				<br>			
+
 				<strong id="success_message"></strong>
 			</div>
 				
@@ -35,7 +40,7 @@
 	<script type="text/javascript" src="/static/js/cookieAccessor.js"></script>
 	<script> 
 	
-	
+		
 		$('#group_form').submit(function(e) {
 			e.preventDefault();	
 		});
@@ -55,7 +60,7 @@
 				console.log("weird");
 				if(success){
 					console.log("REG");
-					$("#success_message").text("You are currently registered with teacher ID " + teacher + " and group ID " + group + ".");
+					$("#success_message").text("Your details are stored!");
 				}
 				else{
 					console.log("no such group");
