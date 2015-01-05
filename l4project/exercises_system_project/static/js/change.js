@@ -53,18 +53,17 @@ function goToStep(direction) {
 			}
 			
 		}
-		if(action != "question" && currentStep > 0){
-			var now = new Date().getTime();			
-			$.post("/exerciser/log_info_db/",
-			{
+		var now = new Date().getTime();			
+		$.post("/exerciser/log_info_db/",
+		{
 			time : (now - lastTime) / 1000,
 			step : currentStep,
 			direction : direction,
 			csrfmiddlewaretoken : csrftoken,
 			example_name : app_name
-			});
-			lastTime = now;
-		}
+		});
+		lastTime = now;
+
 
 		
 		if (direction == "next" && explanation_dict[currentStep] == undefined) {

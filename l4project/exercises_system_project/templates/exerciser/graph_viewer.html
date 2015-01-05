@@ -48,16 +48,18 @@
 		}
 		console.log(apps_without_questions);
 		
-		var selected_option=document.getElementById("statistics_options").value;
-		var selected_application=document.getElementById("application_list").value;
-		var selected_group=document.getElementById("group_list").value;
-		console.log(selected_option + selected_application + selected_group);
+
 	
 		$(function ($) {
-
+			var selected_option=document.getElementById("statistics_options").value;
+			var selected_application=document.getElementById("application_list").value;
+			var selected_group=document.getElementById("group_list").value;
+			console.log(selected_option + selected_application + selected_group);
+			
+			
 			$('#application_list').on('change', function() {
 				selected_application = document.getElementById("application_list").value;
-				if(selected_option="answers"){
+				if(selected_option=="answers"){
 					$("#question_list").empty();
 					addQuestions(selected_application);
 				}
@@ -101,6 +103,7 @@
 				var sel_data=[];
 				var chartType="";
 				var question="";
+				console.log("%%%%%%%%%%%%%%%%%%%"+selected_option);
 				if(selected_option=="time"){
 					chartType="line";
 				}
