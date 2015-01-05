@@ -40,9 +40,32 @@
 		<div class="container">
 			<div class="row">
 				<div class="col-md-6 text-center">
-					{% if request.session.registered %}
-						<i class="fa fa-check success"></i>
-						<strong class="success">Thank you for registering! Please log in</strong>
+					{% if request.session.registered = True %}
+						<br/><br/><br/><br/><br/>
+						<div style="font-size: 12pt; font-weight: bold;"> 
+							<i class="fa fa-check success" style="color:green;"></i>
+							<strong class="success" style="color:green;">Thank you for registering! Please log in</strong>
+						</div>
+					{% elif request.session.registered = False %}
+
+						<h1>Register here!</h1><br />
+						
+						<form id="user_form" method="post" action="/exerciser/register/" enctype="multipart/form-data">
+							{% csrf_token %}
+
+							<!-- Display each form. The as_p method wraps each element in a paragraph
+							(<p>) element. This ensures each element appears on a new line,
+							making everything look neater. -->
+							{{ user_form.as_p }}
+							{{ group_form.as_p }}
+
+							<!-- Provide a button to click to submit the form. -->
+							<input id="register_user_button" type="submit" name="submit" value="Register" />
+						</form><br/>
+						<div style="font-size: 12pt; font-weight: bold;"> 
+							<i class="fa fa-close success" style="color:red;"></i>
+							<strong class="success" style="color:red;">Your registration was unsuccessful. Please try again!</strong>
+						</div>
 					{% else %}
 						<h1>Register here!</h1><br />
 
@@ -68,6 +91,13 @@
 						<p><label for="id_password">Password:</label> <input id="id_password" name="password" type="password"></p>
 						<input id="login_button" type="submit" value="Submit"/>
 					</form>
+					{% if request.session.successful_login = False %}
+						<br/>
+						<div style="font-size: 12pt; font-weight: bold;"> 
+							<i class="fa fa-close success" style="color:red;"></i>
+							<strong class="success" style="color:red;">Sorry but your attempt to login was unsuccessful! Please try again!</strong>
+						</div>
+					{% endif %}
 				</div>
 			</div>			
 		</div>

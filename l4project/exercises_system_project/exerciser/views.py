@@ -293,6 +293,9 @@ def teacher_interface(request):
 	# Note that the first parameter is the template we wish to use.
 	return render_to_response('exerciser/teacher_interface.html', context_dict, context)
 
+	
+	
+	
 def register(request):
 
     # Like before, get the request's context.
@@ -337,15 +340,18 @@ def register(request):
         else:
             print user_form.errors, group_form.errors
 
-    print registered
+    print registered,"registered"
     request.session['registered'] = registered
     # Render the template depending on the context.
     return HttpResponseRedirect('/exerciser/teacher_interface')
-
+	
+	
 def user_login(request):
     # Like before, obtain the context for the user's request.
     context = RequestContext(request)
     # If the request is a HTTP POST, try to pull out the relevant information.
+    successful_login = False
+
     if request.method == 'POST':
         # Gather the username and password provided by the user.
         # This information is obtained from the login form.
@@ -365,23 +371,11 @@ def user_login(request):
                 # If the account is valid and active, we can log the user in.
                 # We'll send the user back to the homepage.
                 login(request, user)
-                return HttpResponseRedirect('/exerciser/teacher_interface')
-            else:
-                # An inactive account was used - no logging in!
-                return HttpResponse("Your account is disabled.")
-        else:
-            # Bad login details were provided. So we can't log the user in.
-            print "Invalid login details: {0}, {1}".format(username, password)
-            return HttpResponse("Invalid login details supplied.")
+                successful_login = True
 
-    # The request is not a HTTP POST, so display the login form.
-    # This scenario would most likely be a HTTP GET.
-    else:
-        # No context variables to pass to the template system, hence the
-        # blank dictionary object...
-		
-		############# TEST THIS !!!!! #####################
-        return HttpResponseRedirect('/exerciser/teacher_interface')
+
+    request.session['successful_login'] = successful_login
+    return HttpResponseRedirect('/exerciser/teacher_interface')
 
 @login_required
 def statistics(request):
