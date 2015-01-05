@@ -108,11 +108,17 @@
 				var sel_data=[];
 				var chartType="";
 				var question="";
+				var xAxisTitle="Steps";
+				var yAxisTitle="Seconds";
+				var seriesName="Average time";
 				console.log("%%%%%%%%%%%%%%%%%%%"+selected_option);
 				if(selected_option=="time"){
 					chartType="line";
 				}
 				else{
+					xAxisTitle="Answers";
+					yAxisTitle="Times chosen";
+					seriesName="Times chosen";
 					chartType="column";
 					question=document.getElementById("question_list").value;
 					console.log("#############"+question+"###################");
@@ -131,7 +137,7 @@
 						console.log("data>0");
 						if(selected_option=="time"){
 							for (i = 0; i < sel_data.length; i++) { 
-								categories[i]="Step"+(i+1);
+								categories[i]=(i+1);
 							}
 						}
 						else{
@@ -157,16 +163,26 @@
 											type: chartType
 										},
 										title: {
-											text: selected_application
+											text: selected_application + "- Group " + selected_group
 										},
 										subtitle: {
-											text: "Group " + selected_group
+											text: question
 										},
 										xAxis: {
-											categories:categories
+											categories:categories,
+											title:{
+												text: xAxisTitle
+											}
+										},
+										yAxis: {
+											title:{
+												text: yAxisTitle
+											}
 										},
 										series: [{
-											data: sel_data
+											showInLegend: false,
+											name: seriesName,
+											data: sel_data,
 										}]
 						});
 					}
