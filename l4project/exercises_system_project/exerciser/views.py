@@ -225,13 +225,19 @@ def update_teacher_interface_graph_data(request):
 		teacher=Teacher.objects.filter(user=user)
 		selected_group = Group.objects.filter(name = group_name)
 		selected_application=Application.objects.filter(name=app_name)
-		selected_data=[]
+		selected_data={}
 		if len(selected_group)>0 and len(selected_application)>0 and len(teacher)>0:
 			teacher = teacher[0]
 			selected_group = selected_group[0]
 			selected_application = selected_application[0]
 			usage_records = UsageRecord.objects.filter(application=selected_application,teacher=teacher,usergroup=selected_group)
+			question_steps=[]
+			app_questions=Question.objects.filter(application=selected_application)
+			for question in app_questions:
+				question_steps.append(question.step.order)
+			print "!!!!!!!!!!!!!!!!!!!!",question_steps
 			
+			sd=[]
 			if info_type=="time":
 				#### Getting averages ##########
 				num_steps = usage_records.aggregate(max = Max('step'))
@@ -241,8 +247,10 @@ def update_teacher_interface_graph_data(request):
 						print "in"
 						records = usage_records.filter(step = step)
 						average = records.aggregate(time = Avg('time_on_step'))
-						selected_data.append([average['time']])
+						sd.append([average['time']])
 						print "hehe",step,average['time']
+				selected_data["question_steps"]=question_steps
+				selected_data["data"]=sd
 				################################
 			else:
 				question_text=request.GET['question']
@@ -258,10 +266,66 @@ def update_teacher_interface_graph_data(request):
 					sd.append({option_text:option['count']})
 					sv.append(option['count'])
 				print "SD", sd
-				selected_data=sd
+				selected_data["data"]=sd
 		return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")	
 	
 
+	
+@login_required		
+def get_question_data(request):
+
+		app_name=request.GET['app_name']
+		group_name=request.GET['group']
+		step_num=request.GET['step']
+		teacher_username = request.user
+		
+		# get teacher
+		user=User.objects.filter(username=teacher_username)
+		teacher=Teacher.objects.filter(user=user)
+		
+		#get group
+		group = Group.objects.filter(name = group_name)
+		
+		#get application
+		application=Application.objects.filter(name=app_name)
+		
+		#get step
+		step=Step.objects.filter(application=application,order=step_num)
+
+		selected_data={}
+		question_text=""
+		if len(group)>0 and len(application)>0 and len(teacher)>0 and len(step)>0:
+			teacher = teacher[0]
+			group = group[0]
+			application = application[0]
+			step=step[0]
+			
+			usage_records = UsageRecord.objects.filter(application=application,teacher=teacher,usergroup=group)
+			
+
+				
+			question=Question.objects.filter(application=application,step=step)
+			if len(question)>0:
+				question=question[0]
+				question_text=question.question_text
+				print "QUESTION",question_text
+				question_records = QuestionRecord.objects.filter(application=application, question=question, teacher=teacher,usergroup=group)
+				test=question_records.values('answer').annotate(count=Count('answer')).order_by('answer')
+				print test,"test"
+				print Option.objects.filter(id=17)
+
+				sd=[]
+				for option in test:
+					option_text=Option.objects.filter(id=option['answer'])[0].content
+					sd.append({option_text:option['count']})
+				print "SD", sd
+				selected_data['question']=question_text
+				selected_data['data']=sd
+			
+			return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")	
+
+	
+	
 @requires_csrf_token
 def teacher_interface(request):
 	# Request the context of the request.

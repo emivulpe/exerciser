@@ -36,7 +36,17 @@
 
 {% block javascripts %}
 	<script src="/static/js/highcharts.js"></script>
-	<script src="/static/js/exporting.js"></script>	
+	<script src="/static/js/exporting.js"></script>
+	<script src="/static/js/customEvents.js"></script>
+
+<script src="http://code.highcharts.com/modules/data.js"></script>
+
+
+<!-- Additional files for the Highslide popup effect -->
+<script type="text/javascript" src="http://www.highcharts.com/media/com_demo/highslide-full.min.js"></script>
+<script type="text/javascript" src="http://www.highcharts.com/media/com_demo/highslide.config.js" charset="utf-8"></script>
+<link rel="stylesheet" type="text/css" href="http://www.highcharts.com/media/com_demo/highslide.css" />
+
 	<script>
 	
 	
@@ -52,12 +62,13 @@
 		console.log(apps_without_questions);
 		
 
-
+			var count=0;
 		$(function () {
 		
 			var selected_option=document.getElementById("statistics_options").value;
 			var selected_application=document.getElementById("application_list").value;
 			var selected_group=document.getElementById("group_list").value;
+
 			console.log(selected_option + selected_application + selected_group);
 			
 			
@@ -130,14 +141,22 @@
 					console.log("here");
 					// when we get here, the request has succeeded.
 					// this should mean that data is now the data from the ajax request (i.e. from the view above)
-					sel_data=selected_data;
+
 					console.log("sel" + sel_data);
 					console.log("data " + sel_data);
-					if(sel_data.length>0){
+					if(Object.getOwnPropertyNames(selected_data).length != 0){
+						sel_data=selected_data["data"];
+						questionSteps=selected_data["question_steps"];
+						console.log(questionSteps);
 						console.log("data>0");
 						if(selected_option=="time"){
 							for (i = 0; i < sel_data.length; i++) { 
-								categories[i]=(i+1);
+								if(questionSteps.indexOf(i)  != -1){
+									categories[i]="? " + (i+1);
+								}
+								else{
+									categories[i]=(i+1);
+								}
 							}
 						}
 						else{
@@ -163,7 +182,19 @@
 											type: chartType
 										},
 										title: {
-											text: selected_application + "- Group " + selected_group
+											text: selected_application + "- Group " + selected_group,
+										events: {
+											dblclick: function () {
+												alert('dbclick on xAxis label');
+											},
+											click: function (event) {
+												alert('click on xAxis label');
+												console.log("??????"+event.point);
+											},
+											contextmenu: function () {
+												alert('context menu on xAxis label');
+											}
+										}
 										},
 										subtitle: {
 											text: question
@@ -179,12 +210,46 @@
 												text: yAxisTitle
 											}
 										},
+										
+										plotOptions: {
+											series: {
+												cursor: 'pointer',
+												point: {
+													events: {
+														click: function (e) {
+															if(questionSteps.indexOf(this.x)!=-1){
+																hs.htmlExpand(null, {
+																	pageOrigin: {
+																		x: e.pageX || e.clientX,
+																		y: e.pageY || e.clientY
+																	},
+																	headingText: this.series.name,
+																	maincontentText: "	<div id='cont_"+count+"'> </div><br/> " +
+																		this.x + ' visits',
+																	width: 600,
+																	height:330
+																});
+																getQuestionData(selected_application,selected_group,this.x);
+															}
+														}
+													}
+												},
+												marker: {
+													lineWidth: 1
+												}
+											}
+										},
+
 										series: [{
 											showInLegend: false,
 											name: seriesName,
 											data: sel_data,
 										}]
 						});
+						
+						
+						
+
 					}
 					
 							
@@ -197,7 +262,66 @@
 			});
 		});
 
-		
+function getQuestionData(selected_application,selected_group,selected_step){
+
+	var request = $.get('/exerciser/question_graph/', {app_name:"HorizontalLines", group:"f",step:selected_step});
+
+
+	request.done(function(selected_data) {
+		console.log("request done");
+		if(Object.getOwnPropertyNames(selected_data).length != 0){
+			sel_data=selected_data["data"];
+			questionText=selected_data["question"];
+			console.log(questionText);
+			console.log("in custom");
+			var option_categories=[];
+			var option_data=[];
+			for (i = 0; i < sel_data.length; i++) { 
+				for (var option in sel_data[i]) {
+					option_categories.push(option);
+					console.log(option);
+					option_data.push(sel_data[i][option]);
+					console.log(sel_data[i][option]);
+				}
+			}
+			sel_data=option_data;
+			categories=option_categories;
+
+       		$('#cont_'+count).highcharts({
+				chart: {
+					type: "column"
+				},
+				title: {
+					text: selected_application + "- Group " + selected_group,
+				},
+				subtitle: {
+					text: questionText
+				},
+				xAxis: {
+					categories:option_categories,
+					title:{
+						text: "answers"
+					}
+				},
+				yAxis: {
+					title:{
+						text: "Times chosen"
+					}
+				},
+				series: [{
+					showInLegend: false,
+					name: "Times chosen",
+					data: sel_data,
+				}]
+			});
+			
+	
+		}
+		count++;
+	});
+
+}		
+
 function addQuestions(selected_application){
 	for (var question_index in app_questions_dict[selected_application]){
 		var question = app_questions_dict[selected_application][question_index];
