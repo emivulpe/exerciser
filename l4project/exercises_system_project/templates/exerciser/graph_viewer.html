@@ -244,7 +244,14 @@
 											showInLegend: false,
 											name: seriesName,
 											data: sel_data,
-										}]
+										}],
+										tooltip: {
+											formatter: function() {return ' ' +
+												'Average time: ' + this.point.y +'<br />'+
+												'Via next: ' + this.point.next + '<br />'+
+												'Via prev: ' + this.point.prev + '<br />';
+											}
+										}
 						});
 						
 						

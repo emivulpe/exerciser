@@ -6,6 +6,7 @@ var direction = "next";
 var answer = "";
 var explanation_dict={}
 var totalSteps = 1;
+var last_direction="next";
 $("#btn_prev").hide();
 
 
@@ -17,6 +18,16 @@ function goToStep(direction) {
 	direction = direction;
 
 	if (direction == "back") {
+		/*var now = new Date().getTime();
+		$.post("/exerciser/log_info_db/",
+		{
+			time : (now - lastTime) / 1000,
+			step : currentStep,
+			direction : direction,
+			csrfmiddlewaretoken : csrftoken,
+			example_name : app_name
+		});
+		lastTime = now;*/
 		currentStep--;
 	}
 
@@ -53,17 +64,30 @@ function goToStep(direction) {
 			}
 			
 		}
+		if (direction == "next") {
 		var now = new Date().getTime();			
 		$.post("/exerciser/log_info_db/",
 		{
 			time : (now - lastTime) / 1000,
 			step : currentStep,
-			direction : direction,
+			direction : last_direction,
 			csrfmiddlewaretoken : csrftoken,
 			example_name : app_name
 		});
 		lastTime = now;
-
+		}
+		else{
+				var now = new Date().getTime();			
+		$.post("/exerciser/log_info_db/",
+		{
+			time : (now - lastTime) / 1000,
+			step : currentStep+1,
+			direction : last_direction,
+			csrfmiddlewaretoken : csrftoken,
+			example_name : app_name
+		});
+		lastTime = now;
+		}
 
 		
 		if (direction == "next" && explanation_dict[currentStep] == undefined) {
@@ -93,7 +117,7 @@ function goToStep(direction) {
 			$('#explanation').html(explanation_dict[currentStep-1]);
 		}
 	}
-
+	last_direction=direction;
 }
 
 

@@ -247,10 +247,23 @@ def update_teacher_interface_graph_data(request):
 						print "in"
 						records = usage_records.filter(step = step)
 						average = records.aggregate(time = Avg('time_on_step'))
-						sd.append([average['time']])
+						
+						directions=records.values('direction').annotate(count=Count('direction')).order_by('direction')
+						print "DIRECTIONS!!!!!!!!!!!!!!!!!!",directions
+						next_count=0
+						prev_count=0
+						for direction_record in directions:
+							print direction_record['direction']
+							if direction_record["direction"] == "next":
+								next_count = direction_record["count"]
+							elif direction_record["direction"] == "back":
+								prev_count = direction_record["count"]
+						
+						sd.append({"y":average['time'],"next":next_count,"prev":prev_count})
 						print "hehe",step,average['time']
 				selected_data["question_steps"]=question_steps
 				selected_data["data"]=sd
+				print sd,"this"
 				################################
 			else:
 				question_text=request.GET['question']

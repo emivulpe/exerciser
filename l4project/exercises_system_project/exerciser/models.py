@@ -181,3 +181,4 @@ class QuestionRecord(models.Model):
 	usergroup = models.ForeignKey(Group, blank=True, null=True)
 	session_id = models.CharField(max_length=100)
 	answer = models.ForeignKey(Option)
+
