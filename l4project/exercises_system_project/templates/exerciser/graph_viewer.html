@@ -213,6 +213,12 @@
 										
 										plotOptions: {
 											series: {
+											
+												dataLabels: {
+												enabled: true,
+												format: '{y} s<br/>Via next: {point.next} <br/>Via back: {point.prev} '
+												},
+
 												cursor: 'pointer',
 												point: {
 													events: {
@@ -249,7 +255,8 @@
 											formatter: function() {return ' ' +
 												'Average time: ' + this.point.y +'<br />'+
 												'Via next: ' + this.point.next + '<br />'+
-												'Via prev: ' + this.point.prev + '<br />';
+												'Via back: ' + this.point.prev + '<br />' +
+												'Expanation: ' + this.point.explanation + '<br />';
 											}
 										}
 						});

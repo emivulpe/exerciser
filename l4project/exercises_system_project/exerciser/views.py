@@ -31,7 +31,24 @@ def log_info_db(request):
 	
 	record = UsageRecord(application = application, session_id = session_id, time_on_step = time_on_step, step = current_step, direction = direction, timestamp = timestamp)
 	
-	usergroup = request.session.get('teacher_group', None)
+	#usergroup = request.session.get('teacher_group', None)
+	
+	teacher_name=request.session.get("teacher",None)
+	group_name=request.session.get("group",None)
+	student_name=request.session.get("student", None)
+	if teacher_name != None:
+		user=User.objects.filter(username=teacher_name)
+		teacher=Teacher.objects.filter(user=user)[0]
+		record.teacher = teacher
+		
+	if group_name != None:
+		group = Group.objects.filter(name = group_name)[0]
+		record.usergroup = group
+	if student_name != None:
+		print "add code later"
+		############ ADD APPROPRIATE CODE HERE################
+		
+	"""
 	print(usergroup)
 	if usergroup != None:
 		print "not none"
@@ -46,7 +63,7 @@ def log_info_db(request):
 			group = group[0]
 			record.usergroup = group
 			record.teacher = teacher
-
+	"""
 
 	record.save()
 	print("test")
@@ -338,9 +355,22 @@ def update_teacher_interface_graph_data(request):
 				num_steps = usage_records.aggregate(max = Max('step'))
 				print "here"
 				if num_steps['max'] != None:
-					for step in range(1, num_steps['max']+1):
+					for step_num in range(1, num_steps['max']+1):
+						explanation_text=""
+						step=Step.objects.filter(application=selected_application,order=step_num)
+						if len(step)>0:
+							step=step[0]
+							explanation=Explanation.objects.filter(step=step)
+							if len(explanation)>0:
+								explanation=explanation[0]
+								explanation_text=explanation.text
+								if len(explanation_text)<100:
+									explanation_text=explanation_text[:len(explanation_text)]
+								else:
+									explanation_text=explanation_text[:100]
+					
 						print "in"
-						records = usage_records.filter(step = step)
+						records = usage_records.filter(step = step_num)
 						average = records.aggregate(time = Avg('time_on_step'))
 						
 						directions=records.values('direction').annotate(count=Count('direction')).order_by('direction')
@@ -354,8 +384,8 @@ def update_teacher_interface_graph_data(request):
 							elif direction_record["direction"] == "back":
 								prev_count = direction_record["count"]
 						
-						sd.append({"y":average['time'],"next":next_count,"prev":prev_count})
-						print "hehe",step,average['time']
+						sd.append({"y":average['time'],"next":next_count,"prev":prev_count,"explanation":explanation_text})
+						print "hehe",step_num,average['time']
 				selected_data["question_steps"]=question_steps
 				selected_data["data"]=sd
 				print sd,"this"
@@ -457,7 +487,8 @@ def teacher_interface(request):
 	group_form = GroupForm()
 	
 	
-	group_names=[]
+	groups=[]
+
 	if request.user.is_authenticated():
 		print "good"
 
@@ -465,9 +496,6 @@ def teacher_interface(request):
 		user = User.objects.filter(username=teacher_username)
 		teacher = Teacher.objects.filter (user=user)
 		groups = Group.objects.filter(teacher=teacher)
-		for group in groups:
-			group_names.append(group.name)
-	print group_names
 
 	context_dict = {'applications' : application_list,'user_form': user_form, 'group_form': group_form,'groups':groups}
 	
