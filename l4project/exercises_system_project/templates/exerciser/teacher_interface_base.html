@@ -27,9 +27,21 @@
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span>
 				</button>
-				<a class="navbar-brand" href="/exerciser/teacher_interface/">
-				<i class="fa fa-home fa-lg landing-icon fa-2x"></i><span class="landing-text">Home</span>
-				</a>
+			</div>
+				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+					<ul class="nav navbar-nav navbar-left">
+						<li>
+							<a class="navbar-brand" href="/exerciser/teacher_interface/">
+							<i class="fa fa-home fa-lg landing-icon fa-2x"></i><span class="landing-text">Home</span>
+							</a>
+						</li>
+					</ul>
+					{% if user.is_authenticated %}
+					<ul class="nav navbar-nav navbar-right">
+						<a href="/exerciser/logout/"><i class="fa fa-key fa-lg landing-icon fa-2x"></i><class="landing-text">Logout</span></a>
+					</ul>
+					{% endif %}
+				</div>
 			</div>
 			<!-- /.navbar-collapse -->
 		</div>

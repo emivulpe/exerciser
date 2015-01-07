@@ -1,6 +1,6 @@
 from django.template import RequestContext
 from django.shortcuts import render_to_response
-from exerciser.models import Application, Panel, Document, Change, Step, Explanation, UsageRecord, QuestionRecord, Group, Teacher, Question, Option
+from exerciser.models import Application, Panel, Document, Change, Step, Explanation, UsageRecord, QuestionRecord, Group, Teacher, Question, Option, Student
 import json 
 import simplejson 
 import datetime
@@ -112,8 +112,37 @@ def create_group(request):
 			print "created"
 	return HttpResponse(simplejson.dumps(success),content_type = "application/json")
 
+	
+	
 @requires_csrf_token
-def register_group_with_session(request):
+def create_student(request):
+	print "in create student"
+	
+	student_name = request.POST['student']
+	teacher_username = request.POST['teacher']
+	group_name = request.POST['group']
+	
+	user = User.objects.filter(username = teacher_username)
+	teacher = Teacher.objects.filter(user=user)
+	
+	group = Group.objects.filter(teacher=teacher,name=group_name)
+	
+	success = False
+	if len(user)>0 and len(teacher)>0 and len(group)>0:
+		user = user[0]
+		teacher = teacher[0]
+		group=group[0]
+		print "eee", len(Student.objects.filter(teacher=teacher,name=student_name))==0
+		if len(Student.objects.filter(teacher = teacher, group = group, name = student_name))==0:
+			student = Student(teacher = teacher, group = group, name = student_name)
+			student.save()
+			success = True
+			print "created"
+	return HttpResponse(simplejson.dumps(success),content_type = "application/json")
+	
+	
+@requires_csrf_token
+def register_group_with_session1(request):
 	print("register")
 	teacher_username = request.POST['teacher']
 	group_name = request.POST['group']
@@ -130,6 +159,72 @@ def register_group_with_session(request):
 	print "success",success
 	return HttpResponse(simplejson.dumps(success),content_type = "application/json")
 
+	
+@requires_csrf_token
+def register_group_with_session(request):
+	print("register")
+	teacher_username = request.session['teacher']
+	group_name = request.POST['group']
+	success=False
+	user = User.objects.filter(username=teacher_username)
+	if len(user) > 0 :
+
+		teacher = Teacher.objects.filter(user=user)
+
+		if len(Group.objects.filter(teacher=teacher, name=group_name)) > 0:
+			print "group exists"
+			request.session['group'] = group_name
+			success = True
+	print "success",success
+	return HttpResponse(simplejson.dumps(success),content_type = "application/json")
+
+	
+	
+@requires_csrf_token
+def register_teacher_with_session(request):
+	teacher_username = request.POST['teacher']
+
+	success=False
+	user = User.objects.filter(username=teacher_username)
+	groups=[]
+	if len(user) > 0 :
+		teacher = Teacher.objects.filter(user=user)
+		print "teacher exists "
+		groups = Group.objects.filter(teacher=teacher)
+		request.session['teacher'] = teacher_username
+		success = True
+	print "success",success,groups
+	group_names=[]
+	for group in groups:
+		group_names.append(group.name)
+	return HttpResponse(simplejson.dumps({"success":success,"groups":group_names}),content_type = "application/json")
+
+
+	
+@requires_csrf_token
+def register_student_with_session(request):
+
+	student_name = request.POST['student']
+	
+	teacher_username = request.session['teacher']
+	group_name = request.session['group']
+	
+	success=False
+	user = User.objects.filter(username=teacher_username)
+	teacher = Teacher.objects.filter(user=user)[0]
+	group=Group.objects.filter(teacher=teacher, name=group_name)[0]
+	student=Student.objects.filter(teacher=teacher,group=group,name=student_name)
+	print Student.objects.all()
+	print "student check",student,group,teacher,student_name,group_name,teacher_username
+	if len(student) > 0:
+		print "student exists"
+		request.session['student'] = student_name
+		success = True
+	print "success",success
+	return HttpResponse(simplejson.dumps(success),content_type = "application/json")
+
+
+	
 def index(request):
 	# Request the context of the request.
 	# The context contains information such as the client's machine details, for example.
@@ -361,7 +456,20 @@ def teacher_interface(request):
 	user_form = UserForm()
 	group_form = GroupForm()
 	
-	context_dict = {'applications' : application_list,'user_form': user_form, 'group_form': group_form}
+	
+	group_names=[]
+	if request.user.is_authenticated():
+		print "good"
+
+		teacher_username = request.user
+		user = User.objects.filter(username=teacher_username)
+		teacher = Teacher.objects.filter (user=user)
+		groups = Group.objects.filter(teacher=teacher)
+		for group in groups:
+			group_names.append(group.name)
+	print group_names
+
+	context_dict = {'applications' : application_list,'user_form': user_form, 'group_form': group_form,'groups':groups}
 	
 	
 	# Return a rendered response to send to the client.

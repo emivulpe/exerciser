@@ -19,9 +19,11 @@
 				<h1>Specify your group</h1>
 				<br>
 				<form id="group_form" style="margin-top: 10px; margin-right: 5px; padding: 5px; font-size: 14pt; font-weight: bold;">
-					Group ID: <input id = "group" type="text" name="GroupName" style="margin: 10px 5px 0 10px; padding: 5px; font-size: 12pt; font-weight: bold;" /><br />
-					Teacher ID: <input id = "teacher" type="text" name="TeacherId" style="margin-top: 10px; margin-right: 5px; padding: 5px; font-size: 12pt; font-weight: bold;" /><br />
-					<input  id = "submit" type="submit" value="Submit" style="margin-top: 10px; margin-right: 5px; padding: 5px; font-size: 14pt; font-weight: bold;" />
+
+					
+					<p id="teacher_id" >Teacher ID: <input id = "teacher" type="text" name="TeacherId" style="margin-top: 10px; margin-right: 5px; padding: 5px; font-size: 12pt; font-weight: bold;" /></p><br />
+					<input  id = "submit" class="save_teacher" type="submit" value="Next" style="margin-top: 10px; margin-right: 5px; padding: 5px; font-size: 14pt; font-weight: bold;" onclick="saveTeacher()"/>
+					<input id = "no_id" type="submit" value="No teacher ID" style="margin-top: 10px; margin-right: 5px; padding: 5px; font-size: 14pt; font-weight: bold;"/>
 				</form>
 				<br>			
 
@@ -39,20 +41,37 @@
 {% block javascripts %}
 	<script type="text/javascript" src="/static/js/cookieAccessor.js"></script>
 	<script> 
-	
-		
+		console.log("Teacher {{request.session.teacher}}");
+		var csrftoken = getCookie('csrftoken');
 		$('#group_form').submit(function(e) {
 			e.preventDefault();	
 		});
 		
+		$("#no_id").click(function (e){
+		console.log("Teacher {{request.session.teacher}}");
+			if("{{request.session.teacher}}"==""){
+				console.log("Thank you! You can start using the system as anonymous user by selecting an application");
+			}
+			else if("{{request.session.group}}" == ""){
+				console.log("You are registered with the teacher id {{request.session.teacher}}");
+			}
+			else if("{{request.session.student}}" == ""){
+				console.log("You are registered with the teacher id {{request.session.teacher}} and group id {{request.session.group}}");
+			}
+			else{
+				console.log("You are registered with the teacher id {{request.session.teacher}}, group id {{request.session.group}} and student id {{request.session.student}}");
+			}
+		});
+		
+		
+		/*
 		$("#submit").click(function (e){
 			var csrftoken = getCookie('csrftoken');
-			var teacher = $("#teacher").val();
-			var group = $("#group").val();
+			//var teacher = $("#teacher").val();
+			var group=document.getElementById("groups").value;
 			console.log(group);
 			var request = $.post("/exerciser/register_group_with_session/",
 			{
-			teacher : teacher,
 			group : group,
 			csrfmiddlewaretoken : csrftoken
 			});
@@ -64,13 +83,128 @@
 				}
 				else{
 					console.log("no such group");
-					$("#success_message").text("Sorry, but teacher ID " + teacher + " and group ID " + group + " are invalid. Please, try again, or continue anonymously!");
+					$("#success_message").text("Sorry, but the group ID " + group + " is invalid. Please, try again, or continue anonymously!");
 				}
 			});
 		});
 		
 		
+		$("#save_teacher").click(function (e){
+			var csrftoken = getCookie('csrftoken');
+			var teacher = $("#teacher").val();
+			var request = $.post("/exerciser/register_teacher_with_session/",
+			{
+				teacher : teacher,
+				csrfmiddlewaretoken : csrftoken
+			});
+			request.done(function(reply) {
+				console.log("weird");
+				if(reply["success"]){
+					console.log("REG");
+					$("#success_message").text("Your details are stored!");
+					$("#teacher_id").after( "<p>Group ID: <select id='groups' style='margin: 10px 5px 0 10px; padding: 5px; font-size: 12pt; font-weight: bold;'></select></p><br/>" );
+					for (var index in reply["groups"]) {
+						var group="<option value='" + reply["groups"][index] +"' >"+reply["groups"][index] + "</option>";
+						$("#groups").append(group);
+					}
+					$("#save_teacher").after("<button  id = 'save_group' type='submit' style='margin-top: 10px; margin-right: 5px; padding: 5px; font-size: 14pt; font-weight: bold;' onclick='saveGroup()'>Next</button>");
+					$("#save_teacher").remove();
+					//$("#save_teacher").attr("id","save_group");
+					$("#no_id").html('No group ID');
+				}
+				else{
+					console.log("no such group");
+					$("#success_message").text("Sorry, but teacher ID " + teacher + " and group ID " + teacher + " are invalid. Please, try again, or continue anonymously!");
+				}
+			});
+		});
+		
+		
+		$("#save_group").click(function (e){
+			console.log("click save group");
+			$("#save_group").attr("id", "save_student");
+			$("#no_id").val('No student ID');
+		});
+		*/
+		function saveStudent(){
+			console.log("click save group!!!!!!");
+			
+			$("#no_id").html('No student ID');
 
+			var student = $("#student").val();
+			
+
+			var request = $.post("/exerciser/register_student_with_session/",
+			{
+				student : student,
+				csrfmiddlewaretoken : csrftoken
+			});
+			request.done(function(success) {
+				console.log("weird");
+				if(success){
+					console.log("REG");
+					$("#success_message").text("Your details are stored!");
+				}
+				else{
+					console.log("no such group");
+					$("#success_message").text("Sorry, but the student ID " + student + " is invalid. Please, try again, or continue anonymously!");
+				}
+			});
+		};
+		
+		function saveTeacher (){
+			var teacher = $("#teacher").val();
+			var request = $.post("/exerciser/register_teacher_with_session/",
+			{
+				teacher : teacher,
+				csrfmiddlewaretoken : csrftoken
+			});
+			request.done(function(reply) {
+				console.log("weird");
+				if(reply["success"]){
+					console.log("REG");
+					//$("#success_message").text("Your details are stored!");
+					$("#teacher_id").after( "<p id='groups'>Group ID: <select id='group_list' style='margin: 10px 5px 0 10px; padding: 5px; font-size: 12pt; font-weight: bold;'></select></p><br/>" );
+					for (var index in reply["groups"]) {
+						var group="<option value='" + reply["groups"][index] +"' >"+reply["groups"][index] + "</option>";
+						$("#group_list").append(group);
+					}
+
+					$("#submit").attr('onclick', 'saveGroup()');
+					$("#no_id").val('No group ID');
+				}
+				else{
+					console.log("no such group");
+					$("#success_message").text("Sorry, but teacher ID " + teacher + " and group ID " + teacher + " are invalid. Please, try again, or continue anonymously!");
+				}
+			});
+		}
+		
+		function saveGroup(){
+
+			var group=document.getElementById("group_list").value;
+			console.log(group);
+			var request = $.post("/exerciser/register_group_with_session/",
+			{
+			group : group,
+			csrfmiddlewaretoken : csrftoken
+			});
+			request.done(function(success) {
+				console.log("weird");
+				if(success){
+					console.log("REG");
+					//$("#success_message").text("Your details are stored!");
+					$("#group_list").after("<p id='student_id' >Student ID: <input id = 'student' type='text' name='StudentId' style='margin-top: 10px; margin-right: 5px; padding: 5px; font-size: 12pt; font-weight: bold;' /></p>");
+					$("#submit").attr('onclick', 'saveStudent()');
+					$("#submit").val('Submit');
+					$("#no_id").val('No student ID');
+				}
+				else{
+					console.log("no such group");
+					$("#success_message").text("Sorry, but the group ID " + group + " is invalid. Please, try again, or continue anonymously!");
+				}
+			});
+		}
 
 	</script>
 {% endblock %}

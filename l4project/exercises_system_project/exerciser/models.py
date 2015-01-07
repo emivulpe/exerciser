@@ -148,6 +148,13 @@ class Group(models.Model):
 	teacher = models.ForeignKey(Teacher)
 	name = models.CharField(max_length=100, unique=True)
 	
+class Student(models.Model):
+	teacher = models.ForeignKey(Teacher)
+	group = models.ForeignKey(Group)
+	name = models.CharField(max_length=100)
+	
+	def __unicode__(self):
+		return " ".join((" teacher: ",self.teacher.user.username," group: ",self.group.name, " name",self.name))
 	
 class UsageRecord(models.Model):
 	application = models.ForeignKey(Application)

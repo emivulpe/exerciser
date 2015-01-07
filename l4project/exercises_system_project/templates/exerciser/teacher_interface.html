@@ -20,17 +20,28 @@
 				<div class="col-md-4 text-center">
 					<h1>Register a group</h1><br>
 					<form id="register_group">
-						<p><label for="id_username">Group ID:</label> <input type="text" name="group"></p>
+						<p><label for="group_id">Group ID:</label> <input type="text" name="group"></p>
 						<input id="register_group_button" type="reset" value="Register">
 					</form>
 					<br>
-					<strong id="success_message"></strong>
+					<strong id="group_success_message"></strong>
 				</div>
 				<div class="col-md-4 text-center">
 					<h1 class="brand-heading"><a href="/exerciser/statistics/"><i class="fa fa-bar-chart landing-icon fa-lg fa-5x"></i><br><br><span class="landing-text">View Statistics</span></a></h1>
 				</div>
 				<div class="col-md-4 text-center">
-					<h1 class="brand-heading"><a href="/exerciser/logout/"><i class="fa fa-key landing-icon fa-lg fa-5x"></i><br><br><span class="landing-text">Logout</span></a></h1>
+					<h1>Register a student</h1><br>
+					<form id="register_group">
+						<p><label for="student">Student ID:</label> <input type="text" name="student"></p>
+						<p><label for="student">Group ID:</label> <select id="group" style="margin: 10px 5px 10px 10px; padding: 5px; font-size: 12pt; font-weight: bold;">
+							{% for group in groups %}
+								<option value="{{group.name}}" >Group {{group.name}}</option>
+							{% endfor %}
+						</select></p>
+						<input id="register_student_button" type="reset" value="Register">
+					</form>
+					<br>
+					<strong id="student_success_message"></strong>
 				</div>
 			</div>			
 		</div>
@@ -111,7 +122,7 @@
 	<script type="text/javascript" src="/static/js/cookieAccessor.js"></script>
 
 	<script>
-	
+		var csrftoken = getCookie('csrftoken');
 		$('button').each(function(){
 			$(this).closest('form').find("input[type=text], textarea").val("");
 			console.log("DA");
@@ -124,32 +135,80 @@
 		
 		$('#register_group_button').click(function () {
 			console.log("click");
-			var group_name = $('input:text[name=group]').val();
-			var csrftoken = getCookie('csrftoken');
-			console.log("{{ user.username }}");
-			var request = $.post("/exerciser/create_group/",{
-				csrfmiddlewaretoken : csrftoken,
-				teacher : "{{ user.username }}",
-				group : group_name
-			});
+			var chosen_group = $('input:text[name=group]').val();
+			//var option=document.getElementById("id_type").value;
 
+			console.log("{{ user.username }}");
+			//var request;
+			//var chosen_option="";
+			//if(option=="group"){
+				request = $.post("/exerciser/create_group/",{
+					csrfmiddlewaretoken : csrftoken,
+					teacher : "{{ user.username }}",
+					group : chosen_group
+				});
+				//chosen_option = " group " + chosen_name;
+			//}
+			/*else{
+				request = $.post("/exerciser/create_student/",{
+					csrfmiddlewaretoken : csrftoken,
+					teacher : "{{ user.username }}",
+					student : chosen_name
+				});
+				chosen_option = " student " + chosen_name;
+			}*/
 			request.done(function(test) {
 				if( $(".success_icon").length ){
 					$( ".success_icon" ).remove();
 				}
 				console.log(test);
 				if (test){
-					$("#success_message").before("<i class='fa fa-check success_icon' style='color:green'></i>");
-					$("#success_message").text(" You successfully created group " + group_name + "!");
-					$("#success_message").css("color","green");
+					$("#group_success_message").before("<i class='fa fa-check success_icon' style='color:green'></i>");
+					$("#group_success_message").text(" You successfully created group " + chosen_group + "!");
+					$("#group_success_message").css("color","green");
+					$("#group").append("<option value='"+chosen_group+"' >Group "+ chosen_group + "</option>");
 				}
 				else{
-					$("#success_message").before("<i class='fa fa-times success_icon' style='color:red'></i>");
-					$("#success_message").text("Sorry but group with name " + group_name + " already exists. Please choose another name!");
-					$("#success_message").css("color","red");
+					$("#group_success_message").before("<i class='fa fa-times success_icon' style='color:red'></i>");
+					$("#group_success_message").text("Sorry but the chosen group " + chosen_group + " already exists. Please choose another name!");
+					$("#group_success_message").css("color","red");
 				}
 			});
 		});
+		
+		
+		$('#register_student_button').click(function () {
+			console.log("click");
+			var chosen_student = $('input:text[name=student]').val();
+			var chosen_group = document.getElementById("group").value;
+
+
+
+				request = $.post("/exerciser/create_student/",{
+					csrfmiddlewaretoken : csrftoken,
+					teacher : "{{ user.username }}",
+					student : chosen_student,
+					group : chosen_group
+				});
+			request.done(function(test) {
+				if( $(".success_icon").length ){
+					$( ".success_icon" ).remove();
+				}
+				console.log(test);
+				if (test){
+					$("#student_success_message").before("<i class='fa fa-check success_icon' style='color:green'></i>");
+					$("#student_success_message").text(" You successfully created student " + chosen_student + " belonging to group " + chosen_group + "!");
+					$("#student_success_message").css("color","green");
+					
+				}
+				else{
+					$("#student_success_message").before("<i class='fa fa-times success_icon' style='color:red'></i>");
+					$("#student_success_message").text("Sorry but the chosen student " + chosen_student + " already exists in group " + chosen_group + ". Please choose another name!");
+					$("#student_success_message").css("color","red");
+				}
+			});
+		});
+
 
 	</script>
 {% endblock %}
