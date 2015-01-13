@@ -1,0 +1,51 @@
+{% extends 'exerciser/teacher_interface_base.html' %}
+
+
+{% block body_block %}
+	<!--<form id="questionnaire_form" method="post" action="/exerciser/submit_questionnaire/" name="questionnaire"><br>
+		{% csrf_token %}
+			<p><label for="teacher_name">Name:</label> <input id="teacher_name" maxlength="30" name="name" type="text"></p>
+			<p><label for="school_name">School:</label> <input id="school_name" name="school" type="text"></p>
+			<input type="radio" name="myname" value="myvalue">MyValue<br/>
+			<input type="radio" name="myname2" value="myvalue2">MyValue2<br/>
+			<input type="checkbox" name="mycheckbox" value="mycheckbox">MyCheckbox<br/>
+			<input type="checkbox" name="mycheckbox2" value="mycheckbox2">MyCheckbox2<br/>
+			What do you think?<br/>
+			<select id="statistics_options" style="margin: 10px 5px 10px 10px; padding: 5px; font-size: 12pt; font-weight: bold;">
+				<option value="time">Average Time</option>
+				<option value="answers">Question Answers</option>
+			</select><br/>
+			Comments<br/>
+			<textarea rows="5" cols="30"></textarea><br/>
+			
+			
+			<input id="login_button" type="submit" value="Submit"/>
+	</form>-->
+			<div class="container">
+			<div class="row">
+				<div class="col-md-12r">
+
+	<form action="/exerciser/submit_questionnaire/" method="post">
+		{% csrf_token %}
+		<table border="1" style="margin-left:auto; margin-right:auto;">
+			{% for field in form %}
+				<tr>
+					<td style="vertical-align:top;">
+						{{ field.label_tag }}
+					</td>
+					<td>
+						{{ field }}
+					</td>
+				</tr>
+			{% endfor %}
+		</table>
+		<input type="submit" value="Submit" />
+	</form>
+	</div>
+	</div>
+	</div>
+
+<i class="fa fa-question" title="We ask for your age only for statistical purposes.gsdsgsgsgddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaattttttttttttttttttttttttttttnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnooooooooooooooooooooooooooooooooooooooooeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"></i>
+
+	
+{% endblock %}

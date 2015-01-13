@@ -38,7 +38,7 @@
 	}
 
 	.question{
-		padding-left: 15px;
+		padding: 0px 10px 0px 10px;
 	}
 
 	#question_submit{
@@ -64,14 +64,14 @@
 	{% if application %}
 		{% if panels %}
 			<div class="row" id = "outer_panel">
-				<table id="panel_container">
+				<table id="panel_container" style="line-height: 116%;">
 					<tr>
 					{% for panel in panels %}
 						<th class = "panel" id="panel_row">
-							<div class="panel">
+							<div class="panel" style="font-size:0;float: left;word-wrap:break-word;padding-top:1px;">
 							{% for fragment in panel.getFragments %}
 								{% autoescape off %}
-								<span id = fragment_{{fragment.id}} class = "fragment">{{ fragment.text }}</span>
+								<span id = fragment_{{fragment.id}} class = "fragment" style="font-size:14px;">{{fragment.text}}</span>
 								{% endautoescape %}
 							{% endfor %}
 							</div>
@@ -82,7 +82,7 @@
 			</div>
 			<div class="row" id="explanation_row">
 				<div class = "resizable" id="explanation_container">
-					<div id = "explanation"> </div>
+					<div id = "explanation" style="line-height: 100%;"> </div>
 					<div class="ui-resizable-handle ui-resizable-n" id = "north"></div>
 				</div>
 			</div>
@@ -94,7 +94,7 @@
 	{% endif %}
 			
 	<div id="overlay" class="web_dialog_overlay"></div>
-	<div id="dialog" class="web_dialog">
+	<div id="dialog" class="web_dialog ">
 		<table id="question_dialogue" cellpadding="3" cellspacing="0">
 			<tr>
 				<td class="web_dialog_title">Question</td>
@@ -147,8 +147,9 @@
 		
 		$(function($) {
 			$( ".resizable").resizable();
+			$( "#dialog" ).draggable();
 		});
-		
+
 		$("#explanation_container").bind('resize', function(e) {
 			$("#panel_container").height($("#interface").height()-$("#explanation_container").height());
 			console.log("expl ".concat($("#explanation_container").height()));

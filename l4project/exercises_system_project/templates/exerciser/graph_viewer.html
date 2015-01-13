@@ -1,33 +1,57 @@
 {% extends 'exerciser/teacher_interface_base.html' %}
 
 {% block style %}
-#container{
-	min-width: 310px;
-	height: 400px;
-	margin: 0 auto;
-}
+	<style>
+		#container{
+			min-width: 310px;
+			height: 400px;
+			margin: 0 auto;
+		}
+		.ui-autocomplete{
+			margin:0;
+			padding:0;
+			width:100px;
 
+		}
+		
+		.ui-menu-item{
+			list-style-type:none;
+
+		}
+	</style>
 {% endblock %}
+
 {% block body_block %}
 <div class="container" style="background:gray;width: 100%;">
 	<select id="group_list" style="margin: 10px 5px 0 10px; padding: 5px; font-size: 12pt; font-weight: bold;">
+		<option value="" disabled selected style="display:none;">Select group...</option>
 		{% for group in groups %}
 			<option value="{{group.name}}" >Group {{group.name}}</option>
 		{% endfor %}
 	</select>
-	
+<!--	
 	<select id="application_list" style="margin: 10px 5px 10px 10px; padding: 5px; font-size: 12pt; font-weight: bold;">
 		{% for application in applications %}
 			<option id="id_{{application.name}}" value="{{application.name}}">{{application.name}}</option>
 		{% endfor %}
 	</select>
-	
+-->
+
 	<select id="statistics_options" style="margin: 10px 5px 10px 10px; padding: 5px; font-size: 12pt; font-weight: bold;">
+		<option value="" disabled selected style="display:none;">Select data type...</option>
 		<option value="time">Average Time</option>
 		<option value="answers">Question Answers</option>
 	</select>
+	<span class="ui-widget">
+		<input id="application" placeholder="Select application...">
+	</span>
+
+	<select id="question_list" style="max-width:250px;margin: 10px 5px 10px 10px; padding: 5px; font-size: 12pt; font-weight: bold;display:none;">
+		<option value="" disabled selected style="display:none;">Select question...</option>
+	</select>
 	
-	<button id="set_data_button" class="autocompare" style="margin: 10px 5px 10px 10px; padding: 5px; font-size: 12pt; font-weight: bold;">Set new data</button>
+	<button id="set_data_button" class="autocompare" style="margin: 10px 5px 10px 10px; padding: 5px; 
+font-size: 12pt; font-weight: bold;">View data</button>
 	<i class="fa fa-info-circle"></i><span class="landing-text">Please select!</span>
 </div>
 	<div id="container" style="width:100%; min-height:80vh; text-align: center;font-size: 12pt; font-weight: bold;"> </div>
@@ -45,6 +69,7 @@
 <!-- Additional files for the Highslide popup effect -->
 <script type="text/javascript" src="http://www.highcharts.com/media/com_demo/highslide-full.min.js"></script>
 <script type="text/javascript" src="http://www.highcharts.com/media/com_demo/highslide.config.js" charset="utf-8"></script>
+<script type="text/javascript" src="/static/js/jquery-ui.js"></script>
 <link rel="stylesheet" type="text/css" href="http://www.highcharts.com/media/com_demo/highslide.css" />
 
 	<script>
@@ -52,27 +77,35 @@
 	
 		{% autoescape off %}
 		var app_questions_dict = {{app_questions_dict}};
+		var applications = {{application_names}};
 		{% endautoescape %}
 		var apps_without_questions=[];
+		var apps_with_questions=[];
+		var legal_applications=applications; //apps that are good for the selected category (questions, average time)
+		var selected_option="";
+
 		for (var application in app_questions_dict) {
 			if (app_questions_dict[application].length == 0){
 				apps_without_questions.push(application);
+			}
+			else{
+				apps_with_questions.push(application);
 			}
 		}
 		console.log(apps_without_questions);
 		
 
-			var count=0;
+		var count=0;
 		$(function () {
 		
-			var selected_option=document.getElementById("statistics_options").value;
-			var selected_application=document.getElementById("application_list").value;
+			var selected_application=$("#application").val();
 			var selected_group=document.getElementById("group_list").value;
+			
 
 			console.log(selected_option + selected_application + selected_group);
 			
 			
-			$('#application_list').on('change', function() {
+			/*$('#application_list').on('change', function() {
 				selected_application = document.getElementById("application_list").value;
 				if(selected_option=="answers"){
 					$("#question_list").empty();
@@ -83,34 +116,49 @@
 			$('#group_list').on('change', function() {
 				selected_group = document.getElementById("group_list").value;
 			});
-			
+			*/
 			$('#statistics_options').on('change', function() {
 				selected_option = document.getElementById("statistics_options").value;
 				if (this.value=="answers"){
-					$( this ).after( "<select id='question_list' style='max-width:250px;margin: 10px 5px 10px 10px; padding: 5px; font-size: 12pt; font-weight: bold;'>	</select>" );
+					$("#question_list").show();
+					/*$( this ).after( "<select id='question_list' style='max-width:250px;margin: 10px 5px 10px 10px; padding: 5px; font-size: 12pt; font-weight: bold;'><option value='' disabled selected style='display:none;'>Select question...</option></select>" );
 					for (var index in apps_without_questions) {
 							$("#id_"+apps_without_questions[index]).wrap('<span/>'); //hide it-no questions (cross-browser compatible)
 					}
-					$("#application_list > option:first").attr("selected", "selected"); 
+					*/
+					//legal_applications=apps_with_questions;
+					//remove apps without questions, when enter app, on click of this show relevant questions, before that Select question...
+				/*	$("#application_list > option:first").attr("selected", "selected"); 
 					selected_application = document.getElementById("application_list").value;
 					console.log("Sel app" + selected_application);
 					console.log($("#application_list > option:first").val()+"FC");
+					*/
 					
-					addQuestions(selected_application);
+					$( "#application" ).autocomplete('option', 'source', apps_with_questions);
+
 				}
 				
 				else{
-					if ($("#question_list").length > 0){
+					//legal_applications=applications;
+					$( "#application" ).autocomplete('option', 'source', applications);
+					$("#question_list").hide();
+					/*if ($("#question_list").length > 0){
 						$("#question_list").remove();
 					}
 					
 					for (var index in apps_without_questions) {
 						$("#id_"+apps_without_questions[index]).unwrap(); //hide it-no questions (cross-browser compatible)
-					}
+					}*/
 				}
 			});
 
-
+$( "#application" ).blur(function() {
+	if (selected_option=="answers"){
+	
+		selected_application=$("#application").val();
+		addQuestions(selected_application);
+	}
+});
 			// the button action
 			$('#set_data_button').click(function () {
 
@@ -123,6 +171,9 @@
 				var yAxisTitle="Seconds";
 				var seriesName="Average time";
 				console.log("%%%%%%%%%%%%%%%%%%%"+selected_option);
+				selected_application=$("#application").val();
+				selected_group = document.getElementById("group_list").value;
+				console.log(selected_application);
 				if(selected_option=="time"){
 					chartType="line";
 				}
@@ -183,18 +234,7 @@
 										},
 										title: {
 											text: selected_application + "- Group " + selected_group,
-										events: {
-											dblclick: function () {
-												alert('dbclick on xAxis label');
-											},
-											click: function (event) {
-												alert('click on xAxis label');
-												console.log("??????"+event.point);
-											},
-											contextmenu: function () {
-												alert('context menu on xAxis label');
-											}
-										}
+	
 										},
 										subtitle: {
 											text: question
@@ -216,7 +256,14 @@
 											
 												dataLabels: {
 												enabled: true,
-												format: '{y} s<br/>Via next: {point.next} <br/>Via back: {point.prev} '
+												formatter: function(){
+													if (chartType == "line"){
+														return Highcharts.numberFormat(this.y,1) + ' s / ' + this.point.next + ' / ' + this.point.prev 
+													} 
+													else {
+														return this.y + ' times'
+													}
+												}
 												},
 
 												cursor: 'pointer',
@@ -230,12 +277,21 @@
 																		y: e.pageY || e.clientY
 																	},
 																	headingText: this.series.name,
-																	maincontentText: "	<div id='cont_"+count+"'> </div><br/> " +
-																		this.x + ' visits',
+																	maincontentText: "	<div id='cont_"+count+"'> </div><br/> ",
 																	width: 600,
 																	height:330
 																});
 																getQuestionData(selected_application,selected_group,this.x);
+															}
+															else{
+																hs.htmlExpand(null, {
+																		pageOrigin: {
+																			x: e.pageX || e.clientX,
+																			y: e.pageY || e.clientY
+																		},
+																		headingText: "Step Expanation",
+																		maincontentText: this.explanation
+																	});
 															}
 														}
 													}
@@ -252,12 +308,19 @@
 											data: sel_data,
 										}],
 										tooltip: {
-											formatter: function() {return ' ' +
-												'Average time: ' + this.point.y +'<br />'+
-												'Via next: ' + this.point.next + '<br />'+
-												'Via back: ' + this.point.prev + '<br />' +
-												'Expanation: ' + this.point.explanation + '<br />';
+											formatter: function() {
+												if(chartType=="line"){
+													return ' ' +
+													'Average time: ' + + Highcharts.numberFormat(this.point.y, 1) +'<br />'+
+													'Via next: ' + this.point.next + '<br />'+
+													'Via back: ' + this.point.prev + '<br />' +
+													'Expanation: ' + this.point.explanation_start + '<br />';
+												}
+												else {
+													return 'Times Chosen: ' + this.point.y;
+												}
 											}
+											
 										}
 						});
 						
@@ -337,6 +400,7 @@ function getQuestionData(selected_application,selected_group,selected_step){
 }		
 
 function addQuestions(selected_application){
+	$("#question_list").empty();
 	for (var question_index in app_questions_dict[selected_application]){
 		var question = app_questions_dict[selected_application][question_index];
 		var option="<option value='" + question +"' >"+question + "</option>";
@@ -344,6 +408,17 @@ function addQuestions(selected_application){
 		$("#question_list").append(option);
 	}
 }
+
+
+ $(function() {
+
+
+		$( "#application" ).autocomplete({minLength: 0,
+		  source: applications
+		}).focus(function() {
+		$(this).autocomplete("search", "");});
+
+});
 	</script>
 {% endblock %}
 

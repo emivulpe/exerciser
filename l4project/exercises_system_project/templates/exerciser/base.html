@@ -35,7 +35,8 @@
 					<span class="icon-bar"></span>
 				</button>
 			</div>
-
+			
+			
 			<!-- Collect the nav links, forms, and other content for toggling -->
 			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 				<ul class="nav navbar-nav navbar-left">
@@ -44,23 +45,29 @@
 						<i class="fa fa-home fa-lg landing-icon fa"></i>&nbsp;<span class="landing-text" style="position: relative; top: 2px;">Home</span>
 						</a>
 					</li>
-					<li class="dropdown">
-						<a class="navbar-brand dropdown-toggle" style="position: relative; left: 10px;" data-toggle="dropdown" href="#"><span class="landing-text" style="position: relative; top: 2px;">Applications<b class="caret"></b></span></a>
-						{% if applications %}
-							<ul class="dropdown-menu">
-								{% for application in applications %}
-								<li><a href="/exerciser/application/{{ application.url }}">{{ application.name }}</a></li>
-								{% endfor %}
-							</ul>
-						{% else %}
-							<strong>There are no applications present.</strong>
-						{% endif %}
+
+					<li id="application_list" class="dropdown">
+						<div class="btn-group" id="myDropdown">
+						  <a class="btn dropdown-toggle" data-toggle="dropdown" href="#" style="position: relative; top: 10px;">
+							<input id="application_text" style="background-color: inherit; border: 0; font-size: 12pt; padding: 0; margin: 0; color: gray; " value="Select Application..."  />
+							<span class="caret"></span>
+						  </a>
+								{% if applications %}
+								<ul class="dropdown-menu" id="application_list">
+									{% for application in applications %}
+									<li><a href="/exerciser/application/{{ application.url }}">{{ application.name }}</a></li>
+									{% endfor %}
+								</ul>
+							{% endif %}
+						</div>
+							
 					</li>
 				</ul>
 				<ul class="nav nav-center">
 					<span style="font-size: 16pt; font-weight: bold; position: relative; top: 5px;">{% block app_name %} {% endblock %}</span>
 				</ul>
 				<ul class="nav navbar-nav navbar-right">
+					{% block reset_registration %} {% endblock %}
 					{% block app_controls %} {% endblock %}
 				</ul>
 			</div>
@@ -76,7 +83,10 @@
 	<script type="text/javascript" src="/static/js/jquery-2.1.1.js"></script>
 	<script type="text/javascript" src="/static/js/bootstrap.min.js"></script>
 	<script>
-
+		console.log("{{request.session.registered}}"+"test");
+		if ("{{request.session.registered}}" == ""){
+			$("#application_list").hide();
+		}
 		$("#interface").css("padding-top",$("#navbar").height());
 		
 		$( window ).resize(function() {
@@ -85,6 +95,29 @@
 			$("#interface").css("padding-top",navHeight);
 			//$("#interface").css("height",$(window).height()-navHeight-1);
 		});
+$(document).ready(function() {
+
+	$('.navbar-collapse').on('show.bs.dropdown', function () {
+		setTimeout(function() {
+			$('#application_text').focus();
+			$('#application_text').val("");
+		}, 50);
+		
+		$('#application_text').blur(function() {
+			$('#application_text').val("Select Application...");
+		});
+		
+	$('#application_text').keyup(function(){
+	   var valThis = $(this).val().toLowerCase();
+		$('#application_list>li').each(function(){
+		 var text = $(this).text().toLowerCase();
+			(text.indexOf(valThis) == 0) ? $(this).show() : $(this).hide();            
+	   });
+	});
+})
+
+
+});
 		
 	</script>
 		

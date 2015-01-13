@@ -140,21 +140,25 @@ class Panel(models.Model):
 	def getFragments(self):
 		return Fragment.objects.filter(document = self.document)
 
+class AcademicYear(models.Model):
+	start = models.IntegerField(primary_key=True)
+		
 class Teacher(models.Model):
 	user = models.OneToOneField(User)
 	can_analyse = models.BooleanField(default=False)
 		
 class Group(models.Model):
 	teacher = models.ForeignKey(Teacher)
+	academic_year = models.ForeignKey(AcademicYear)
 	name = models.CharField(max_length=100, unique=True)
 	
 class Student(models.Model):
 	teacher = models.ForeignKey(Teacher)
 	group = models.ForeignKey(Group)
-	name = models.CharField(max_length=100)
+	student_id = models.CharField(max_length=2)
 	
 	def __unicode__(self):
-		return " ".join((" teacher: ",self.teacher.user.username," group: ",self.group.name, " name",self.name))
+		return " ".join((" teacher: ",self.teacher.user.username," group: ",self.group.name, " name",self.student_id))
 	
 class UsageRecord(models.Model):
 	application = models.ForeignKey(Application)
@@ -186,6 +190,29 @@ class QuestionRecord(models.Model):
 	question = models.ForeignKey(Question)
 	teacher = models.ForeignKey(Teacher, blank=True, null=True)
 	usergroup = models.ForeignKey(Group, blank=True, null=True)
+	student = models.ForeignKey(Student, blank=True, null=True)
 	session_id = models.CharField(max_length=100)
 	answer = models.ForeignKey(Option)
+
+class SampleQuestionnaire(models.Model):
+	FRESHMAN = 'FR'
+	SOPHOMORE = 'SO'
+	JUNIOR = 'JR'
+	SENIOR = 'SR'
+	YEAR_IN_SCHOOL_CHOICES = (
+		(FRESHMAN, 'Freshman'),
+		(SOPHOMORE, 'Sophomore'),
+		(JUNIOR, 'Junior'),
+		(SENIOR, 'Senior'),
+	)
+	year_in_school = models.CharField(max_length=2,
+										choices=YEAR_IN_SCHOOL_CHOICES,
+										default=FRESHMAN)
+	year_in_school2 = models.CharField(max_length=2,
+										choices=YEAR_IN_SCHOOL_CHOICES,
+										default=SENIOR)
+	school=models.CharField(max_length=100)
+	bool=models.BooleanField()
+	comment=models.TextField()
+	
 

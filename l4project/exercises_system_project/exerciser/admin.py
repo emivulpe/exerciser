@@ -1,5 +1,5 @@
 from django.contrib import admin
-from exerciser.models import Document, Fragment, Step, Change, Explanation, Question, Option, Application, Panel, UsageRecord, QuestionRecord, Group, Teacher, Student
+from exerciser.models import Document, Fragment, Step, Change, Explanation, Question, Option, Application, Panel, UsageRecord, QuestionRecord, Group, Teacher, Student, SampleQuestionnaire, AcademicYear
 admin.site.register(Document)
 admin.site.register(Fragment)
 admin.site.register(Step)
@@ -14,3 +14,5 @@ admin.site.register(QuestionRecord)
 admin.site.register(Group)
 admin.site.register(Teacher)
 admin.site.register(Student)
+admin.site.register(SampleQuestionnaire)
+admin.site.register(AcademicYear)

@@ -1,12 +1,15 @@
 from django.template import RequestContext
+from django.shortcuts import render
 from django.shortcuts import render_to_response
-from exerciser.models import Application, Panel, Document, Change, Step, Explanation, UsageRecord, QuestionRecord, Group, Teacher, Question, Option, Student
+from exerciser.models import Application, Panel, Document, Change, Step, Explanation, UsageRecord, QuestionRecord, Group, Teacher, Question, Option, Student, AcademicYear
 import json 
 import simplejson 
 import datetime
+import string
+import random
 from django.views.decorators.csrf import requires_csrf_token
 import django.conf as conf
-from exerciser.forms import UserForm, GroupForm
+from exerciser.forms import UserForm, GroupForm, SampleQuestionnaireForm
 from django.contrib.auth import authenticate, login
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
@@ -15,6 +18,23 @@ from django.contrib.auth.models import User
 from chartit import DataPool, Chart
 from django.db.models import Avg
 from django.db.models import Count, Max
+
+
+
+def get_student_ids(teacher,group,number_needed):
+	print "in get student ids "
+	created=0
+	ids=[]
+	while (created<int(number_needed)):
+		id=random.choice(string.letters)
+		id+=random.choice(string.letters)
+		students=Student.objects.filter(teacher=teacher,group=group,student_id=id)
+		if len(students)==0:
+			student=Student(teacher=teacher,group=group,student_id=id)
+			student.save()
+			ids.append(id)
+			created = created + 1
+	print ids
 
 
 @requires_csrf_token
@@ -38,16 +58,22 @@ def log_info_db(request):
 	student_name=request.session.get("student", None)
 	if teacher_name != None:
 		user=User.objects.filter(username=teacher_name)
-		teacher=Teacher.objects.filter(user=user)[0]
-		record.teacher = teacher
+		teacher=Teacher.objects.filter(user=user)
+		if len(teacher)>0:
+			teacher=teacher[0]
+			record.teacher = teacher
 		
-	if group_name != None:
-		group = Group.objects.filter(name = group_name)[0]
-		record.usergroup = group
-	if student_name != None:
-		print "add code later"
-		############ ADD APPROPRIATE CODE HERE################
-		
+			if group_name != None:
+				group = Group.objects.filter(teacher=teacher,name = group_name)
+				if len(group) > 0:
+					group=group[0]
+					record.usergroup = group
+				if student_name != None:
+					student = Student.objects.filter(teacher=teacher,group=group,student_id=student_name)
+					if len(student) > 0:
+						student=student[0]
+						record.student = student
+
 	"""
 	print(usergroup)
 	if usergroup != None:
@@ -109,22 +135,52 @@ def log_question_info_db(request):
 	return HttpResponse("{}",content_type = "application/json")
 	
 	
+def student_group_list(request):
+
+
+	context = RequestContext(request)
+	
+	group_name = request.GET.get('group', None)
+	teacher_username = request.GET.get('teacher', None)
+	selected_year = request.GET.get('year', None)
+	
+	user = User.objects.filter(username = teacher_username)
+	teacher = Teacher.objects.filter(user=user)[0]
+	year = AcademicYear.objects.filter(start=selected_year)[0]
+	group=Group.objects.filter(teacher=teacher,name=group_name,academic_year=year)[0]
+	
+	students=Student.objects.filter(teacher=teacher,group=group)
+	
+	print "in student group"
+	print students
+	#print "emi",request.GET.get('girl', None) 
+	return render_to_response('exerciser/groupSheet.html', {'students':students}, context)
+	
+	
 @requires_csrf_token
 def create_group(request):
-	print "in create group"
+	print "in create groupppppppppp"
 	group_name = request.POST['group']
 	teacher_username = request.POST['teacher']
+	selected_year = request.POST['year']
+
+	num_students = request.POST['num_students']
+
+
+	print "after student ids"
 	user = User.objects.filter(username = teacher_username)
 	teacher = Teacher.objects.filter(user=user)
+	year = AcademicYear.objects.filter(start=selected_year)[0]
 	print "create"
 	success = False
 	if len(user)>0 and len(teacher)>0:
 		user = user[0]
 		teacher = teacher[0]
 		print "eee", len(Group.objects.filter(teacher=teacher,name=group_name))==0
-		if len(Group.objects.filter(teacher=teacher,name=group_name))==0:
-			group = Group(teacher = teacher, name = group_name)
+		if len(Group.objects.filter(teacher=teacher,name=group_name,academic_year=year))==0:
+			group = Group(teacher = teacher, name = group_name,academic_year=year)
 			group.save()
+			get_student_ids(teacher,group,num_students)
 			success = True
 			print "created"
 	return HttpResponse(simplejson.dumps(success),content_type = "application/json")
@@ -195,7 +251,12 @@ def register_group_with_session(request):
 	print "success",success
 	return HttpResponse(simplejson.dumps(success),content_type = "application/json")
 
-	
+@requires_csrf_token
+def save_session_ids(request):
+	request.session['registered']=True
+	print "saving..."
+	return HttpResponse("{}",content_type = "application/json")
+
 	
 @requires_csrf_token
 def register_teacher_with_session(request):
@@ -230,7 +291,7 @@ def register_student_with_session(request):
 	user = User.objects.filter(username=teacher_username)
 	teacher = Teacher.objects.filter(user=user)[0]
 	group=Group.objects.filter(teacher=teacher, name=group_name)[0]
-	student=Student.objects.filter(teacher=teacher,group=group,name=student_name)
+	student=Student.objects.filter(teacher=teacher,group=group,student_id=student_name)
 	print Student.objects.all()
 	print "student check",student,group,teacher,student_name,group_name,teacher_username
 	if len(student) > 0:
@@ -239,8 +300,54 @@ def register_student_with_session(request):
 		success = True
 	print "success",success
 	return HttpResponse(simplejson.dumps(success),content_type = "application/json")
-
-
+	
+@requires_csrf_token
+def reset_session(request):
+	
+	print "in reset"
+	if 'teacher' in request.session:
+		del request.session['teacher']
+		print "t"
+	if 'group' in request.session:
+		del request.session['group']
+		print "g"
+	if 'student' in request.session:
+		del request.session['student']
+		print "s"
+	if 'registered' in request.session:
+		del request.session['registered']
+		print "r"
+	
+	request.session.delete()
+	request.session.modified = True
+	return HttpResponse("{}",content_type = "application/json")
+	
+@requires_csrf_token
+def reset_session1(request):
+	print "in reset"
+	
+	teacher = request.session.get('teacher', None)
+	group = request.session.get('group', None)
+	student = request.session.get('student', None)
+	registered = request.session.get('registered', None)
+	
+	
+	
+	if  teacher != None:
+		del request.session['teacher']
+		print "t"
+	if group != None:
+		del request.session['group']
+		print "g"
+	if student != None:
+		del request.session['student']
+		print "s"
+	if registered != None:
+		del request.session['registered']
+		print "r"
+	return HttpResponse("{}",content_type = "application/json")
+	
+	
 	
 def index(request):
 	# Request the context of the request.
@@ -261,6 +368,54 @@ def index(request):
 	# Note that the first parameter is the template we wish to use.
 	return render_to_response('exerciser/index.html', context_dict, context)
 
+@login_required	
+def questionnaire1(request):
+	# Request the context of the request.
+	# The context contains information such as the client's machine details, for example.
+	context = RequestContext(request)
+
+	teacher = request.user
+	
+
+	context_dict = {'teacher' : teacher}
+
+	return render_to_response('exerciser/questionnaire.html', context_dict, context)
+	
+@requires_csrf_token
+def submit_questionnaire(request):
+
+	print "submitting form..."
+	
+	
+
+	context = RequestContext(request)
+
+
+	saved = False
+
+	# If it's a HTTP POST, we're interested in processing form data.
+	if request.method == 'POST':
+
+		questionnaire_form = SampleQuestionnaireForm(data=request.POST)
+
+		# If the form is valid...
+		if questionnaire_form.is_valid():
+			# Save the user's form data to the database.
+			questionnaire = questionnaire_form.save()
+			questionnaire.save()
+			saved = True
+
+		# Invalid form - mistakes or something else?
+		# Print problems to the terminal.
+		# They'll also be shown to the user.
+		else:
+			print questionnaire_form.errors
+	else:
+		form = SampleQuestionnaireForm()
+
+	print saved,"form saved"
+	return HttpResponseRedirect('/exerciser/teacher_interface')
+	
 def application(request, application_name_url):
 	# Request our context from the request passed to us.
 	context = RequestContext(request)
@@ -365,9 +520,9 @@ def update_teacher_interface_graph_data(request):
 								explanation=explanation[0]
 								explanation_text=explanation.text
 								if len(explanation_text)<100:
-									explanation_text=explanation_text[:len(explanation_text)]
+									explanation_text_start=explanation_text[:len(explanation_text)]
 								else:
-									explanation_text=explanation_text[:100]
+									explanation_text_start=explanation_text[:100]
 					
 						print "in"
 						records = usage_records.filter(step = step_num)
@@ -384,11 +539,11 @@ def update_teacher_interface_graph_data(request):
 							elif direction_record["direction"] == "back":
 								prev_count = direction_record["count"]
 						
-						sd.append({"y":average['time'],"next":next_count,"prev":prev_count,"explanation":explanation_text})
+						sd.append({"y":average['time'],"next":next_count,"prev":prev_count,"explanation":explanation_text,"explanation_start":explanation_text_start})
 						print "hehe",step_num,average['time']
-				selected_data["question_steps"]=question_steps
-				selected_data["data"]=sd
-				print sd,"this"
+				#selected_data["question_steps"]=question_steps
+				#selected_data["data"]=sd
+				#print sd,"this"
 				################################
 			else:
 				question_text=request.GET['question']
@@ -397,14 +552,16 @@ def update_teacher_interface_graph_data(request):
 				test=question_records.values('answer').annotate(count=Count('answer')).order_by('answer')
 				print test,"test"
 				print Option.objects.filter(id=17)
-				sv=[]
-				sd=[]
+				#sv=[]
+				#sd=[]
 				for option in test:
 					option_text=Option.objects.filter(id=option['answer'])[0].content
 					sd.append({option_text:option['count']})
-					sv.append(option['count'])
+					#sv.append(option['count'])
 				print "SD", sd
+			if sd!=[]:
 				selected_data["data"]=sd
+				selected_data["question_steps"]=question_steps
 		return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")	
 	
 
@@ -471,6 +628,7 @@ def teacher_interface(request):
 	context = RequestContext(request)
 
 	application_list = Application.objects.all()
+	academic_years = AcademicYear.objects.all()
 	
 	# Construct a dictionary to pass to the template engine as its context.
 	# Note the key boldmessage is the same as {{ boldmessage }} in the template!
@@ -497,7 +655,8 @@ def teacher_interface(request):
 		teacher = Teacher.objects.filter (user=user)
 		groups = Group.objects.filter(teacher=teacher)
 
-	context_dict = {'applications' : application_list,'user_form': user_form, 'group_form': group_form,'groups':groups}
+	print "AY", academic_years
+	context_dict = {'applications' : application_list,'user_form': user_form, 'group_form': group_form,'groups':groups,'academic_years':academic_years}
 	
 	
 	# Return a rendered response to send to the client.
@@ -558,6 +717,26 @@ def register(request):
     return HttpResponseRedirect('/exerciser/teacher_interface')
 	
 	
+def questionnaire(request):
+    # if this is a POST request we need to process the form data
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        form = SampleQuestionnaireForm(request.POST)
+        # check whether it's valid:
+        if form.is_valid():
+            # process the data in form.cleaned_data as required
+            # ...
+            # redirect to a new URL:
+            return HttpResponseRedirect('/exerciser/teacher_interface')
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        form = SampleQuestionnaireForm()
+
+    return render(request, 'exerciser/questionnaire.html', {'form': form})
+	
+	
+	
 def user_login(request):
     # Like before, obtain the context for the user's request.
     context = RequestContext(request)
@@ -601,15 +780,17 @@ def statistics(request):
 	groups = Group.objects.filter(teacher=teacher)
 	print len(groups)
 	applications = Application.objects.all();
+	application_names=[]
 	questions={}
 	for application in applications:
+		application_names.append(str(application.name))
 		questions_text=[]
 		app_questions = Question.objects.filter(application=application)
 		for app_question in app_questions:
 			questions_text.append(app_question.question_text)
 		questions[application.name]=questions_text
 	print questions
-	context_dict = {'groups' : groups, 'app_questions_dict' : simplejson.dumps(questions)}
+	context_dict = {'application_names' : application_names, 'groups' : groups, 'app_questions_dict' : simplejson.dumps(questions)}
 	print "YEY"
     	return render_to_response('exerciser/graph_viewer.html', context_dict, context)
 

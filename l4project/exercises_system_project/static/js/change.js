@@ -7,7 +7,7 @@ var answer = "";
 var explanation_dict={}
 var totalSteps = 1;
 var last_direction="next";
-$("#btn_prev").hide();
+$("#btn_prev").css('visibility','hidden');
 
 
 function goToStep(direction) {
@@ -33,14 +33,16 @@ function goToStep(direction) {
 
 
 	if (currentStep == totalSteps-1 && direction == "next"){
-		$("#btn_next").hide();
+		$("#btn_next").css('visibility','hidden');
+		//console.log("disabled");
+		//$('#btn_next').attr("disabled", true);
 	}
 	else if(currentStep == 0 && direction == "back") {
-		$("#btn_prev").hide();
+		$("#btn_prev").css('visibility','hidden');
 	}
 	else {
-		$("#btn_prev").show();
-		$("#btn_next").show();
+		$("#btn_prev").css('visibility','visible');
+		$("#btn_next").css('visibility','visible');
 	}
 
 	if(currentStep >= 0 && currentStep < totalSteps){	
@@ -91,7 +93,7 @@ function goToStep(direction) {
 
 		
 		if (direction == "next" && explanation_dict[currentStep] == undefined) {
-		
+			console.log("1");
 			var explanationText= answer +'<strong>Step '+ (currentStep + 1) +"/" + totalSteps + ':</strong><br>';
 			if(action!="question"){
 				explanationText += explanations[currentStep].substring(1, explanations[currentStep].length-1);
@@ -109,11 +111,15 @@ function goToStep(direction) {
 
 		}
 		else if (direction == "next" && explanation_dict[currentStep] != undefined){
+					console.log("2");
+
 			$('#explanation').html(explanation_dict[currentStep]);
 			currentStep++;
 
 		}
 		else {
+					console.log("3");
+
 			$('#explanation').html(explanation_dict[currentStep-1]);
 		}
 	}
@@ -135,7 +141,8 @@ function doReset() {
 	$("*[id^='fragment_']").css("background-color", "transparent");
 	$("*[id^='fragment_']").hide();
 	$('#explanation').html('');
-	$("#btn_prev").hide();
+	$("#btn_prev").css('visibility','hidden');
+	$("#btn_next").css('visibility','visible');
 	currentStep = 0;
 }
 
@@ -146,7 +153,9 @@ function doAction(fragment, action) {
 	
 	if (action == "show") {
 		object.show();
-		object.css("background-color", "#BC8F8F");
+		object.css("background-color", "#CD96CD");
+		var contactTopPosition = object.position().top;
+		object.parent().animate({scrollTop: contactTopPosition});
 	}
 	
 	else if (action == "hide") {
@@ -154,7 +163,7 @@ function doAction(fragment, action) {
 	}
 	
 	else if (action == "highlight") {
-		object.css("background-color", "#DA70D6");
+		object.css("background-color", "#E3A869");
 	}
 	
 	else if (action == "unhighlight") {
@@ -223,7 +232,19 @@ $(document).ready(function ()
 
 function ShowDialog(){
 	$("#overlay").show();
+	 /*   $("#overlay").css({
+        "position": "absolute",
+        "top": ((($(window).height() - $("#overlay").outerHeight()) / 2) + $(window).scrollTop() + "px"),
+        "left": ((($(window).width() - $("#overlay").outerWidth()) / 2) + $(window).scrollLeft() + "px"),
+		"margin-top":(-($("#overlay").height()/2)+"px"),
+		"margin-left":(-($("#overlay").width()/2)+"px")});*/
+		$("#dialog").css({
+		"position": "absolute",
+		"top": ((($(window).height() - $("#dialog").outerHeight()) / 2) + $(window).scrollTop() + "px"),
+        "left": ((($(window).width() - $("#dialog").outerWidth()) / 2) + $(window).scrollLeft() + "px"),
+		});
 	$("#dialog").fadeIn(300);
+	
 	$("#overlay").unbind("click");
 }
 

@@ -19,16 +19,9 @@
 .web_dialog
 {
    display: none;
-   position: fixed;
-   width: 500px;
-   height: 400px;
-   top: 50%;
-   left: 50%;
-   margin-left: -250px;
-   margin-top: -200px;
    background-color: #ffffff;
    border: 2px solid #336699;
-   padding: 0px;
+   padding-bottom: 10px;
    z-index: 10001;
    font-family: Verdana;
    font-size: 10pt;
