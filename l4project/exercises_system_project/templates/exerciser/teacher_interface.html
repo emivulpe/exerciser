@@ -2,6 +2,7 @@
 
 
 {% block style %}
+<style>
 .brand-heading{
 	font-size: 36pt;
 }
@@ -9,7 +10,13 @@
 .success{
 	color:green;
 }
-
+.choice_selector{
+	margin: 10px 0px 10px 0px;
+	padding: 5px;
+	font-size: 12pt;
+	font-weight: bold;
+}
+</style>
 {% endblock %}
 {% block body_block %}
 
@@ -20,50 +27,110 @@
 				<div class="col-md-4 text-center">
 					<h1>Register/Update a group</h1><br>
 					<form id="register_or_update_group_form">
-					Action:<input id="register_group" type="radio" name="action" value="register" checked>Register
-<input id = "update_group"type="radio" name="action" value="update">Update
-							<p><label for="year">Academic Year:</label> <select id="year" class="year" style="margin: 10px 5px 10px 10px; padding: 5px; font-size: 12pt; font-weight: bold;">
-							{% for year in academic_years %}
-								<option value="{{year.start}}" >{{ year.start}}/{{ year.start|add:"1" }}</option>
-							{% endfor %}
-						</select></p>
-						<p id ="group_id_entry" style="display:none;">
-							<label for="group_id_entry">Group ID:</label> <input  type="text" name="group_id_entry"><br/>
-							<span id="existing_groups">Existing groups: </span>
-						</p>
-						<p id ="group_id_select" style="display:none;">
-							<label for="group_id">Group ID:</label>
-							<select id="group_select" class="group" ></select>
-						</p>
-						<p><label for="num_students">Number of Students:</label> <input id="num_students" type="number" min="0" name="num_students" onkeypress="return isNumber(event)"></p>
-						<input id="register_group_button" type="reset" value="Register">
+					<table class = "choice_selector" >
+						<tr>
+							<td class = "choice_selector" style="text-align:right;padding-right:10px;">Action:
+							</td>
+							<td>
+								<input id="register_group" type="radio" name="action" value="register" checked>Register
+							</td>
+							<td>
+								<input id = "update_group"type="radio" name="action" value="update">Update
+							</td>
+						</tr>
+						<tr>
+							<td style="text-align:right;padding:10px;">
+								<label for="year">Academic Year:</label>
+							</td>
+							<td colspan="2">
+								<select id="year" class="year choice_selector" style="width:100%;">
+									{% for year in academic_years %}
+										<option value="{{year.start}}" >{{ year.start}}/{{ year.start|add:"1" }}</option>
+									{% endfor %}
+								</select>
+							</td>
+						</tr>
+						<tr class="register_group_specific" style="display:none;">
+							<td style="text-align:right;padding-right:10px;">
+								<label>Group ID:</label>
+							</td>
+							<td colspan="2">
+								<input id="group_id_entry" type="text" name="group_id_entry">
+							</td>
+						</tr>
+						<tr class="register_group_specific">
+							<td style="text-align:right; padding-right:10px;">
+								<span id="existing_groups">Existing groups: </span>
+							</td>
+							<td colspan="2"class="existing_groups_list" style="text-align:left;">
+							</td>
+						</tr>
+						<tr id ="group_id_select" style="display:none;">
+							<td style="text-align:right;padding-right:10px;">
+								<label for="group_id">Group ID:</label>
+							</td>
+							<td colspan="2" >
+								<select id="group_entry" class="group" style = "width:100%;"></select>
+							</td>
+						</tr>
+						<tr>
+							<td style="text-align:right;padding-right:10px;">
+								<label for="num_students">Number of Students:</label>
+							</td>
+							<td colspan="2">
+								<input id="num_students" type="number" min="0" name="num_students" onkeypress="return isNumber(event)">
+							</td> 
+						</tr>
+						<tr>
+							<td></td>
+							<td>	
+								<input id="save_group_button" type="reset" value="Register">
+							</td>
+							<td></td>
+						</tr>
+					</table>
 
 					</form>
 					<br>
 					<strong id="group_success_message"></strong>
 				</div>
-				<div class="col-md-4 text-center">
-					<h1 class="brand-heading"><a href="/exerciser/statistics/"><i class="fa fa-bar-chart landing-icon fa-lg fa-5x"></i><br><br><span class="landing-text">View Statistics</span></a></h1>
-				</div>
+
 				<div class="col-md-4 text-center">
 					<h1>View group list</h1><br>
-					<form id="register_or_update_group_form">
-					<p>
-						<label for="year">Academic Year:</label> <select id="group_year" class="year" style="margin: 10px 5px 10px 10px; padding: 5px; font-size: 12pt; font-weight: bold;">
-							{% for year in academic_years %}
-								<option value="{{year.start}}" >{{ year.start}}/{{ year.start|add:"1" }}</option>
-							{% endfor %}
-						</select>
-					</p>
-					<p>
-						<label for="group">Group ID:</label> <select id="group" class="group" style="margin: 10px 5px 10px 10px; padding: 5px; font-size: 12pt; font-weight: bold;">
-						</select>
-					</p>
-						<a id="get_group_list_link" class="btn btn-default"href="/exerciser/get_group_list/" >list</a>
-						<input id="view_group_list" type="reset" value="View">
+					<form id="register_or_update_group_form" style="text-align:center;">
+						<table class = "choice_selector" style="margin: 0 auto;">
+							<tr>
+								<td style="text-align:right;padding-right:10px;">
+									<label for="year">Academic Year:</label> 
+								</td>
+								<td style="text-align:left;">
+									<select id="group_year" class="year">
+									{% for year in academic_years %}
+										<option value="{{year.start}}" >{{ year.start}}/{{ year.start|add:"1" }}</option>
+									{% endfor %}
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td style="text-align:right;padding-right:10px;">
+									<label for="group">Group ID:</label>
+								</td>
+								<td style="text-align:left;">
+									<select id="group" class="group" style="width:100%;"></select>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2">
+									<input id="view_group_list" type="reset" value="View">
+								</td>
+							</tr>
+						</table>
 					</form>
 					<br>
 					<strong id="student_success_message"></strong>
+				</div>
+				<div class="col-md-4 text-center">
+					<h1 class="brand-heading"><a href="/exerciser/statistics/"><i class="fa fa-bar-chart landing-icon fa-lg fa-5x"></i><br><br><span class="landing-text">View Statistics</span></a></h1>
 				</div>
 			</div>			
 		</div>
@@ -160,18 +227,25 @@
 			group_list = year_group_dict[selected_year];
 			//$("#existing_groups").text("Existing groups: ");
 			console.log(3);
-			$(".appended_groups").remove();
+			if(year_element=="year"){
+				$(".existing_groups_list").empty();
+			}
 			for (i = 0; i < group_list.length; i++) {
 				var group = group_list[i];
 				$("#"+group_element).append( "<option value='" + group +"'>" + group + "</option>" );
-				if("#"+group_element=="#group_select")
-				$("#existing_groups").append("<span class='appended_groups'>" + group + " </span>");
+				if(group_element=="group_entry"){
+					$(".existing_groups_list").append("<span class='appended_groups'>" + group + " </span>");
+				}
+			}
+			if (group_list.length==0){
+				$(".existing_groups_list").append("<span class='appended_groups'>None</span>");
 			}
 		};
-		
-		populateGroupList("year","group_select");
-		populateGroupList("group_year","group");
-		setGroupChoice();
+		$(function () {
+			populateGroupList("group_year","group");
+			populateGroupList("year","group_entry");
+			setGroupChoice();
+		});
 		
 		
 	$('.year').on('change', function() {
@@ -187,6 +261,7 @@
 	
 	$("input[name='action']").change(function(){
 	   setGroupChoice();
+	   updateButtonText();
 	});
 
 		function setGroupChoice(){
@@ -195,12 +270,25 @@
 			if (action=="register"){
 			
 				$("#group_id_select").hide();
-				$("#group_id_entry").show();
+				$(".register_group_specific").show();
 			}
 			else{
-				$("#group_id_entry").hide();
+				$(".register_group_specific").hide();
 				$("#group_id_select").show();
 			
+			}
+		
+		}
+		
+		function updateButtonText(){
+		
+			var action = $('input[name=action]:checked').val();
+			if (action=="register"){
+			
+				$("#save_group_button").val("Register");
+			}
+			else{
+				$("#save_group_button").val("Update");
 			}
 		
 		}
@@ -222,7 +310,7 @@
 			});
 		});
 		
-		$('#register_group_button').click(function () {
+		$('#save_group_button').click(function () {
 			var action = $('input[name=action]:checked').val();
 			if (action == "register"){
 		
@@ -274,7 +362,7 @@
 			else{
 				console.log("TODO");
 
-				var chosen_group = $('#group_select').val();
+				var chosen_group = $('#group_entry').val();
 				var num_students = $('#num_students').val();
 				var year=document.getElementById("year").value;
 
