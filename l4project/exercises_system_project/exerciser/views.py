@@ -210,6 +210,32 @@ def create_group(request):
 			success = True
 			print "created"
 	return HttpResponse(simplejson.dumps(success),content_type = "application/json")
+	
+	
+@requires_csrf_token
+def update_group(request):
+	print "in update groupppppppppp"
+	group_name = request.POST['group']
+	teacher_username = request.POST['teacher']
+	selected_year = request.POST['year']
+
+	num_students = request.POST['num_students']
+
+	user = User.objects.filter(username = teacher_username)
+	teacher = Teacher.objects.filter(user=user)
+	year = AcademicYear.objects.filter(start=selected_year)[0]
+
+	success = False
+	if len(user)>0 and len(teacher)>0:
+		user = user[0]
+		teacher = teacher[0]
+		print "eee", len(Group.objects.filter(teacher=teacher,name=group_name))==0
+		if len(Group.objects.filter(teacher=teacher,name=group_name,academic_year=year))>0:
+			group = Group.objects.filter(teacher=teacher,name=group_name,academic_year=year)[0]
+			get_student_ids(teacher,group,num_students)
+			success = True
+			print "created"
+	return HttpResponse(simplejson.dumps(success),content_type = "application/json")
 
 	
 	
@@ -655,13 +681,7 @@ def teacher_interface(request):
 
 	application_list = Application.objects.all()
 	academic_years = AcademicYear.objects.all()
-	
-	# Construct a dictionary to pass to the template engine as its context.
-	# Note the key boldmessage is the same as {{ boldmessage }} in the template!
 
-	# for application in application_list:
-	#	application.url = application.name.replace(' ', '_')
-	print "fde"
 	
 	
 	
@@ -671,7 +691,7 @@ def teacher_interface(request):
 	group_form = GroupForm()
 	
 	
-	groups=[]
+	groups={}
 
 	if request.user.is_authenticated():
 		print "good"
@@ -679,10 +699,15 @@ def teacher_interface(request):
 		teacher_username = request.user
 		user = User.objects.filter(username=teacher_username)
 		teacher = Teacher.objects.filter (user=user)
-		groups = Group.objects.filter(teacher=teacher)
+		for academic_year in academic_years:
+			group_objects = Group.objects.filter(teacher=teacher, academic_year=academic_year)
+			group_names=[]
+			for group in group_objects:
+				group_names.append(str(group.name))
+			groups[academic_year.start]= group_names
 
 	print "AY", academic_years
-	context_dict = {'applications' : application_list,'user_form': user_form, 'group_form': group_form,'groups':groups,'academic_years':academic_years}
+	context_dict = {'applications' : application_list,'user_form': user_form, 'group_form': group_form,'groups': groups,'academic_years':academic_years}
 	
 	
 	# Return a rendered response to send to the client.
