@@ -163,7 +163,8 @@ class Student(models.Model):
 class UsageRecord(models.Model):
 	application = models.ForeignKey(Application)
 	teacher = models.ForeignKey(Teacher, blank=True, null=True)
-	usergroup = models.ForeignKey(Group, blank=True, null=True)
+	group = models.ForeignKey(Group, blank=True, null=True)
+	student = models.ForeignKey(Student, blank=True, null=True)
 	session_id = models.CharField(max_length=100)
 	time_on_step = models.FloatField()
 	step = models.PositiveSmallIntegerField()
@@ -179,17 +180,23 @@ class UsageRecord(models.Model):
 			group=self.usergroup.name
 		else:
 			group="No group"
-		return " ".join((self.application.name ," teacher: ",teacher," group: ",group))
+		if self.student != None:
+			teacher=self.student.student_id
+		else:
+			student="No student id"
+		return " ".join((self.application.name ," teacher: ",teacher," group: ",group," student: ",student))
 
+"""
 class QuestionRecord1(models.Model):
 	record = models.OneToOneField(UsageRecord)
 	answer = models.ForeignKey(Option)
-	
+"""
+
 class QuestionRecord(models.Model):
 	application = models.ForeignKey(Application)
 	question = models.ForeignKey(Question)
 	teacher = models.ForeignKey(Teacher, blank=True, null=True)
-	usergroup = models.ForeignKey(Group, blank=True, null=True)
+	group = models.ForeignKey(Group, blank=True, null=True)
 	student = models.ForeignKey(Student, blank=True, null=True)
 	session_id = models.CharField(max_length=100)
 	answer = models.ForeignKey(Option)

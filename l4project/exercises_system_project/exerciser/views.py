@@ -67,7 +67,7 @@ def log_info_db(request):
 				group = Group.objects.filter(teacher=teacher,name = group_name)
 				if len(group) > 0:
 					group=group[0]
-					record.usergroup = group
+					record.group = group
 				if student_name != None:
 					student = Student.objects.filter(teacher=teacher,group=group,student_id=student_name)
 					if len(student) > 0:
@@ -106,17 +106,22 @@ def log_question_info_db(request):
 	session_id = request.session.session_key
 	application_name = request.POST['example_name']
 	answer_text = request.POST['answer']
+	teacher_name=request.session.get("teacher",None)
+	group_name=request.session.get("group",None)
+	student_name=request.session.get("student", None)
 	
+	print group_name,"GROUP"
 	application = Application.objects.filter(name=application_name)[0]
 	step = Step.objects.filter(application=application, order=current_step)[0]
 	question = Question.objects.filter(step=step)[0]
 	answer = Option.objects.filter(question=question,content=answer_text)[0]
 	
 	timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-	usergroup= request.session.get('teacher_group', None)
+	#usergroup= request.session.get('teacher_group', None)
 	
-	print(usergroup)
+	#print(usergroup)
 	question_record=QuestionRecord(application=application,question=question,answer=answer)
+	"""
 	if usergroup != None:
 		print "not none"
 		teacher_username=usergroup[0]
@@ -130,6 +135,27 @@ def log_question_info_db(request):
 			group = group[0]
 			question_record.usergroup = group
 			question_record.teacher = teacher
+			
+	"""
+	
+	if teacher_name != None:
+		user=User.objects.filter(username=teacher_name)
+		teacher=Teacher.objects.filter(user=user)
+		if len(teacher)>0:
+			teacher=teacher[0]
+			question_record.teacher = teacher
+		
+			if group_name != None:
+				group = Group.objects.filter(teacher=teacher,name = group_name)
+				if len(group) > 0:
+					group=group[0]
+					question_record.group = group
+				if student_name != None:
+					student = Student.objects.filter(teacher=teacher,group=group,student_id=student_name)
+					if len(student) > 0:
+						student=student[0]
+						question_record.student = student
+
 	question_record.save()
 	print("test success")
 	return HttpResponse("{}",content_type = "application/json")
@@ -497,7 +523,7 @@ def update_teacher_interface_graph_data(request):
 			teacher = teacher[0]
 			selected_group = selected_group[0]
 			selected_application = selected_application[0]
-			usage_records = UsageRecord.objects.filter(application=selected_application,teacher=teacher,usergroup=selected_group)
+			usage_records = UsageRecord.objects.filter(application=selected_application,teacher=teacher,group=selected_group)
 			question_steps=[]
 			app_questions=Question.objects.filter(application=selected_application)
 			for question in app_questions:
@@ -548,7 +574,7 @@ def update_teacher_interface_graph_data(request):
 			else:
 				question_text=request.GET['question']
 				question=Question.objects.filter(application=selected_application,question_text=question_text)
-				question_records = QuestionRecord.objects.filter(application=selected_application, question=question, teacher=teacher,usergroup=selected_group)
+				question_records = QuestionRecord.objects.filter(application=selected_application, question=question, teacher=teacher,group=selected_group)
 				test=question_records.values('answer').annotate(count=Count('answer')).order_by('answer')
 				print test,"test"
 				print Option.objects.filter(id=17)
@@ -595,7 +621,7 @@ def get_question_data(request):
 			application = application[0]
 			step=step[0]
 			
-			usage_records = UsageRecord.objects.filter(application=application,teacher=teacher,usergroup=group)
+			usage_records = UsageRecord.objects.filter(application=application,teacher=teacher,group=group)
 			
 
 				
@@ -604,7 +630,7 @@ def get_question_data(request):
 				question=question[0]
 				question_text=question.question_text
 				print "QUESTION",question_text
-				question_records = QuestionRecord.objects.filter(application=application, question=question, teacher=teacher,usergroup=group)
+				question_records = QuestionRecord.objects.filter(application=application, question=question, teacher=teacher,group=group)
 				test=question_records.values('answer').annotate(count=Count('answer')).order_by('answer')
 				print test,"test"
 				print Option.objects.filter(id=17)
