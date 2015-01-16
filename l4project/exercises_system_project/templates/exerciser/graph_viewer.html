@@ -1,5 +1,9 @@
 {% extends 'exerciser/teacher_interface_base.html' %}
-
+{% load static %}
+{% block links %} 	
+	<link rel="stylesheet" type="text/css" href="{% static 'css/ui.dropdownchecklist.themeroller.css' %}" />
+	<link rel="stylesheet" type="text/css" href="{% static 'css/jquery-ui-1.8.4.custom.css' %}" />
+	{% endblock %}
 {% block style %}
 	<style>
 		#container{
@@ -23,11 +27,12 @@
 
 {% block body_block %}
 <div class="container" style="background:gray;width: 100%;">
-	<select id="group_list" style="margin: 10px 5px 0 10px; padding: 5px; font-size: 12pt; font-weight: bold;">
-		<option value="" disabled selected style="display:none;">Select group...</option>
-		{% for group in groups %}
-			<option value="{{group.name}}" >Group {{group.name}}</option>
+	<select id="group_year" class="year">
+		{% for year in academic_years %}
+			<option value="{{year.start}}" >{{ year.start}}/{{ year.start|add:"1" }}</option>
 		{% endfor %}
+	</select>
+	<select id="group_list" style="margin: 10px 5px 0 10px; padding: 5px; font-size: 12pt; font-weight: bold;" class="group">
 	</select>
 <!--	
 	<select id="application_list" style="margin: 10px 5px 10px 10px; padding: 5px; font-size: 12pt; font-weight: bold;">
@@ -41,6 +46,7 @@
 		<option value="" disabled selected style="display:none;">Select data type...</option>
 		<option value="time">Average Time</option>
 		<option value="answers">Question Answers</option>
+		<option value="summary_data">Class Summary</option>
 	</select>
 	<span class="ui-widget">
 		<input id="application" placeholder="Select application...">
@@ -49,12 +55,27 @@
 	<select id="question_list" style="max-width:250px;margin: 10px 5px 10px 10px; padding: 5px; font-size: 12pt; font-weight: bold;display:none;">
 		<option value="" disabled selected style="display:none;">Select question...</option>
 	</select>
-	
+	<select id="s1" multiple="multiple">
+    <option value="a">Alice</option>
+    <option value="b">Bob</option>
+    <option value="c">Christian</option>
+    <option value="d">Daniel</option>
+</select>
 	<button id="set_data_button" class="autocompare" style="margin: 10px 5px 10px 10px; padding: 5px; 
 font-size: 12pt; font-weight: bold;">View data</button>
 	<i class="fa fa-info-circle"></i><span class="landing-text">Please select!</span>
 </div>
 	<div id="container" style="width:100%; min-height:80vh; text-align: center;font-size: 12pt; font-weight: bold;"> </div>
+	
+	<table id="summary_data" border="1" style="display:none;">
+		<caption id="summary_data_caption" style="text-align: center;">test</caption>
+		<tr>
+			<th>Student ID</th>
+			<th>Total time</th>
+			<th>Times revisited</th>
+			<th>Last step</th>
+		</tr>
+	</table>
 
 {% endblock %}
 
@@ -70,6 +91,7 @@ font-size: 12pt; font-weight: bold;">View data</button>
 <script type="text/javascript" src="http://www.highcharts.com/media/com_demo/highslide-full.min.js"></script>
 <script type="text/javascript" src="http://www.highcharts.com/media/com_demo/highslide.config.js" charset="utf-8"></script>
 <script type="text/javascript" src="/static/js/jquery-ui.js"></script>
+<script type="text/javascript" src="/static/js/ui.dropdownchecklist-1.1-min.js"></script>
 <link rel="stylesheet" type="text/css" href="http://www.highcharts.com/media/com_demo/highslide.css" />
 
 	<script>
@@ -78,11 +100,13 @@ font-size: 12pt; font-weight: bold;">View data</button>
 		{% autoescape off %}
 		var app_questions_dict = {{app_questions_dict}};
 		var applications = {{application_names}};
+		var year_group_dict = {{groups}}
 		{% endautoescape %}
 		var apps_without_questions=[];
 		var apps_with_questions=[];
 		var legal_applications=applications; //apps that are good for the selected category (questions, average time)
 		var selected_option="";
+		populateGroupList("group_year","group_list");
 
 		for (var application in app_questions_dict) {
 			if (app_questions_dict[application].length == 0){
@@ -174,169 +198,215 @@ $( "#application" ).blur(function() {
 				selected_application=$("#application").val();
 				selected_group = document.getElementById("group_list").value;
 				console.log(selected_application);
-				if(selected_option=="time"){
-					chartType="line";
-				}
-				else{
-					xAxisTitle="Choices";
-					yAxisTitle="Times chosen";
-					seriesName="Times chosen";
-					chartType="column";
-					question=document.getElementById("question_list").value;
-					console.log("#############"+question+"###################");
-				}
-				console.log("time");
-				var request = $.get('/exerciser/update_graph/', {app_name:selected_application, group:selected_group, info_type:selected_option,question:question})
-				//console.log("here");
-				request.done(function(selected_data) {
-					console.log("here");
-					// when we get here, the request has succeeded.
-					// this should mean that data is now the data from the ajax request (i.e. from the view above)
+				if(selected_option!="summary_data"){
+					if(selected_option=="time"){
+						chartType="line";
+					}
+					else{
+						xAxisTitle="Choices";
+						yAxisTitle="Times chosen";
+						seriesName="Times chosen";
+						chartType="column";
+						question=document.getElementById("question_list").value;
+						console.log("#############"+question+"###################");
+					}
+					console.log("time");
+					var request = $.get('/exerciser/update_graph/', {app_name:selected_application, group:selected_group, info_type:selected_option,question:question})
+					//console.log("here");
+					request.done(function(selected_data) {
+						console.log("here");
+						// when we get here, the request has succeeded.
+						// this should mean that data is now the data from the ajax request (i.e. from the view above)
 
-					console.log("sel" + sel_data);
-					console.log("data " + sel_data);
-					if(Object.getOwnPropertyNames(selected_data).length != 0){
-						sel_data=selected_data["data"];
-						questionSteps=selected_data["question_steps"];
-						console.log(questionSteps);
-						console.log("data>0");
-						if(selected_option=="time"){
-							for (i = 0; i < sel_data.length; i++) { 
-								if(questionSteps.indexOf(i)  != -1){
-									categories[i]="? " + (i+1);
-								}
-								else{
-									categories[i]=(i+1);
-								}
-							}
-						}
-						else{
-							var option_categories=[];
-							var option_data=[];
-							for (i = 0; i < sel_data.length; i++) { 
-								for (var option in sel_data[i]) {
-								  option_categories.push(option);
-								  console.log(option);
-								  option_data.push(sel_data[i][option]);
-								  console.log(sel_data[i][option]);
+						console.log("sel" + sel_data);
+						console.log("data " + sel_data);
+						if(Object.getOwnPropertyNames(selected_data).length != 0){
+							sel_data=selected_data["data"];
+							questionSteps=selected_data["question_steps"];
+							console.log(questionSteps);
+							console.log("data>0");
+							console.log(sel_data+"INITIAL DATA");
+							if(selected_option=="time"){
+								for (i = 0; i < sel_data.length; i++) { 
+									if(questionSteps.indexOf(i)  != -1){
+										categories[i]="? " + (i+1);
+									}
+									else{
+										categories[i]=(i+1);
+									}
 								}
 							}
-							sel_data=option_data;
-							categories=option_categories;
-							console.log(sel_data);
-							console.log(categories);
 							
-						}
+							else{
+								var option_categories=[];
+								var option_data=[];
+								for (i = 0; i < sel_data.length; i++) { 
+									console.log(sel_data[i]+"SELDI");
+									for (var option in sel_data[i]) {
+										console.log(option+"OPTION");
+										if ((typeof option)=="string" && option!="students"){
+										  option_categories.push(option);
 										
-						$('#container').highcharts({
-										chart: {
-											type: chartType
-										},
-										title: {
-											text: selected_application + "- Group " + selected_group,
-	
-										},
-										subtitle: {
-											text: question
-										},
-										xAxis: {
-											categories:categories,
-											title:{
-												text: xAxisTitle
-											}
-										},
-										yAxis: {
-											title:{
-												text: yAxisTitle
-											}
-										},
-										
-										plotOptions: {
-											series: {
-											
-												dataLabels: {
-												enabled: true,
-												formatter: function(){
-													if (chartType == "line"){
-														return Highcharts.numberFormat(this.y,1) + ' s / ' + this.point.next + ' / ' + this.point.prev 
-													} 
-													else {
-														return this.y + ' times'
-													}
-												}
-												},
+										  //console.log(option+"OPTION");
+										  option_data.push({"y":sel_data[i][option],"students":sel_data[i]["students"]});
+										}
+									  
+									  //console.log(sel_data[i][option]+"DATA");
+									}
+								}
+								sel_data=option_data;
+								categories=option_categories;
+								console.log(sel_data);
+								console.log(categories);
 
-												cursor: 'pointer',
-												point: {
-													events: {
-														click: function (e) {
-															if(questionSteps.indexOf(this.x)!=-1){
-																hs.htmlExpand(null, {
-																	pageOrigin: {
-																		x: e.pageX || e.clientX,
-																		y: e.pageY || e.clientY
-																	},
-																	headingText: this.series.name,
-																	maincontentText: "	<div id='cont_"+count+"'> </div><br/> ",
-																	width: 600,
-																	height:330
-																});
-																getQuestionData(selected_application,selected_group,this.x);
-															}
-															else{
-																hs.htmlExpand(null, {
+								
+							}
+							console.log(sel_data+"SELECTED DATA");			
+							$('#container').highcharts({
+											chart: {
+												type: chartType
+											},
+											title: {
+												text: selected_application + "- Group " + selected_group,
+		
+											},
+											subtitle: {
+												text: question
+											},
+											xAxis: {
+												categories:categories,
+												title:{
+													text: xAxisTitle
+												}
+											},
+											yAxis: {
+												allowDecimals: false,
+												title:{
+													text: yAxisTitle
+												}
+											},
+											
+											plotOptions: {
+												series: {
+												
+													dataLabels: {
+													enabled: true,
+													formatter: function(){
+														if (chartType == "line"){
+															return Highcharts.numberFormat(this.y,1) + ' s (' + this.point.prev + ')' 
+														} 
+														else {
+															return this.y + ' times'
+														}
+													}
+													},
+
+													cursor: 'pointer',
+													point: {
+														events: {
+															click: function (e) {
+																if(questionSteps.indexOf(this.x)!=-1){
+																	hs.htmlExpand(null, {
 																		pageOrigin: {
 																			x: e.pageX || e.clientX,
 																			y: e.pageY || e.clientY
 																		},
-																		headingText: "Step Expanation",
-																		maincontentText: this.explanation
+																		headingText: this.series.name,
+																		maincontentText: "	<div id='cont_"+count+"'> </div><br/> ",
+																		width: 600,
+																		height:330
 																	});
+																	getQuestionData(selected_application,selected_group,this.x);
+																}
+																else{
+																	hs.htmlExpand(null, {
+																			pageOrigin: {
+																				x: e.pageX || e.clientX,
+																				y: e.pageY || e.clientY
+																			},
+																			headingText: "Step Explanation",
+																			maincontentText: this.explanation
+																		});
+																}
 															}
 														}
+													},
+													marker: {
+														lineWidth: 1
 													}
-												},
-												marker: {
-													lineWidth: 1
 												}
-											}
-										},
+											},
 
-										series: [{
-											showInLegend: false,
-											name: seriesName,
-											data: sel_data,
-										}],
-										tooltip: {
-											formatter: function() {
-												if(chartType=="line"){
-													return ' ' +
-													'Average time: ' + + Highcharts.numberFormat(this.point.y, 1) +'<br />'+
-													'Via next: ' + this.point.next + '<br />'+
-													'Via back: ' + this.point.prev + '<br />' +
-													'Expanation: ' + this.point.explanation_start + '<br />';
+											series: [{
+												showInLegend: false,
+												name: seriesName,
+												data: sel_data,
+											}],
+											tooltip: {
+												formatter: function() {
+													if(chartType=="line"){
+														return ' ' +
+														'Average time: ' + + Highcharts.numberFormat(this.point.y, 1) +' s<br />'+
+														'Revisited: ' + this.point.prev + ' times<br />' +
+														'Explanation: ' + this.point.explanation_start + '<br />';
+													}
+													else {
+														return 'Times Chosen: ' + this.point.y + '<br/>' +
+														'Students: ' + this.point.students;
+													}
 												}
-												else {
-													return 'Times Chosen: ' + this.point.y;
-												}
+												
 											}
-											
-										}
-						});
-						
-						
-						
-
-					}
-					
+							});
 							
-					else{
-						$('#container').find('.highcharts-container').hide();
-						$('#container').html("<div class='no_stats_info'><br\><br\><br\><br\><br\><br\><i class='fa fa-asterisk' style='color:red'></i><span style='color:red'>There are no statistics for the current selection</span><div>");
-					}
-				});
+							
+							
+
+						}
+						
+								
+						else{
+							$('#container').find('.highcharts-container').hide();
+							$('#container').html("<div class='no_stats_info'><br\><br\><br\><br\><br\><br\><i class='fa fa-asterisk' style='color:red'></i><span style='color:red'>There are no statistics for the current selection</span><div>");
+						}
+					});
+								
+				}
+				else{
+					$(".student_info").remove();
+					$("#summary_data_caption").empty();
+					console.log("TODO TABLE");
+					var selected_application="ClockExample";
+
+					var request = $.get('/exerciser/populate_summary_table/', {application:selected_application, group:selected_group, year:2014})
+					//console.log("here");
+					//var summary_data;
+					request.done(function(summary_data) {
+						console.log("DONE");
+						//summary_data=summary_data;
+						//console.log(summary_data["total_steps"]+"total steps");
+						for (student in summary_data["selected_data"]){
+							$("#summary_data").append("<tr id='student_"+student+"' class='student_info'></tr>");
+							var studentData = summary_data[student];
+							$("#student_"+student).append("<td>" + student + "</td>");
+							$("#student_"+student).append("<td>" + summary_data["selected_data"][student]["total_time"].toFixed(1) + "</td>");
+							$("#student_"+student).append("<td>" + summary_data["selected_data"][student]["num_steps_revisited"] + "</td>");
+							$("#student_"+student).append("<td>" + summary_data["selected_data"][student]["last_step"] + "</td>");
+						
+							//console.log(summary_data[student]);
+							//console.log(summary_data[student]["total_time"]);
+						}
+						$("#summary_data_caption").append(selected_application + " (" + summary_data["total_steps"] + " steps)");
+
+						
+					});
+					//console.log(summary_data);
+					//$('#container').append("<table border='1'><tr><td>test</td></tr></table>");
+					$("#summary_data").show();
+				}
 
 			});
+
 		});
 
 function getQuestionData(selected_application,selected_group,selected_step){
@@ -419,6 +489,64 @@ function addQuestions(selected_application){
 		$(this).autocomplete("search", "");});
 
 });
+	$('.year').on('change', function() {
+		//alert("'#"+$(this).attr('id')+"'" + "'#"+$(".group").first().attr('id')+"'");
+		//populateGroupList('"#'+$(this).attr('id')+'"','"#'+$(".group").first().attr('id')+'"');
+		populateGroupList($(this).attr('id'),nextInDOM('.group', $(this)).attr('id'));
+	});
+function populateGroupList(year_element,group_element) {
+			//var year_element="'#"+year+"'";
+			//var group_element="'#"+group+"'";
+			console.log(year_element+"r3wr");
+			console.log(group_element+"sfa");
+			$("#"+group_element).empty();
+						console.log(1);
+			var selected_year=$("#"+year_element).val();
+						console.log(2);
+			group_list = year_group_dict[selected_year];
+			//$("#existing_groups").text("Existing groups: ");
+			console.log(3);
+			if(year_element=="year"){
+				$(".existing_groups_list").empty();
+			}
+			for (i = 0; i < group_list.length; i++) {
+				var group = group_list[i];
+				$("#"+group_element).append( "<option value='" + group +"'>" + group + "</option>" );
+				if(group_element=="group_entry"){
+					$(".existing_groups_list").append("<span class='appended_groups'>" + group + " </span>");
+				}
+			}
+			if (group_list.length==0){
+				$(".existing_groups_list").append("<span class='appended_groups'>None</span>");
+			}
+		};
+
+//from here: http://stackoverflow.com/questions/12873027/jquery-forget-the-dom-structure-just-find-the-next-element-with-this-class/12873187#12873187
+function nextInDOM(_selector, _subject) {
+    var next = getNext(_subject);
+    while(next.length != 0) {
+        var found = searchFor(_selector, next);
+        if(found != null) return found;
+        next = getNext(next);
+    }
+    return null;
+}
+function getNext(_subject) {
+    if(_subject.next().length > 0) return _subject.next();
+    return getNext(_subject.parent());
+}
+function searchFor(_selector, _subject) {
+    if(_subject.is(_selector)) return _subject;
+    else {
+        var found = null;
+        _subject.children().each(function() {
+            found = searchFor(_selector, $(this));
+            if(found != null) return false;
+        });
+        return found;
+    }
+    return null; // will/should never get here
+}
 	</script>
 {% endblock %}
 

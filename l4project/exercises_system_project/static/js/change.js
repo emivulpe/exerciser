@@ -16,7 +16,13 @@ function goToStep(direction) {
 	$("*[id^='fragment_']").css("background-color", "transparent");
 	$('#explanation').html("");
 	direction = direction;
+	if(currentStep == 0 && direction == "next"){
+		$("#forward_button_label").text("Next");
+		$("#forward_button_label").css('color','black');
+		$("#forward_button_label").css('font-size','14px');
+		$("#next_arrow").show();
 
+	}
 	if (direction == "back") {
 		/*var now = new Date().getTime();
 		$.post("/exerciser/log_info_db/",
@@ -94,7 +100,7 @@ function goToStep(direction) {
 		
 		if (direction == "next" && explanation_dict[currentStep] == undefined) {
 			console.log("1");
-			var explanationText= answer +'<strong>Step '+ (currentStep + 1) +"/" + totalSteps + ':</strong><br>';
+			var explanationText= answer +'<strong>Step '+ (currentStep + 1) +"/" + totalSteps + ':</strong><br/>';
 			if(action!="question"){
 				explanationText += explanations[currentStep].substring(1, explanations[currentStep].length-1);
 				answer = "";
@@ -143,6 +149,12 @@ function doReset() {
 	$('#explanation').html('');
 	$("#btn_prev").css('visibility','hidden');
 	$("#btn_next").css('visibility','visible');
+	$("#forward_button_label").text('Start');
+	$("#forward_button_label").css('color','red');
+	$("#forward_button_label").css('font-size','24px');
+	$("#next_arrow").hide();
+
+
 	currentStep = 0;
 }
 

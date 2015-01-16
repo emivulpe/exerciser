@@ -48,14 +48,24 @@
 					{% endif %}
 					
 					<br/><br/>
-					<div>
-					<input placeholder="Search Application" id="application_search_box" type="text" /> 
+					<div style="text-align:left;">
+					<table style="margin: 0 auto;">
+						<tr>
+						<td>
+							<input placeholder="Search Application" id="application_search_box" type="text" style="margin:10px;"/> 
+						</td>
+						</tr>
+						<tr>
+						<td>
 
-					<ul class="navList">
-					{% for application in applications %}
-					<li><a href="/exerciser/application/{{ application.url }}">{{ application.name }}</a></li>
-					{% endfor %}
-					</ul>
+						<ul class="navList" style=" list-style-type: none; ">
+						{% for application in applications %}
+						<li><a href="/exerciser/application/{{ application.url }}">{{ application.name }}</a></li>
+						{% endfor %}
+						</ul>
+						</td>
+						</tr>
+						</table>
 					</div>
 					</strong>
 
@@ -88,7 +98,7 @@
 						</tr>
 						<tr>
 							<td style="text-align: right;">
-								<input  id = "back_button" type="submit" value="Back" style="margin-top: 10px; font-size: 14pt; font-weight: bold;"/>&nbsp;
+								<input  id = "back_button" type="button" value="Back" style="margin-top: 10px; font-size: 14pt; font-weight: bold;"/>&nbsp;
 							</td>
 							<td style="text-align: left">
 								<input  id = "submit_button" class="save_teacher details" type="submit" value="Next" style="margin-top: 10px; font-size: 14pt; font-weight: bold;" onclick="saveTeacher()"/>&nbsp;
@@ -96,43 +106,7 @@
 							</td>
 						</tr>
 					</table>
-				
-					<!--
-					<table style="border:1px solid black;width:100%;" border="1px">
-					<tr id="teacher_details" class="details" style="display:none">
-						<td align="right" style="padding-right:5px;">Teacher ID: 
-						</td>
-						<td colspan="2" align="left" style="padding-left:5px;vertical-align:center;">
-							<input id = "teacher" type="text" name="TeacherId" style="margin-right: 5px; padding: 5px; font-size: 12pt; font-weight: bold;" /><i class="fa fa-question-circle" title="Enter the teacher id provided by your teacher or click on <No teacher ID> button to proceed."></i>
-						</td>
-					</tr>
-					<tr id="group_details" class="details" style="display:none">
-						<td>Group ID:
-						</td>
-						<td colspan="2">
-							<select id="group_list" style="margin: 10px 5px 0 10px; padding: 5px; font-size: 12pt; font-weight: bold;"></select><i class="fa fa-question-circle" title="Choose the group your teacher assigned you to or click on <No group ID> button to proceed."></i>
-						</td>
-					</tr>
-					<tr id="student_details" class="details" style="display:none" >
-						<td>Student ID: 
-						</td>
-						<td colspan="2">
-							<input id = "student" type="text" name="StudentId" style="margin-right: 5px; padding: 5px; font-size: 12pt; font-weight: bold;" /><i class="fa fa-question-circle" title="Enter the student ID your teacher assigned to you or click on <No student ID> button to proceed."></i>
-						</td>
-					</tr>
-					<tr id="buttons" class="details" style="display:none">
-						<td style="width:33.3%">
-							<input  id = "back_button" type="submit" value="Back" style="margin-top: 10px;display:none; margin-right: 5px; padding: 5px; font-size: 14pt; font-weight: bold;"/>
-						</td>
-						<td style="width:33.3%">
-							<input  id = "submit_button" class="save_teacher details" type="submit" value="Next" style="margin-top: 10px; margin-right: 5px; padding: 5px; font-size: 14pt; font-weight: bold;" onclick="saveTeacher()"/>
-						</td>
-						<td style="width:33.3%">
-							<input id = "no_id" class="details" type="submit" value="No teacher ID" onclick="storeDetails()" style="margin-top: 10px; margin-right: 5px; padding: 5px; font-size: 14pt; font-weight: bold;"/>
-						</td>
-					</tr>
-				</table>
-				-->
+
 				</form>
 				<br>			
 
@@ -195,7 +169,9 @@
 			}
 			message += ".";
 			//$("#success_message").text(message);
-			location.reload(true);
+			//$(this).delay(500);
+			location.reload();
+			//location.reload();
 
 		}
 		
@@ -238,6 +214,7 @@
 			$("#back_button").show();
 			$("#back_button").attr('onclick', 'chooseGroupStep()');
 			$("#submit_button").val("Submit");
+			$("#submit_button").prop("type", "submit");
 			$("#submit_button").attr('onclick', 'saveStudent()');
 			$("#no_id").val('No student ID');
 			$("#success_message").text('');

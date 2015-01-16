@@ -1,6 +1,9 @@
 {% extends 'exerciser/base.html' %}
 {% block style %}
-
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
 	#outer_panel{
 		height:70%;
 		margin:5px;
@@ -56,7 +59,7 @@
 {% block app_name %}{{application_name}}{% endblock %}
 {% block app_controls %}
 	<li><a id="btn_prev" href="#" style="position: relative; top: 2px;"><i class="fa fa-step-backward fa-lg landing-icon fa"></i>&nbsp;Previous</a></li>
-	<li><a id="btn_next" href="#" style="position: relative; top: 2px;">Next&nbsp;<i class="fa fa-step-forward fa-lg landing-icon fa"></i></a></li>
+	<li><a id="btn_next" href="#" style="position: relative; top: 2px;"><label id="forward_button_label" style="color:red;font-size:24px;">Start</label>&nbsp;<i id="next_arrow" class="fa fa-step-forward fa-lg landing-icon fa" style="display:none;"></i></a></li>
 	<li><a id="btn_reset" href="#" style="position: relative; top: 2px;">Reset&nbsp;<i class="fa fa-refresh fa-lg landing-icon fa"></i></a></li>
 {% endblock %}
 
@@ -64,11 +67,11 @@
 	{% if application %}
 		{% if panels %}
 			<div class="row" id = "outer_panel">
-				<table id="panel_container" style="line-height: 116%;">
+				<table id="panel_container" style="line-height: 90%;">
 					<tr>
 					{% for panel in panels %}
 						<th class = "panel" id="panel_row">
-							<div class="panel" style="font-size:0;float: left;word-wrap:break-word;padding-top:1px;">
+							<div class="panel" style="font-size:0;float: left;word-wrap:break-word;padding:2px;">
 							{% for fragment in panel.getFragments %}
 								{% autoescape off %}
 								<span id = fragment_{{fragment.id}} class = "fragment" style="font-size:14px;">{{fragment.text}}</span>
@@ -82,7 +85,7 @@
 			</div>
 			<div class="row" id="explanation_row">
 				<div class = "resizable" id="explanation_container">
-					<div id = "explanation" style="line-height: 100%;"> </div>
+					<div id = "explanation" style="line-height: 104%;padding:2px;font-size:15px;"> </div>
 					<div class="ui-resizable-handle ui-resizable-n" id = "north"></div>
 				</div>
 			</div>

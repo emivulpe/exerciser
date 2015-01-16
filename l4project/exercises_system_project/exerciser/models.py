@@ -166,8 +166,8 @@ class UsageRecord(models.Model):
 	group = models.ForeignKey(Group, blank=True, null=True)
 	student = models.ForeignKey(Student, blank=True, null=True)
 	session_id = models.CharField(max_length=100)
-	time_on_step = models.FloatField()
-	step = models.PositiveSmallIntegerField()
+	time_on_step = models.FloatField(default=0)
+	step = models.PositiveSmallIntegerField(default=0)
 	direction = models.CharField(max_length=10)
 	timestamp = models.DateTimeField('timestamp', null=True, blank=True)
 	
@@ -176,12 +176,12 @@ class UsageRecord(models.Model):
 			teacher=self.teacher.user.username
 		else:
 			teacher="No teacher"
-		if self.usergroup != None:
-			group=self.usergroup.name
+		if self.group != None:
+			group=self.group.name
 		else:
 			group="No group"
 		if self.student != None:
-			teacher=self.student.student_id
+			student=self.student.student_id
 		else:
 			student="No student id"
 		return " ".join((self.application.name ," teacher: ",teacher," group: ",group," student: ",student))

@@ -7,6 +7,7 @@ import simplejson
 import datetime
 import string
 import random
+from random import randint
 from django.views.decorators.csrf import requires_csrf_token
 import django.conf as conf
 from exerciser.forms import UserForm, GroupForm, SampleQuestionnaireForm
@@ -17,7 +18,7 @@ from django.contrib.auth import logout
 from django.contrib.auth.models import User
 from chartit import DataPool, Chart
 from django.db.models import Avg
-from django.db.models import Count, Max
+from django.db.models import Count, Max, Sum
 
 
 
@@ -26,8 +27,8 @@ def get_student_ids(teacher,group,number_needed):
 	created=0
 	ids=[]
 	while (created<int(number_needed)):
-		id=random.choice(string.letters)
-		id+=random.choice(string.letters)
+		id=random.choice(string.lowercase)
+		id+=str(randint(10, 99))
 		students=Student.objects.filter(teacher=teacher,group=group,student_id=id)
 		if len(students)==0:
 			student=Student(teacher=teacher,group=group,student_id=id)
@@ -51,7 +52,7 @@ def log_info_db(request):
 	
 	record = UsageRecord(application = application, session_id = session_id, time_on_step = time_on_step, step = current_step, direction = direction, timestamp = timestamp)
 	
-	#usergroup = request.session.get('teacher_group', None)
+
 	
 	teacher_name=request.session.get("teacher",None)
 	group_name=request.session.get("group",None)
@@ -74,22 +75,6 @@ def log_info_db(request):
 						student=student[0]
 						record.student = student
 
-	"""
-	print(usergroup)
-	if usergroup != None:
-		print "not none"
-		teacher_username=usergroup[0]
-		usergroup_name=usergroup[1]
-		user=User.objects.filter(username=teacher_username)
-		teacher=Teacher.objects.filter(user=user)
-		group = Group.objects.filter(name = usergroup_name)
-		if len(group)>0 and len(teacher) > 0: #both have to be >0 because we can't record only group or teacher
-			print "yes"
-			teacher = teacher[0]
-			group = group[0]
-			record.usergroup = group
-			record.teacher = teacher
-	"""
 
 	record.save()
 	print("test")
@@ -117,26 +102,9 @@ def log_question_info_db(request):
 	answer = Option.objects.filter(question=question,content=answer_text)[0]
 	
 	timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-	#usergroup= request.session.get('teacher_group', None)
-	
-	#print(usergroup)
+
 	question_record=QuestionRecord(application=application,question=question,answer=answer)
-	"""
-	if usergroup != None:
-		print "not none"
-		teacher_username=usergroup[0]
-		usergroup_name=usergroup[1]
-		user=User.objects.filter(username=teacher_username)
-		teacher=Teacher.objects.filter(user=user)
-		group = Group.objects.filter(name = usergroup_name)
-		if len(group)>0 and len(teacher) > 0: #both have to be >0 because we can't record only group or teacher
-			print "yes"
-			teacher = teacher[0]
-			group = group[0]
-			question_record.usergroup = group
-			question_record.teacher = teacher
-			
-	"""
+
 	
 	if teacher_name != None:
 		user=User.objects.filter(username=teacher_name)
@@ -374,31 +342,7 @@ def reset_session(request):
 	request.session.modified = True
 	return HttpResponse("{}",content_type = "application/json")
 	
-@requires_csrf_token
-def reset_session1(request):
-	print "in reset"
-	
-	teacher = request.session.get('teacher', None)
-	group = request.session.get('group', None)
-	student = request.session.get('student', None)
-	registered = request.session.get('registered', None)
-	
-	
-	
-	if  teacher != None:
-		del request.session['teacher']
-		print "t"
-	if group != None:
-		del request.session['group']
-		print "g"
-	if student != None:
-		del request.session['student']
-		print "s"
-	if registered != None:
-		del request.session['registered']
-		print "r"
-	return HttpResponse("{}",content_type = "application/json")
-	
+
 	
 	
 def index(request):
@@ -542,7 +486,7 @@ def update_teacher_interface_graph_data(request):
 		teacher_username = request.user
 		user=User.objects.filter(username=teacher_username)
 		teacher=Teacher.objects.filter(user=user)
-		selected_group = Group.objects.filter(name = group_name)
+		selected_group = Group.objects.filter(name = group_name,teacher=teacher)
 		selected_application=Application.objects.filter(name=app_name)
 		selected_data={}
 		if len(selected_group)>0 and len(selected_application)>0 and len(teacher)>0:
@@ -591,35 +535,99 @@ def update_teacher_interface_graph_data(request):
 							elif direction_record["direction"] == "back":
 								prev_count = direction_record["count"]
 						
-						sd.append({"y":average['time'],"next":next_count,"prev":prev_count,"explanation":explanation_text,"explanation_start":explanation_text_start})
+						sd.append({"y":average['time'],"prev":prev_count,"explanation":explanation_text,"explanation_start":explanation_text_start})
 						print "hehe",step_num,average['time']
 				#selected_data["question_steps"]=question_steps
 				#selected_data["data"]=sd
-				#print sd,"this"
+				print sd,"SD"
 				################################
 			else:
 				question_text=request.GET['question']
-				question=Question.objects.filter(application=selected_application,question_text=question_text)
+				question=Question.objects.filter(application=selected_application,question_text=question_text)[0]
+				all_options=Option.objects.filter(question=question)
+				
 				question_records = QuestionRecord.objects.filter(application=selected_application, question=question, teacher=teacher,group=selected_group)
-				test=question_records.values('answer').annotate(count=Count('answer')).order_by('answer')
-				print test,"test"
-				print Option.objects.filter(id=17)
-				#sv=[]
-				#sd=[]
-				for option in test:
-					option_text=Option.objects.filter(id=option['answer'])[0].content
-					sd.append({option_text:option['count']})
-					#sv.append(option['count'])
-				print "SD", sd
+				
+				
+				for option in all_options:
+					records_for_option=question_records.filter(answer=option)
+					times_chosen=len(records_for_option)
+					student_list=[]
+					for record in records_for_option:
+						student_id=record.student.student_id
+						print student_id
+						if student_id not in student_list:
+							student_list.append(student_id)
+					sd.append({option.content:times_chosen,'students':student_list})
+
 			if sd!=[]:
 				selected_data["data"]=sd
 				selected_data["question_steps"]=question_steps
 		return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")	
 	
+	
+	
+	
+def populate_summary_table(request):
 
+	application=request.GET['application']
+	academic_year=request.GET['year']
+	group_name=request.GET['group']
+	teacher_username = request.user
+	
+	user=User.objects.filter(username=teacher_username)
+	teacher=Teacher.objects.filter(user=user)[0]
+	
+	year=AcademicYear.objects.filter(start=academic_year)[0]
+	
+	group = Group.objects.filter(name = group_name,teacher=teacher,academic_year=year)[0]
+	
+	students=Student.objects.filter(teacher=teacher,group=group)
+	
+	print teacher,year,group,students[0]
+	selected_data={}
+
+	
+	selected_application=Application.objects.filter(name=application)
+	total_steps=selected_application.aggregate(num_steps=Count('step'))
+	print total_steps
+		
+	selected_application=selected_application[0]
+
+
+	for student in students:
+
+		student_id=student.student_id
+		
+		student_records=UsageRecord.objects.filter(application=selected_application,teacher=teacher,group=group,student=student)
+		
+		last_step_reached=student_records.aggregate(last_step=Max('step'))
+		
+		if last_step_reached['last_step'] == None:
+			last_step_reached['last_step'] = 0
+			
+		total_app_time=student_records.aggregate(time_on_step=Sum('time_on_step'))
+		
+		if total_app_time['time_on_step'] == None:
+			total_app_time['time_on_step'] = 0
+			
+		revisited_steps_count=student_records.filter(direction='back').aggregate(count_revisits=Count('id'))
+		print student_id, last_step_reached,total_app_time,revisited_steps_count
+		
+		selected_data[student_id]={'last_step':last_step_reached['last_step'],'total_time':total_app_time['time_on_step'],'num_steps_revisited':revisited_steps_count['count_revisits']}
+		
+
+
+	print selected_data
+	return HttpResponse(simplejson.dumps({"selected_data":selected_data,"total_steps":total_steps['num_steps']}), content_type="application/json")	
+	
+	
+	
+	
 	
 @login_required		
 def get_question_data(request):
+		print "TESTssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss"
 
 		app_name=request.GET['app_name']
 		group_name=request.GET['group']
@@ -635,7 +643,8 @@ def get_question_data(request):
 		
 		#get application
 		application=Application.objects.filter(name=app_name)
-		
+		print "TEST"
+
 		#get step
 		step=Step.objects.filter(application=application,order=step_num)
 
@@ -655,16 +664,24 @@ def get_question_data(request):
 			if len(question)>0:
 				question=question[0]
 				question_text=question.question_text
-				print "QUESTION",question_text
+				all_options=Option.objects.filter(question=question)
 				question_records = QuestionRecord.objects.filter(application=application, question=question, teacher=teacher,group=group)
-				test=question_records.values('answer').annotate(count=Count('answer')).order_by('answer')
-				print test,"test"
-				print Option.objects.filter(id=17)
-
+				answers=question_records.values('answer').annotate(count=Count('answer')).order_by('answer')
+				
 				sd=[]
-				for option in test:
+
+
+				print "TEST"
+				for option in answers:
 					option_text=Option.objects.filter(id=option['answer'])[0].content
 					sd.append({option_text:option['count']})
+				for opt in all_options:
+					print opt,"OPT"
+					for answer in sd:
+						print answer
+						if opt.content not in answer:
+							print opt.content
+							sd.append({opt.content:0})
 				print "SD", sd
 				selected_data['question']=question_text
 				selected_data['data']=sd
@@ -841,7 +858,15 @@ def statistics(request):
 			questions_text.append(app_question.question_text)
 		questions[application.name]=questions_text
 	print questions
-	context_dict = {'application_names' : application_names, 'groups' : groups, 'app_questions_dict' : simplejson.dumps(questions)}
+	academic_years=AcademicYear.objects.all()
+	groups={}
+	for academic_year in academic_years:
+			group_objects = Group.objects.filter(teacher=teacher, academic_year=academic_year)
+			group_names=[]
+			for group in group_objects:
+				group_names.append(str(group.name))
+			groups[academic_year.start]= group_names
+	context_dict = {'application_names' : application_names, 'groups' : groups, 'app_questions_dict' : simplejson.dumps(questions), 'academic_years': academic_years}
 	print "YEY"
     	return render_to_response('exerciser/graph_viewer.html', context_dict, context)
 
