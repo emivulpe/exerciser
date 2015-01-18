@@ -482,6 +482,7 @@ def update_teacher_interface_graph_data(request):
 		print "in update graph"
 		print "group",group_name
 		print "app",app_name
+		print "info",info_type
 
 		teacher_username = request.user
 		user=User.objects.filter(username=teacher_username)
@@ -490,6 +491,7 @@ def update_teacher_interface_graph_data(request):
 		selected_application=Application.objects.filter(name=app_name)
 		selected_data={}
 		if len(selected_group)>0 and len(selected_application)>0 and len(teacher)>0:
+			print "IN"
 			teacher = teacher[0]
 			selected_group = selected_group[0]
 			selected_application = selected_application[0]
@@ -502,6 +504,7 @@ def update_teacher_interface_graph_data(request):
 			
 			sd=[]
 			if info_type=="time":
+				print "time"
 				#### Getting averages ##########
 				num_steps = usage_records.aggregate(max = Max('step'))
 				print "here"
@@ -541,7 +544,8 @@ def update_teacher_interface_graph_data(request):
 				#selected_data["data"]=sd
 				print sd,"SD"
 				################################
-			else:
+			elif info_type=="answers":
+				print "answers"
 				question_text=request.GET['question']
 				question=Question.objects.filter(application=selected_application,question_text=question_text)[0]
 				all_options=Option.objects.filter(question=question)
@@ -559,15 +563,51 @@ def update_teacher_interface_graph_data(request):
 						if student_id not in student_list:
 							student_list.append(student_id)
 					sd.append({option.content:times_chosen,'students':student_list})
+			else:
+				print "else"
+				usage_records=usage_records.filter(step=0) #######   HARDCODED   CHANGE   #############
+				print usage_records 
+				
+				for record in usage_records:
+					sd.append({record.student.student_id:record.time_on_step})
+				print sd,"NEW SD"
 
 			if sd!=[]:
 				selected_data["data"]=sd
 				selected_data["question_steps"]=question_steps
 		return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")	
 	
+def get_step_data(request):
+	application=request.GET['application']
+	#academic_year=request.GET['year']
+	group_name=request.GET['group']
+	step_num=request.GET['step']
+	teacher_username = request.user
 	
 	
-	
+	user=User.objects.filter(username=teacher_username)
+	teacher=Teacher.objects.filter(user=user)
+	selected_group = Group.objects.filter(name = group_name,teacher=teacher)
+	selected_application=Application.objects.filter(name=application)
+	print teacher,"t",selected_group,"g",selected_application,"a"
+	selected_data=[]
+	if len(selected_group)>0 and len(selected_application)>0 and len(teacher)>0:
+		print "IN"
+		teacher = teacher[0]
+		selected_group = selected_group[0]
+		selected_application = selected_application[0]
+		usage_records = UsageRecord.objects.filter(application=selected_application,teacher=teacher,group=selected_group,step=step_num)
+
+		for record in usage_records:
+			selected_data.append({record.student.student_id:record.time_on_step})
+			#print sd,"NEW SD"
+	print selected_data
+		
+	return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")	
+
+		
+		
+		
 def populate_summary_table(request):
 
 	application=request.GET['application']

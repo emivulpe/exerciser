@@ -25,4 +25,5 @@ urlpatterns = patterns('',
 		url(r'^reset_session', views.reset_session, name='reset_session'),
 		url(r'^get_group_list', views.student_group_list, name='student_group_list'),
 		url(r'^populate_summary_table', views.populate_summary_table, name='populate_summary_table'),
+		url(r'^get_step_data', views.get_step_data, name='get_step_data'),
 		) 

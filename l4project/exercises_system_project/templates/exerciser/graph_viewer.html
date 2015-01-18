@@ -47,6 +47,7 @@
 		<option value="time">Average Time</option>
 		<option value="answers">Question Answers</option>
 		<option value="summary_data">Class Summary</option>
+		<option value="class_steps">Class Steps</option>
 	</select>
 	<span class="ui-widget">
 		<input id="application" placeholder="Select application...">
@@ -117,13 +118,54 @@ font-size: 12pt; font-weight: bold;">View data</button>
 			}
 		}
 		console.log(apps_without_questions);
-		
 
+		
+function getStepData(step){
+	selected_application=$("#application").val();
+	selected_group=document.getElementById("group_list").value;
+	var request = $.get('/exerciser/get_step_data/',
+	{	
+		application:selected_application,
+		group:selected_group, 
+		step:step
+	});
+	request.done(function(selected_data) {
+		console.log(selected_data);
+		var option_categories=[];
+		var option_data=[];
+		for (i = 0; i < selected_data.length; i++) { 
+			console.log(selected_data[i]+"SELDI");
+			for (var option in selected_data[i]) {
+				console.log(option+"OPTION");
+				if ((typeof option)=="string" && option!="students"){
+					option_categories.push(option);
+					option_data.push({"y":selected_data[i][option]});
+				}
+			}
+		}
+       var chart = $('#container').highcharts();
+       chart.series[0].setData(option_data);
+	});
+}
 		var count=0;
+		var step=0;
+		
+		
+		function getNextStepData() {
+			step++;
+			console.log(step);
+			getStepData(step);
+		};
+		
+		function getPrevStepData() {
+			step--;
+			console.log(step);
+			getStepData(step);
+		};
 		$(function () {
 		
-			var selected_application=$("#application").val();
-			var selected_group=document.getElementById("group_list").value;
+			selected_application=$("#application").val();
+			selected_group=document.getElementById("group_list").value;
 			
 
 			console.log(selected_option + selected_application + selected_group);
@@ -183,6 +225,8 @@ $( "#application" ).blur(function() {
 		addQuestions(selected_application);
 	}
 });
+
+
 			// the button action
 			$('#set_data_button').click(function () {
 
@@ -194,13 +238,30 @@ $( "#application" ).blur(function() {
 				var xAxisTitle="Steps";
 				var yAxisTitle="Seconds";
 				var seriesName="Average time";
+				
+				/* !!!!!!!!!!!!!!!!!!!!! ADD YEAR !!!!!!!!!!!!!!!!!!!! */
+				
+				
 				console.log("%%%%%%%%%%%%%%%%%%%"+selected_option);
 				selected_application=$("#application").val();
 				selected_group = document.getElementById("group_list").value;
 				console.log(selected_application);
+				console.log("!!!!!!!!!!!!!!!!!!"+selected_option);
 				if(selected_option!="summary_data"){
 					if(selected_option=="time"){
 						chartType="line";
+					}
+					else if(selected_option=="class_steps"){
+						console.log("TODO HISTOGRAM");
+						xAxisTitle="Students";
+						yAxisTitle="Time";
+						seriesName="Time";
+						chartType="column";
+						console.log(step);
+
+						$("#container").before("<button id='prev_step_button' onclick='getPrevStepData()'>Prev</button>");
+						$("#container").before("<button id='next_step_button' onclick='getNextStepData()'>Next</button>");
+						console.log(step);
 					}
 					else{
 						xAxisTitle="Choices";
@@ -209,8 +270,8 @@ $( "#application" ).blur(function() {
 						chartType="column";
 						question=document.getElementById("question_list").value;
 						console.log("#############"+question+"###################");
-					}
-					console.log("time");
+					}	
+					console.log("CHART TYPE", chartType);
 					var request = $.get('/exerciser/update_graph/', {app_name:selected_application, group:selected_group, info_type:selected_option,question:question})
 					//console.log("here");
 					request.done(function(selected_data) {
@@ -292,41 +353,48 @@ $( "#application" ).blur(function() {
 													dataLabels: {
 													enabled: true,
 													formatter: function(){
-														if (chartType == "line"){
+														if (selected_option == "time"){
 															return Highcharts.numberFormat(this.y,1) + ' s (' + this.point.prev + ')' 
 														} 
-														else {
+														else if(selected_option == "answers"){
 															return this.y + ' times'
 														}
-													}
+														else if (selected_option == "class_steps"){
+															return Highcharts.numberFormat(this.y,1) + ' s'
+														}
+														else{
+															return this.y
+													}	}
 													},
 
 													cursor: 'pointer',
 													point: {
 														events: {
 															click: function (e) {
-																if(questionSteps.indexOf(this.x)!=-1){
-																	hs.htmlExpand(null, {
-																		pageOrigin: {
-																			x: e.pageX || e.clientX,
-																			y: e.pageY || e.clientY
-																		},
-																		headingText: this.series.name,
-																		maincontentText: "	<div id='cont_"+count+"'> </div><br/> ",
-																		width: 600,
-																		height:330
-																	});
-																	getQuestionData(selected_application,selected_group,this.x);
-																}
-																else{
-																	hs.htmlExpand(null, {
+																if(selected_option=="time"){
+																	if(questionSteps.indexOf(this.x)!=-1){
+																		hs.htmlExpand(null, {
 																			pageOrigin: {
 																				x: e.pageX || e.clientX,
 																				y: e.pageY || e.clientY
 																			},
-																			headingText: "Step Explanation",
-																			maincontentText: this.explanation
+																			headingText: this.series.name,
+																			maincontentText: "	<div id='cont_"+count+"'> </div><br/> ",
+																			width: 600,
+																			height:330
 																		});
+																		getQuestionData(selected_application,selected_group,this.x);
+																	}
+																	else{
+																		hs.htmlExpand(null, {
+																				pageOrigin: {
+																					x: e.pageX || e.clientX,
+																					y: e.pageY || e.clientY
+																				},
+																				headingText: "Step Explanation",
+																				maincontentText: this.explanation
+																			});
+																	}
 																}
 															}
 														}
@@ -344,15 +412,21 @@ $( "#application" ).blur(function() {
 											}],
 											tooltip: {
 												formatter: function() {
-													if(chartType=="line"){
+													if(selected_option=="time"){
 														return ' ' +
-														'Average time: ' + + Highcharts.numberFormat(this.point.y, 1) +' s<br />'+
+														'Average time: ' + Highcharts.numberFormat(this.point.y, 1) +' s<br />'+
 														'Revisited: ' + this.point.prev + ' times<br />' +
 														'Explanation: ' + this.point.explanation_start + '<br />';
 													}
-													else {
+													else if (selected_option=="answers"){
 														return 'Times Chosen: ' + this.point.y + '<br/>' +
 														'Students: ' + this.point.students;
+													}
+													else if (selected_option=="class_steps"){
+														return "Time: " + Highcharts.numberFormat(this.point.y,1) + " s";
+													}
+													else {
+														return this.point.y;
 													}
 												}
 												
