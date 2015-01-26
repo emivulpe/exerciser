@@ -3,3 +3,9 @@
 			height:95vh;
 			position:relative;
 }
+.choice_selector{
+	margin: 10px 0px 10px 0px;
+	padding: 5px;
+	font-size: 12pt;
+	font-weight: bold;
+}

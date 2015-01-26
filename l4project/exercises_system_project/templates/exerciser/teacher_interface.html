@@ -1,6 +1,10 @@
 {% extends 'exerciser/teacher_interface_base.html' %}
 
+{% block links %} 
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
 
+
+{% endblock %}
 {% block style %}
 <style>
 .brand-heading{
@@ -10,11 +14,8 @@
 .success{
 	color:green;
 }
-.choice_selector{
-	margin: 10px 0px 10px 0px;
-	padding: 5px;
-	font-size: 12pt;
-	font-weight: bold;
+.ui-dialog-titlebar-close{
+    display: none;
 }
 </style>
 {% endblock %}
@@ -32,17 +33,20 @@
 							<td class = "choice_selector" style="text-align:right;padding-right:10px;">Action:
 							</td>
 							<td>
-								<input id="register_group" type="radio" name="action" value="register" checked>Register
+								<input id="register_group" type="radio" name="action" value="register" checked><label for="register_group">Register</label>
 							</td>
 							<td>
-								<input id = "update_group"type="radio" name="action" value="update">Update
+								<input id = "update_group"type="radio" name="action" value="update"><label for="update_group">Update</label>
+							</td>
+							<td>
+								<input id = "delete_group"type="radio" name="action" value="delete"><label for="delete_group">Delete</label>
 							</td>
 						</tr>
 						<tr>
 							<td style="text-align:right;padding:10px;">
 								<label for="year">Academic Year:</label>
 							</td>
-							<td colspan="2">
+							<td colspan="3">
 								<select id="year" class="year choice_selector" style="width:100%;">
 									{% for year in academic_years %}
 										<option value="{{year.start}}" >{{ year.start}}/{{ year.start|add:"1" }}</option>
@@ -54,7 +58,7 @@
 							<td style="text-align:right;padding-right:10px;">
 								<label>Group ID:</label>
 							</td>
-							<td colspan="2">
+							<td colspan="3">
 								<input id="group_id_entry" type="text" name="group_id_entry">
 							</td>
 						</tr>
@@ -62,22 +66,22 @@
 							<td style="text-align:right; padding-right:10px;">
 								<span id="existing_groups">Existing groups: </span>
 							</td>
-							<td colspan="2"class="existing_groups_list" style="text-align:left;">
+							<td colspan="3"class="existing_groups_list" style="text-align:left;">
 							</td>
 						</tr>
 						<tr id ="group_id_select" style="display:none;">
 							<td style="text-align:right;padding-right:10px;">
 								<label for="group_id">Group ID:</label>
 							</td>
-							<td colspan="2" >
+							<td colspan="3" >
 								<select id="group_entry" class="group" style = "width:100%;"></select>
 							</td>
 						</tr>
-						<tr>
+						<tr class="update_group_specific">
 							<td style="text-align:right;padding-right:10px;">
-								<label for="num_students">Number of Students:</label>
+								<label for="num_students">Add students:</label>
 							</td>
-							<td colspan="2">
+							<td colspan="3">
 								<input id="num_students" type="number" min="0" name="num_students" onkeypress="return isNumber(event)">
 							</td> 
 						</tr>
@@ -203,7 +207,11 @@
 		</div>
 
 	{% endif %}
-
+	
+<div id="success_dialog" title="Success message">
+  <span id = "success_message"></span>
+</div>
+ 
 {% endblock %}
 
 {% block javascripts %}
@@ -211,10 +219,13 @@
 	<script type="text/javascript" src="/static/js/cookieAccessor.js"></script>
 
 	<script>
+	
 		{% autoescape off %}
-		var year_group_dict = {{groups}};
+		var year_group_dict = {{groups}}; // Mapping between the academic years and the groups for each
 		{% endautoescape %}
-		console.log(year_group_dict + "DICT");
+
+		
+		// Needs REFACTORING
 		function populateGroupList(year_element,group_element) {
 			//var year_element="'#"+year+"'";
 			//var group_element="'#"+group+"'";
@@ -241,6 +252,8 @@
 				$(".existing_groups_list").append("<span class='appended_groups'>None</span>");
 			}
 		};
+		
+		
 		$(function () {
 			populateGroupList("group_year","group");
 			populateGroupList("year","group_entry");
@@ -249,16 +262,9 @@
 		
 		
 	$('.year').on('change', function() {
-		//alert("'#"+$(this).attr('id')+"'" + "'#"+$(".group").first().attr('id')+"'");
-		//populateGroupList('"#'+$(this).attr('id')+'"','"#'+$(".group").first().attr('id')+'"');
 		populateGroupList($(this).attr('id'),nextInDOM('.group', $(this)).attr('id'));
 	});
 
-	/*$('#group_year').on('change', function() {
-		populateGroupList("#group_year","#group");
-	});
-	*/
-	
 	$("input[name='action']").change(function(){
 	   setGroupChoice();
 	   updateButtonText();
@@ -268,14 +274,19 @@
 		
 			var action = $('input[name=action]:checked').val();
 			if (action=="register"){
-			
+				$(".update_group_specific").show();
 				$("#group_id_select").hide();
 				$(".register_group_specific").show();
 			}
-			else{
+			else if (action == "update"){
+				$(".update_group_specific").show();
 				$(".register_group_specific").hide();
 				$("#group_id_select").show();
-			
+			}
+			else if (action == "delete"){
+				$(".register_group_specific").hide();
+				$(".update_group_specific").hide();
+				$("#group_id_select").show();
 			}
 		
 		}
@@ -287,12 +298,19 @@
 			
 				$("#save_group_button").val("Register");
 			}
-			else{
+			else if (action == "update"){
 				$("#save_group_button").val("Update");
+			}
+			else if (action == "delete"){
+				$("#save_group_button").val("Delete");
 			}
 		
 		}
 		var csrftoken = getCookie('csrftoken');
+		
+		
+		
+		// Not sure if this does anything
 		$('button').each(function(){
 			$(this).closest('form').find("input[type=text], textarea").val("");
 			console.log("DA");
@@ -300,105 +318,108 @@
 		});
 		
 		$('#register_or_update_group_form').submit(function(e) {
-			e.preventDefault();	
+			e.preventDefault();
 		});
 		
-		
-		$('#get_group_list_button').click(function () {
-			request = $.post("/exerciser/get_group_list/",{
-					csrfmiddlewaretoken : csrftoken,
-			});
-		});
-		
-		$('#save_group_button').click(function () {
-			var action = $('input[name=action]:checked').val();
-			if (action == "register"){
-		
-				console.log("click");
-				var chosen_group = $('input:text[name=group_id_entry]').val();
-				var num_students = $('#num_students').val();
-				var year=document.getElementById("year").value;
 
-				console.log("{{ user.username }}");
-				console.log(num_students+"num");
-				//var request;
-				//var chosen_option="";
-				//if(option=="group"){
-					request = $.post("/exerciser/create_group/",{
-						csrfmiddlewaretoken : csrftoken,
-						teacher : "{{ user.username }}",
-						group : chosen_group,
-						year : year,
-						num_students : num_students
-					});
-					//chosen_option = " group " + chosen_name;
-				//}
-				/*else{
-					request = $.post("/exerciser/create_student/",{
-						csrfmiddlewaretoken : csrftoken,
-						teacher : "{{ user.username }}",
-						student : chosen_name
-					});
-					chosen_option = " student " + chosen_name;
-				}*/
-				request.done(function(test) {
-					if( $(".success_icon").length ){
-						$( ".success_icon" ).remove();
-					}
-					console.log(test);
-					if (test){
-						$("#group_success_message").before("<i class='fa fa-check success_icon' style='color:green'></i>");
-						$("#group_success_message").text(" You successfully created group " + chosen_group + "!");
-						$("#group_success_message").css("color","green");
-						$("#group").append("<option value='"+chosen_group+"' >Group "+ chosen_group + "</option>");
-					}
-					else{
-						$("#group_success_message").before("<i class='fa fa-times success_icon' style='color:red'></i>");
-						$("#group_success_message").text("Sorry but the chosen group " + chosen_group + " already exists. Please choose another name!");
-						$("#group_success_message").css("color","red");
-					}
-				});
+		// A function to deal with the logic for registering a new group
+		function registerGroup(chosenYear,numStudents){
+			var chosenGroup = $('input:text[name=group_id_entry]').val(); //Get the chosen group
+
+			// Send a request to register a group
+			request = $.post("/exerciser/create_group/",{
+				csrfmiddlewaretoken : csrftoken,
+				teacher : "{{ user.username }}",
+				group : chosenGroup,
+				year : chosenYear,
+				num_students : numStudents
+			});
+
+			// Receive a response
+			request.done(function(success) {
+				showSuccessMessage(success,chosenGroup);
+			});
+		}
+		
+		// A function for updating a group
+		function updateGroup(chosenYear,numStudents){
+			var chosenGroup = $('#group_entry').val(); //Get the chosen group
+
+			// Send a request to update a group
+			request = $.post("/exerciser/update_group/",{
+				csrfmiddlewaretoken : csrftoken,
+				teacher : "{{ user.username }}",
+				group : chosenGroup,
+				year : chosenYear,
+				num_students : numStudents
+			});
+
+			// Receive a response
+			request.done(function(success) {
+				showSuccessMessage(success,chosenGroup);
+			});
+		}
+
+		// A function for deleting a group
+		function deleteGroup(chosenYear){
+			var chosenGroup = $('#group_entry').val(); //Get the chosen group
+
+			// Send a request to update a group
+			request = $.post("/exerciser/delete_group/",{
+				csrfmiddlewaretoken : csrftoken,
+				teacher : "{{ user.username }}",
+				group : chosenGroup,
+				year : chosenYear,
+			});
+
+			// Receive a response
+			request.done(function(success) {
+				showSuccessMessage(success,chosenGroup);
+			});
+		}
+		
+		// A function to show a success/unsuccess message after registering/updating a group
+		function showSuccessMessage(success,chosenGroup){
+			$("#success_dialog").show();
+			// Remove any previous success/unsuccess messages
+			if( $(".success_icon").length ){
+				$( ".success_icon" ).remove();
+			}
+
+			// Show success/unsuccess messages to the user
+			if (success){
+				$("#success_message").before("<i class='fa fa-check success_icon' style='color:green'></i>");
+				$("#success_message").text(" Your changes to group " + chosenGroup + " have been saved!");
+				$("#success_message").css("color","green");
+				$("#group").append("<option value='"+chosenGroup+"' >Group "+ chosenGroup + "</option>");
 			}
 			else{
-				console.log("TODO");
-
-				var chosen_group = $('#group_entry').val();
-				var num_students = $('#num_students').val();
-				var year=document.getElementById("year").value;
-
-				console.log("{{ user.username }}");
-				console.log(num_students+"num");
-				console.log(chosen_group+"group");
-
-					request = $.post("/exerciser/update_group/",{
-						csrfmiddlewaretoken : csrftoken,
-						teacher : "{{ user.username }}",
-						group : chosen_group,
-						year : year,
-						num_students : num_students
-					});
-
-				request.done(function(test) {
-					if( $(".success_icon").length ){
-						$( ".success_icon" ).remove();
-					}
-					console.log(test);
-					if (test){
-						$("#group_success_message").before("<i class='fa fa-check success_icon' style='color:green'></i>");
-						$("#group_success_message").text(" You successfully created group " + chosen_group + "!");
-						$("#group_success_message").css("color","green");
-						$("#group").append("<option value='"+chosen_group+"' >Group "+ chosen_group + "</option>");
-					}
-					else{
-						$("#group_success_message").before("<i class='fa fa-times success_icon' style='color:red'></i>");
-						$("#group_success_message").text("Sorry but the chosen group " + chosen_group + " already exists. Please choose another name!");
-						$("#group_success_message").css("color","red");
-					}
-				});
-
-			
+				$("#success_message").before("<i class='fa fa-times success_icon' style='color:red'></i>");
+				$("#success_message").text(" There was a problem making the changes to group " + chosenGroup + "! Please try again!");
+				$("#success_message").css("color","red");
 			}
-			location.reload();
+			$("#success_dialog").dialog('open');
+		}
+		
+		//A function to deal with the logic for choosing between registering and updating a group
+		$('#save_group_button').click(function () {
+			var action = $('input[name=action]:checked').val(); // Get the action chosen
+			var numStudents = $('#num_students').val(); // Get the number of students to add
+			var chosenYear=document.getElementById("year").value; // Get the chosen academic year
+			
+			
+			console.log(numStudents + chosenYear + "THISISIT");
+			
+			if (action == "register"){
+				registerGroup(chosenYear,numStudents);
+			}
+			else if (action == "update"){
+				updateGroup(chosenYear,numStudents);
+			}
+			else if (action == "delete"){
+				deleteGroup(chosenYear);
+			}
+			
 		});
 		
 		
@@ -410,12 +431,26 @@
 			window.location="/exerciser/get_group_list"+variables;
 		});
 
+  $(function() {
+    $( "#success_dialog" ).dialog({
+      modal: true,
+	  autoOpen: false,
+      buttons: {
+        Ok: function() {
+          $( this ).dialog( "close" );
+		  location.reload(); // Reload the page to reflect the new changes
+        }
+      }
+    });
+  });
+
+// A function to ensure that only numbers are accepted when entering the number of students to add to a group 
 function isNumber(evt){
-    var charCode = (evt.which) ? evt.which : event.keyCode
-    if (charCode > 31 && (charCode < 48 || charCode > 57))
-        return false;
-    return true;
-}  
+	var charCode = (evt.which) ? evt.which : event.keyCode
+	if (charCode > 31 && (charCode < 48 || charCode > 57))
+		return false;
+	return true;
+}
 
 //from here: http://stackoverflow.com/questions/12873027/jquery-forget-the-dom-structure-just-find-the-next-element-with-this-class/12873187#12873187
 function nextInDOM(_selector, _subject) {

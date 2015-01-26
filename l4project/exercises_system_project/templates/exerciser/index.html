@@ -9,10 +9,10 @@
 {% endblock %}
 	
 		{% block reset_registration %}
-		{% if request.session.registered %}
-								<a class="navbar-brand" href="#" onclick="resetRegistration()">
-						<i class="fa fa-refresh landing-icon fa"></i>&nbsp;<span class="landing-text" style="position: relative; top: 2px;">Reset details</span>
-						</a>
+			{% if request.session.registered %}
+				<a class="navbar-brand" href="#" onclick="resetRegistration()">
+					<i class="fa fa-refresh landing-icon fa"></i>&nbsp;<span class="landing-text" style="position: relative; top: 2px;">Reset details</span>
+				</a>
 			{% endif %}
 		{% endblock %}
 	
@@ -84,6 +84,19 @@
 								<input id = "teacher" type="text" name="TeacherId" style="margin-right: 5px; padding: 5px; font-size: 12pt; font-weight: bold; margin-left: 10px;width:200px;" /><i class="fa fa-question-circle" title="Enter the teacher id provided by your teacher or click on <No teacher ID> button to proceed."></i>
 							</td>
 						</tr>
+						
+						<tr id="year_details" class="details" style="display:none">
+					
+							<td style="width: 40%; text-align: right; padding-right: 10px;">Academic Year:</td>
+							<td style="text-align: left;">
+								<select id="academic_year_select" style="margin-right: 5px; padding: 5px; font-size: 12pt; font-weight: bold; margin-left: 10px;width:200px;">
+									{% for year in academic_years %}
+										<option value="{{year.start}}" >{{ year.start}}/{{ year.start|add:"1" }}</option>
+									{% endfor %}
+								</select>
+								<i class="fa fa-question-circle" title="Enter the teacher id provided by your teacher or click on <No teacher ID> button to proceed."></i>
+							</td>
+						</tr>
 						<tr id="group_details" class="details" style="display:none">
 							<td style="width: 40%; text-align: right; padding-right: 10px;">Group ID:</td>
 							<td style="text-align: left;">
@@ -128,6 +141,7 @@
 		console.log("Teacher {{request.session.teacher}},{{applications}}");
 		var csrftoken = getCookie('csrftoken');
 		var teacher_name="";
+		var academic_year="";
 		var group_name="";
 		var student_name="";
 		//var successful_registration = False;
@@ -157,7 +171,7 @@
 				message += "registered with teacher id " + teacher_name;
 				
 				if (group_name != ""){
-					message += ", group id " + group_name;
+					message += ", group id " + group_name + " (" + academic_year + ") "; // TODO (year) is not printed
 					
 					if (student_name != "") {
 						message += " and student id " + student_name;
@@ -168,21 +182,22 @@
 				message += "anonymously";
 			}
 			message += ".";
-			//$("#success_message").text(message);
-			//$(this).delay(500);
+
 			location.reload();
-			//location.reload();
+
 
 		}
 		
 
 		function chooseTeacherStep(){
 			teacher_name="";
+			academic_year="";
 			group_name="";
 			student_name="";
 			$("#teacher_details").show();
 			$("#group_list").empty();
 			$("#buttons").show();
+			$("#year_details").hide();
 			$("#group_details").hide();
 			$("#student_details").hide();
 			$("#back_button").hide();
@@ -196,10 +211,11 @@
 			group_name="";
 			student_name="";
 			$("#teacher_details").hide();
+			$("#year_details").hide();
 			$("#group_details").show();
 			$("#student_details").hide();
 			$("#back_button").show();
-			$("#back_button").attr('onclick', 'chooseTeacherStep()');
+			$("#back_button").attr('onclick', 'chooseYearStep()');
 			$("#submit_button").val("Next");
 			$("#submit_button").attr('onclick', 'saveGroup()');
 			$("#no_id").val('No group ID');
@@ -210,6 +226,7 @@
 			student_name="";
 			$("#teacher_details").hide();
 			$("#group_details").hide();
+			$("#year_details").hide();
 			$("#student_details").show();
 			$("#back_button").show();
 			$("#back_button").attr('onclick', 'chooseGroupStep()');
@@ -220,7 +237,19 @@
 			$("#success_message").text('');
 		}
 		
-		
+		function chooseYearStep(){
+			teacher_name="";
+			$("#teacher_details").hide();
+			$("#group_details").hide();
+			$("#year_details").show();
+			$("#student_details").hide();
+			$("#back_button").show();
+			$("#back_button").attr('onclick', 'chooseTeacherStepStep()');
+			$("#submit_button").val("Next");
+			$("#submit_button").attr('onclick', 'saveYear()');
+			$("#no_id").val('No year');
+			$("#success_message").text('');
+		}
 
 		function saveStudent(){
 
@@ -259,14 +288,11 @@
 			
 			request.done(function(reply) {
 
-				if(reply["success"]){
+				if(reply){
 					teacher_name=teacher;
-					chooseGroupStep();
+					chooseYearStep();
 
-					for (var index in reply["groups"]) {
-						var group="<option value='" + reply["groups"][index] +"' >"+reply["groups"][index] + "</option>";
-						$("#group_list").append(group);
-					}
+
 				}
 				
 				else{
@@ -306,6 +332,39 @@
 			});
 		}
 		
+		
+		function saveYear(){
+
+			$("#buttons").hide();
+			var year=document.getElementById("academic_year_select").value;
+
+			var request = $.post("/exerciser/register_year_with_session/",
+			{
+			year : year,
+			csrfmiddlewaretoken : csrftoken
+			});
+			
+			request.done(function(reply) {
+
+				if(reply["success"]){
+				
+					for (var index in reply["groups"]) {
+						var group="<option value='" + reply["groups"][index] +"' >"+reply["groups"][index] + "</option>";
+						$("#group_list").append(group);
+					}
+					
+					academic_year=year;
+
+					chooseGroupStep();
+
+				}
+				else{
+					console.log("no such group");
+					$("#success_message").text("Sorry, but the year " + group + " is invalid. Please, try again, or click <No year> button to continue!!");
+				}
+				$("#buttons").show();
+			});
+		}
 		
 		$('#application_search_box').keyup(function(){
 		   var valThis = $(this).val().toLowerCase();

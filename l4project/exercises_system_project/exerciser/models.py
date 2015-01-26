@@ -165,11 +165,11 @@ class UsageRecord(models.Model):
 	teacher = models.ForeignKey(Teacher, blank=True, null=True)
 	group = models.ForeignKey(Group, blank=True, null=True)
 	student = models.ForeignKey(Student, blank=True, null=True)
+	step = models.ForeignKey(Step)
 	session_id = models.CharField(max_length=100)
 	time_on_step = models.FloatField(default=0)
-	step = models.PositiveSmallIntegerField(default=0)
 	direction = models.CharField(max_length=10)
-	timestamp = models.DateTimeField('timestamp', null=True, blank=True)
+
 	
 	def __unicode__(self):
 		if self.teacher != None:

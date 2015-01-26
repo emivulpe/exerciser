@@ -72,29 +72,18 @@ function goToStep(direction) {
 			}
 			
 		}
-		if (direction == "next") {
-		var now = new Date().getTime();			
-		$.post("/exerciser/log_info_db/",
-		{
-			time : (now - lastTime) / 1000,
-			step : currentStep,
-			direction : last_direction,
-			csrfmiddlewaretoken : csrftoken,
-			example_name : app_name
-		});
-		lastTime = now;
-		}
-		else{
-				var now = new Date().getTime();			
-		$.post("/exerciser/log_info_db/",
-		{
-			time : (now - lastTime) / 1000,
-			step : currentStep+1,
-			direction : last_direction,
-			csrfmiddlewaretoken : csrftoken,
-			example_name : app_name
-		});
-		lastTime = now;
+		if(currentStep>0){
+			var now = new Date().getTime();			
+			$.post("/exerciser/log_info_db/",
+			{
+				time : (now - lastTime) / 1000,
+				step : currentStep,
+				direction : direction,
+				csrfmiddlewaretoken : csrftoken,
+				example_name : app_name
+			});
+			lastTime = now;
+			console.log("Current step " + currentStep);
 		}
 
 		
