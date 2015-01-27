@@ -86,7 +86,7 @@ function goToStep(direction) {
 			console.log("Current step " + currentStep);
 		}
 
-		
+	
 		if (direction == "next" && explanation_dict[currentStep] == undefined) {
 			console.log("1");
 			var explanationText= answer +'<strong>Step '+ (currentStep + 1) +"/" + totalSteps + ':</strong><br/>';

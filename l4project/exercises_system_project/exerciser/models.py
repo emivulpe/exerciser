@@ -47,7 +47,6 @@ class UserProfile(models.Model):
         return self.user.username
 
 
-
 class Step(models.Model):
     application = models.ForeignKey(Application)
     order = models.IntegerField()

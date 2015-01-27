@@ -754,7 +754,7 @@ def populate_summary_table(request):
 				for student in students:
 
 					student_id=student.student_id
-					
+
 					student_records=UsageRecord.objects.filter(application=selected_application,teacher=teacher,group=group,student=student)
 					
 					last_step_reached=student_records.aggregate(last_step=Max('step'))
