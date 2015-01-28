@@ -139,6 +139,7 @@ function doReset() {
 	$("#btn_prev").css('visibility','hidden');
 	$("#btn_next").css('visibility','visible');
 	$("#forward_button_label").text('Start');
+	$("#forward_button_label").css('cursor','pointer');
 	$("#forward_button_label").css('color','red');
 	$("#forward_button_label").css('font-size','24px');
 	$("#next_arrow").hide();

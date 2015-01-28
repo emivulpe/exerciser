@@ -98,11 +98,11 @@
 
 		// extract some relevant information from the context
 		{% autoescape off %}
+		// ASK
 		var app_questions_dict = {{app_questions_dict}}; // Mapping between an application and the questions for the application 
 		
 		var applications = {{application_names}}; // List of all the application names
 		
-		var year_group_dict = {{groups}} // Mapping between academic years and groups for them
 		{% endautoescape %}
 
 		
@@ -280,7 +280,7 @@ function getStepData(step){
 									'Average time: ' + Highcharts.numberFormat(this.point.y, 1) +' s<br />'+
 									'Revisited: ' + this.point.revisited_count + ' times<br />' +
 									'Explanation: ' + this.point.explanation_start + '<br />';*/
-				var request = $.get('/exerciser/update_graph_time/', {app_name:selectedApplication, group:selectedGroup, year:selectedYear})
+				var request = $.get('/exerciser/update_time_graph/', {app_name:selectedApplication, group:selectedGroup, year:selectedYear})
 				
 				request.done(function(selected_data) {
 					if(Object.getOwnPropertyNames(selected_data).length != 0){
@@ -319,7 +319,7 @@ function getStepData(step){
 									'Average time: ' + Highcharts.numberFormat(this.point.y, 1) +' s<br />'+
 									'Revisited: ' + this.point.revisited_count + ' times<br />' +
 									'Explanation: ' + this.point.explanation_start + '<br />';*/
-				var request = $.get('/exerciser/update_graph_student/', {app_name:selectedApplication, group:selectedGroup, year:selectedYear, student:selectedStudent})
+				var request = $.get('/exerciser/update_time_graph/', {app_name:selectedApplication, group:selectedGroup, year:selectedYear, student:selectedStudent})
 				
 				request.done(function(selected_data) {
 					if ("error" in selected_data){

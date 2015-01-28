@@ -154,14 +154,23 @@ class Group(models.Model):
 	academic_year = models.ForeignKey(AcademicYear)
 	name = models.CharField(max_length=100, unique=True)
 	
+	def __unicode__(self):
+		return self.name
+	def __repr__(self):
+		return self.__unicode__()
+		
 class Student(models.Model):
 	teacher = models.ForeignKey(Teacher)
 	group = models.ForeignKey(Group)
 	student_id = models.CharField(max_length=2)
-	
+	"""
 	def __unicode__(self):
 		return " ".join((" teacher: ",self.teacher.user.username," group: ",self.group.name, " name",self.student_id))
-	
+	"""
+	def __unicode__(self):
+		return self.student_id
+	def __repr__(self):
+		return self.__unicode__()
 class UsageRecord(models.Model):
 	application = models.ForeignKey(Application)
 	teacher = models.ForeignKey(Teacher, blank=True, null=True)

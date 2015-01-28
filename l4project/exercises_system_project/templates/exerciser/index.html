@@ -330,7 +330,7 @@
 			});
 		}
 		
-		
+/*
 		function saveYear(){
 
 			$("#buttons").hide();
@@ -363,7 +363,46 @@
 				$("#buttons").show();
 			});
 		}
-		
+*/	
+		function saveYear(){
+
+			$("#buttons").hide();
+			var year=document.getElementById("academic_year_select").value;
+
+			var request = $.post("/exerciser/register_year_with_session/",
+			{
+			year : year,
+			csrfmiddlewaretoken : csrftoken
+			});
+			
+			request.done(function(success) {
+
+				if(success){
+					// Is if post?
+					groups_request=$.post("/exerciser/get_groups_for_year/",
+					{
+					year : year,
+					csrfmiddlewaretoken : csrftoken
+					});
+					groups_request.done(function(groups) {
+						for (var groupIndex in groups) {
+							var group="<option value='" + groups[groupIndex] +"' >"+groups[groupIndex] + "</option>";
+							$("#group_list").append(group);
+						}
+					});
+					
+					academic_year=year;
+
+					chooseGroupStep();
+
+				}
+				else{
+					console.log("no such group");
+					$("#success_message").text("Sorry, but the year " + group + " is invalid. Please, try again, or click <No year> button to continue!!");
+				}
+				$("#buttons").show();
+			});
+		}	
 		$('#application_search_box').keyup(function(){
 		   var valThis = $(this).val().toLowerCase();
 			$('.navList>li').each(function(){

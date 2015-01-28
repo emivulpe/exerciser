@@ -227,30 +227,36 @@
 		
 		// Needs REFACTORING
 		function populateGroupList(year_element,group_element) {
-			//var year_element="'#"+year+"'";
-			//var group_element="'#"+group+"'";
-			console.log(year_element+"r3wr");
-			console.log(group_element+"sfa");
+
 			$("#"+group_element).empty();
-						console.log(1);
-			var selected_year=$("#"+year_element).val();
-						console.log(2);
-			group_list = year_group_dict[selected_year];
-			//$("#existing_groups").text("Existing groups: ");
-			console.log(3);
-			if(year_element=="year"){
-				$(".existing_groups_list").empty();
-			}
-			for (i = 0; i < group_list.length; i++) {
-				var group = group_list[i];
-				$("#"+group_element).append( "<option value='" + group +"'>" + group + "</option>" );
-				if(group_element=="group_entry"){
-					$(".existing_groups_list").append("<span class='appended_groups'>" + group + " </span>");
+			var selectedYear=$("#"+year_element).val();
+			
+			var request = $.get('/exerciser/get_groups/', {year:selectedYear});
+			console.log("request....");
+			request.done(function(groups) { // Extract a list of the relevant groups
+				if ("error" in groups){
+					alert("Bad input");
 				}
-			}
-			if (group_list.length==0){
-				$(".existing_groups_list").append("<span class='appended_groups'>None</span>");
-			}
+
+				else{
+					if(year_element=="year"){
+						$(".existing_groups_list").empty();
+					}
+					for (var group_index in groups){
+						var group = groups[group_index];
+						var option="<option value='" + group+"' >"+group + "</option>";
+						console.log(group);
+						$("#"+group_element).append(option);
+						if(group_element=="group_entry"){
+							$(".existing_groups_list").append("<span class='appended_groups'>" + group + " </span>");
+						}
+					}
+					if (groups.length==0){
+						$(".existing_groups_list").append("<span class='appended_groups'>None</span>");
+					}
+				}
+			});
+			
 		};
 		
 		
