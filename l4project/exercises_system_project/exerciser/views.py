@@ -565,6 +565,119 @@ def update_graph_time(request):
 				selected_data["question_steps"]=question_steps
 
 		return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")
+def get_students(request):
+	print "in get students!"
+	try:
+		group_name=request.GET['group']
+		year = request.GET['year']
+	except KeyError:
+		return HttpResponse(simplejson.dumps({'error':'Bad input supplied'}), content_type="application/json")
+
+	teacher_username = request.user
+	user=User.objects.filter(username=teacher_username)
+	teacher=Teacher.objects.filter(user=user)
+	academic_year = AcademicYear.objects.filter(start=year)[0]
+	selected_group = Group.objects.filter(name = group_name,teacher=teacher,academic_year=academic_year)
+	students=Student.objects.filter(group=selected_group)
+	
+	### ASK HOW TO PASS STUDENTS ###
+	student_ids_list=[]
+	for student in students:
+		student_ids_list.append(student.student_id)
+	print student_ids_list, " student ids "
+	return HttpResponse(simplejson.dumps(student_ids_list), content_type="application/json")
+	
+def get_groups(request):
+	print "in get students!"
+	try:
+		year = request.GET['year']
+	except KeyError:
+		return HttpResponse(simplejson.dumps({'error':'Bad input supplied'}), content_type="application/json")
+	
+	teacher_username = request.user
+	user=User.objects.filter(username=teacher_username)
+	teacher=Teacher.objects.filter(user=user)
+	try:
+		academic_year = AcademicYear.objects.filter(start=2016)[0]
+	except IndexError:
+		print "Exception"
+		return HttpResponse(simplejson.dumps({'error':'Bad input supplied'}), content_type="application/json")
+
+	selected_groups = Group.objects.filter(teacher=teacher,academic_year=academic_year)
+	
+	### ASK HOW TO PASS GROUPS ###
+	groups=[]
+	for group in selected_groups:
+		groups.append(group.name)
+	print groups, " groups "
+	return HttpResponse(simplejson.dumps(groups), content_type="application/json")
+
+def update_graph_student(request):
+		try:
+			app_name=request.GET['app_name']
+			group_name=request.GET['group']
+			year = request.GET['year']		
+			student_id = request.GET['student']	
+		except KeyError:
+			return HttpResponse(simplejson.dumps({'error':'Bad input supplied'}), content_type="application/json")
+		print 1
+		teacher_username = request.user
+		user=User.objects.filter(username=teacher_username)
+		teacher=Teacher.objects.filter(user=user)
+		academic_year = AcademicYear.objects.filter(start=year)[0]
+		selected_group = Group.objects.filter(name = group_name,teacher=teacher,academic_year=academic_year)
+		selected_application=Application.objects.filter(name=app_name)
+		student = Student.objects.filter(student_id=student_id)
+		print 2
+		selected_data={}
+		if len(selected_group)>0 and len(selected_application)>0 and len(teacher)>0 and len(student)>0:
+			print 3
+			teacher = teacher[0]
+			selected_group = selected_group[0]
+			selected_application = selected_application[0]
+			student = student[0]
+			usage_records = UsageRecord.objects.filter(application=selected_application,teacher=teacher,group=selected_group, student=student)
+			print 4
+			question_steps=[]
+			app_questions=Question.objects.filter(application=selected_application)
+			for question in app_questions:
+				question_steps.append(question.step.order)
+			print 5
+			sd=[]
+			#### Getting averages ##########
+			steps = Step.objects.filter(application=selected_application)
+			num_steps = steps.aggregate(max = Max('order'))
+			print 6
+			if num_steps['max'] != None:
+				print 7
+				print num_steps['max'], "step num"
+				for step_num in range(1, num_steps['max']+1):
+					print step_num, " step num"
+					explanation_text=""
+					step=steps.filter(order=step_num)
+					if len(step)>0:
+						step=step[0]
+						explanation=Explanation.objects.filter(step=step)
+						if len(explanation)>0:
+							explanation=explanation[0]
+							explanation_text=explanation.text
+							if len(explanation_text)<100:
+								explanation_text_start=explanation_text[:len(explanation_text)]
+							else:
+								explanation_text_start=explanation_text[:100]
+
+						records = usage_records.filter(step = step)
+						total_time = records.aggregate(time = Sum('time_on_step'))
+
+						revisited_steps_count=len(records.filter(direction="back"))
+						print total_time['time'] , "Time"
+						sd.append({"y":total_time['time'],"revisited_count":revisited_steps_count,"explanation":explanation_text,"explanation_start":explanation_text_start})
+			if sd!=[]:
+				selected_data["data"]=sd
+				print sd , " SD PRINTED"
+				selected_data["question_steps"]=question_steps
+
+		return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")
 
 		
 def update_graph_class_steps(request):
@@ -733,6 +846,12 @@ def populate_summary_table(request):
 	teacher_username = request.user
 	
 	user=User.objects.filter(username=teacher_username)
+	selected_data={}
+	selected_application=Application.objects.filter(name=application)
+	if len(selected_application)>0:
+		total_steps=selected_application.aggregate(num_steps=Count('step'))['num_steps']
+	else:
+		total_steps=0
 	if len(user) > 0:
 		teacher=Teacher.objects.filter(user=user)[0]
 	
@@ -743,12 +862,12 @@ def populate_summary_table(request):
 			group = group[0]
 			students=Student.objects.filter(teacher=teacher,group=group)
 	
-			selected_data={}
 
-			selected_application=Application.objects.filter(name=application)
+
+
 			if len(selected_application) > 0:
 
-				total_steps=selected_application.aggregate(num_steps=Count('step'))
+				total_steps=selected_application.aggregate(num_steps=Count('step'))['num_steps']
 				selected_application = selected_application[0]
 
 				for student in students:
@@ -776,7 +895,7 @@ def populate_summary_table(request):
 					
 					selected_data[student_id]={'last_step':last_step_reached,'total_time':total_app_time,'num_steps_revisited':revisited_steps_count}
 	print selected_data
-	return HttpResponse(simplejson.dumps({"selected_data":selected_data,"total_steps":total_steps['num_steps']}), content_type="application/json")	
+	return HttpResponse(simplejson.dumps({"selected_data":selected_data,"total_steps":total_steps}), content_type="application/json")	
 	
 	
 ### Refactored ###

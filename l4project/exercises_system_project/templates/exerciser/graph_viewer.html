@@ -43,6 +43,7 @@
 		<option value="answers">Question Answers</option>
 		<option value="summary_data">Class Summary</option>
 		<option value="class_steps">Class Steps</option>
+		<option value="student_time">Student Time</option>
 	</select>
 	<span class="ui-widget" style="font-family:inherit;">
 		<input id="application" class="choice_selector" placeholder="Select application..." style="font-family:inherit; font-size:12pt;">
@@ -50,6 +51,9 @@
 
 	<select id="question_list" class="choice_selector" style="max-width:200px;display:none;">
 		<option id="question_info" value="" disabled selected style="display:none;">Select question...</option>
+	</select>
+	<select id="student_list" class="choice_selector" style="max-width:200px;display:none;">
+		<option id="student_info" value="" disabled selected style="display:none;">Select student...</option>
 	</select>
 	<!--
 	<select id="s1" multiple="multiple">
@@ -163,18 +167,29 @@ function getStepData(step){
 			$('#statistics_options').on('change', function() {
 			
 				selected_option = document.getElementById("statistics_options").value; 
-				
+				console.log("sel opt" + selected_option);
 				// Apply logic specific to the answers selection
 				if (this.value=="answers"){
 					$("#application").val(''); // Reset applications in case the user had selected an application without questions
 					$( "#application" ).autocomplete('option', 'source', Object.keys(app_questions_dict)); // Change the autocomplete list to the relevant applications only ( i.e. the ones that have questions)
 					$("#question_list").show(); // Show the selection for the questions
+					$("#student_list").hide(); // Hide the selection for the students
 				}
-				
+				else if (selected_option=="student_time"){
+					$("#student_list").show(); // Show the selection for the students
+					$("#question_list").hide(); // Hide the questions selection -no interest in being there
+					selectedGroup=document.getElementById("group_list").value;
+					selectedYear = document.getElementById("group_year").value;
+					if(selectedGroup!="" && selectedYear !=""){
+						addStudents(selectedYear, selectedGroup);
+					}
+				}	
 				// Apply logic specific for any selection apart from answers
 				else{
 					$( "#application" ).autocomplete('option', 'source', applications); // Change the autocomplete list to all applications
 					$("#question_list").hide(); // Hide the questions selection -no interest in being there
+					$("#student_list").hide(); // Hide the selection for the students
+
 				}
 			});
 
@@ -186,7 +201,25 @@ function getStepData(step){
 					addQuestions(selected_application);
 				}
 			});
-			
+
+			// Update the student selection to the students for the selected group and year
+			/*$( "#statistics_options" ).blur(function() {
+				selected_option = document.getElementById("statistics_options").value; 
+				console.log(selected_option+"SEL");
+				if (selected_option=="student_time"){
+					selectedGroup=document.getElementById("group_list").value;
+					selectedYear = document.getElementById("group_year").value;
+					addStudents(selectedYear, selectedGroup);
+				}
+			});
+			*/
+
+			// Delete irrelevant students from student selection list in case student option in requested
+		/*	$( "#student_list" ).blur(function() {
+				$("#student_info").prop("selected",true);
+				$("#student_list").children().not(':first').remove();
+			});	
+			*/
 			// Delete irrelevant questions from question selection list in case answers option in requested
 			$( "#application" ).focus(function() {
 				selected_option = document.getElementById("statistics_options").value; 
@@ -195,6 +228,8 @@ function getStepData(step){
 					$("#question_list").children().not(':first').remove();
 				}
 			});
+			
+			
 			function seriesFormat(el,selectedOption){
 				console.log(selectedOption+"SEL OPTION SERIES");
 				if (selectedOption == "time"){
@@ -267,6 +302,53 @@ function getStepData(step){
 						$('#container').html("<div class='no_stats_info'><br\><br\><br\><br\><br\><br\><i class='fa fa-asterisk' style='color:red'></i><span style='color:red'>There are no statistics for the current selection</span><div>");
 					}
 				
+				});
+			}
+
+			function drawStudentTimeChart(selectedApplication,selectedGroup,selectedYear,selectedStudent){
+				chartType="line";
+				selectedOption="time";
+				var categories=[];
+				var sel_data=[];
+				var chartSubtitle="";
+				var xAxisTitle="Steps";
+				var yAxisTitle="Seconds";
+				var seriesName="Average time";
+				//var seriesFormat = Highcharts.numberFormat(this.y,1) + ' s (' + this.point.revisited_count + ')';
+				/*var tooltipFormat = ' ' +
+									'Average time: ' + Highcharts.numberFormat(this.point.y, 1) +' s<br />'+
+									'Revisited: ' + this.point.revisited_count + ' times<br />' +
+									'Explanation: ' + this.point.explanation_start + '<br />';*/
+				var request = $.get('/exerciser/update_graph_student/', {app_name:selectedApplication, group:selectedGroup, year:selectedYear, student:selectedStudent})
+				
+				request.done(function(selected_data) {
+					if ("error" in selected_data){
+						alert("Bad input");
+					}
+					
+					else{
+						if(Object.getOwnPropertyNames(selected_data).length != 0){
+							sel_data=selected_data["data"]; // SELECTED DATA IS NOT EMPTY BUT Y IS NONE! REFACTOR
+							console.log(sel_data.length+"LEN SEL DATA");
+							console.log(sel_data.length + "LEN");
+							questionSteps=selected_data["question_steps"];
+							if(sel_data.length>0){
+								for (i = 0; i < sel_data.length; i++) { 
+									if(questionSteps.indexOf(i)  != -1){
+										categories[i]="? " + (i+1);
+									}
+									else{
+										categories[i]=(i+1);
+									}
+								}
+								drawChart("container",selectedOption,chartType,selectedApplication,selectedGroup,chartSubtitle,categories,xAxisTitle,yAxisTitle,seriesFormat,chartClickHandler,questionSteps, seriesName,sel_data,tooltipFormat,selectedYear);
+							}
+						}
+						else{
+							$('#container').find('.highcharts-container').hide();
+							$('#container').html("<div class='no_stats_info'><br\><br\><br\><br\><br\><br\><i class='fa fa-asterisk' style='color:red'></i><span style='color:red'>There are no statistics for the current selection</span><div>");
+						}
+					}
 				});
 			}
 			
@@ -432,6 +514,9 @@ function getStepData(step){
 				}
 			}
 			
+	
+
+
 			// the button action
 			$('#set_data_button').click(function () {
 				$(".no_stats_info").remove(); // Clear any previous messages
@@ -457,6 +542,13 @@ function getStepData(step){
 					else if (selectedOption=="class_steps"){
 						drawClassStepsChart(selectedApplication,selectedGroup,selectedYear);
 					}
+					
+					// HARDCODED
+					else if (selectedOption=="student_time"){
+						selectedStudent = document.getElementById("student_list").value; 
+						console.log(selectedStudent);
+						drawStudentTimeChart(selectedApplication,selectedGroup,selectedYear,selectedStudent);
+					}
 				}
 			});
 		
@@ -464,8 +556,6 @@ function getStepData(step){
 		function drawClassSummaryTable(selectedApplication, selectedGroup, selectedYear){
 			$(".student_info").remove();
 			$("#summary_data_caption").empty();
-
-			var selected_application="ClockExample";
 
 			var request = $.get('/exerciser/populate_summary_table/', {application:selectedApplication, group:selectedGroup, year:selectedYear})
 
@@ -480,7 +570,7 @@ function getStepData(step){
 					$("#student_"+student).append("<td>" + summary_data["selected_data"][student]["last_step"] + "</td>");
 
 				}
-				$("#summary_data_caption").append(selected_application + " (" + summary_data["total_steps"] + " steps)");
+				$("#summary_data_caption").append(selectedApplication + " (" + summary_data["total_steps"] + " steps)");
 
 						
 			});
@@ -492,8 +582,6 @@ function getStepData(step){
 		// A function to show a graph for a chosen question
 		function getQuestionData(selectedApplication,selectedYear,selectedGroup,selectedStep){
 
-
-			
 				xAxisTitle="Choices";
 				yAxisTitle="Times chosen";
 				seriesName="Times chosen";
@@ -537,6 +625,8 @@ function getStepData(step){
 				});
 		}		
 		});
+		
+		// Refactor make it like add students
 		// A function to populate the question selection with questions specific for the selected application
 		function addQuestions(selectedApplication){
 
@@ -546,6 +636,30 @@ function getStepData(step){
 				console.log(question);
 				$("#question_list").append(option);
 			}
+		}
+
+		// A function to populate the student selection with students specific for the selected group and year
+		function addStudents(selectedYear,selectedGroup){
+
+			var request = $.get('/exerciser/get_students/', {group:selectedGroup,year:selectedYear});
+			console.log("request....");
+			request.done(function(students) {
+				console.log("request dones....");
+				//students=student_list;
+				console.log(students+"?????");
+				if ("error" in students){
+					alert("Bad input");
+				}
+					
+				else{
+					for (var student_index in students){
+						var student = students[student_index];
+						var option="<option value='" + student+"' >"+student + "</option>";
+						console.log(student);
+						$("#student_list").append(option);
+					}
+				}
+			});
 		}
 // Specify the list of applications for the autocomplete for the application selection
 $(function() {
@@ -560,7 +674,7 @@ $('.year').on('change', function() {
 	populateGroupList($(this).attr('id'),nextInDOM('.group', $(this)).attr('id'));
 });
 
-
+/*
 // NEEDS REFACTORING AND MERGING
 // A function to show the available groups for the selected academic year- generic
 function populateGroupList(year_element,group_element) {
@@ -581,6 +695,43 @@ function populateGroupList(year_element,group_element) {
 		$(".existing_groups_list").append("<span class='appended_groups'>None</span>");
 	}
 }
+*/
+
+function populateGroupList(year_element,group_element) {
+	$("#"+group_element).children().not(':first').remove(); // Remove any previously shown groups
+	var selectedYear=$("#"+year_element).val(); // Get the selected year
+	
+	
+	var request = $.get('/exerciser/get_groups/', {year:selectedYear});
+	console.log("request....");
+	request.done(function(groups) { // Extract a list of the relevant groups
+		if ("error" in groups){
+			alert("Bad input");
+		}
+
+		else{
+			for (var group_index in groups){
+				var group = groups[group_index];
+				var option="<option value='" + group+"' >"+group + "</option>";
+				console.log(group);
+				$("#group_list").append(option);
+			}
+		}
+	});
+	/*if(year_element=="year"){
+		$(".existing_groups_list").empty();
+	}*
+	for (i = 0; i < group_list.length; i++) {
+		var group = group_list[i];
+		$("#"+group_element).append( "<option value='" + group +"'>" + group + "</option>" );
+		if(group_element=="group_entry"){
+			$(".existing_groups_list").append("<span class='appended_groups'>" + group + " </span>");
+		}
+	}
+	if (group_list.length==0){
+	*/
+}
+
 
 /*
 //delete if not using

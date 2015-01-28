@@ -53,7 +53,10 @@ class Step(models.Model):
 
     def __unicode__(self):
         return str(self.order)
-		
+
+    class Meta:
+        ordering = ['order']
+
 class Question(models.Model):
     application = models.ForeignKey(Application)
     step = models.ForeignKey(Step)
