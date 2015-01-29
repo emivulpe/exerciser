@@ -510,47 +510,6 @@ def application(request, application_name_url):
 	# Go render the response and return it to the client.
 	return render_to_response('exerciser/application.html', context_dict, context)
 
-	
-### Checks added ###
-def update_graph_answers(request):
-	try:
-		app_name=request.GET['app_name']
-		group_name=request.GET['group']
-		year = request.GET['year']		
-		question_text=request.GET['question']
-	except KeyError:
-		print "error"
-		return HttpResponse(simplejson.dumps({'error':'Bad input supplied'}), content_type="application/json")
-
-	teacher_username = request.user
-	try:
-		user=User.objects.filter(username=teacher_username)[0]
-		teacher=Teacher.objects.filter(user=user)[0]
-		academic_year = AcademicYear.objects.filter(start=year)[0]
-		selected_group = Group.objects.filter(name = group_name,teacher=teacher,academic_year=academic_year)[0]
-		selected_application=Application.objects.filter(name=app_name)[0]
-		question=Question.objects.filter(application=selected_application,question_text=question_text)[0]
-	except IndexError:
-		print "error"
-		return HttpResponse(simplejson.dumps({'error':'Bad input supplied'}), content_type="application/json")
-
-	selected_data=[]
-	all_options=Option.objects.filter(question=question)
-
-	question_records = QuestionRecord.objects.filter(application=selected_application, question=question, teacher=teacher,group=selected_group)
-
-	for option in all_options:
-		records_for_option=question_records.filter(answer=option)
-		times_chosen=len(records_for_option)
-		student_list=[]
-		for record in records_for_option:
-			if record.student != None:
-				student_id=record.student.student_id
-				print student_id
-				if student_id not in student_list:
-					student_list.append(student_id)
-		selected_data.append({option.content:times_chosen,'students':student_list})
-	return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")	
 
 
 ### Checks added. Looks fine ###
@@ -595,7 +554,57 @@ def get_groups(request):
 	groups = Group.objects.filter(teacher=teacher,academic_year=academic_year)
 	groups = map(str,groups)
 	return HttpResponse(simplejson.dumps(groups), content_type="application/json")
+### Refactored ###
+@login_required		
+def get_question_data(request):
 
+	app_name=request.GET.get('app_name',None)
+	year=request.GET.get('year',None)
+	group_name=request.GET.get('group',None)
+	step_num=request.GET.get('step',None)
+	question_text=request.GET.get('question',None)
+	# Check for invalid request
+	if (app_name is None or year is None or group_name is None) or (step_num is None and question_text is None):
+		return HttpResponse(simplejson.dumps({'error':'Bad input supplied'}), content_type="application/json")
+	teacher_username = request.user
+	try:
+		user=User.objects.filter(username=teacher_username)[0]
+		teacher=Teacher.objects.filter(user=user)[0]
+		academic_year = AcademicYear.objects.filter(start=year)[0]
+		group = Group.objects.filter(name = group_name,teacher=teacher,academic_year=academic_year)[0]
+		application=Application.objects.filter(name=app_name)[0]
+		if question_text is not None:
+			question=Question.objects.filter(application=application,question_text=question_text)[0]
+		if step_num is not None:
+			step=Step.objects.filter(application=application,order=step_num)[0]
+			question=Question.objects.filter(application=application,step=step)[0]
+	except IndexError:
+		print "error"
+		return HttpResponse(simplejson.dumps({'error':'Bad input supplied'}), content_type="application/json")
+		
+
+	selected_data={}
+	quest_text=quest_text=question.question_text
+	all_options=Option.objects.filter(question=question)
+	question_records = QuestionRecord.objects.filter(application=application, question=question, teacher=teacher,group=group)
+
+	sd=[]
+
+	for option in all_options:
+		records_for_option=question_records.filter(answer=option)
+		times_chosen=len(records_for_option)
+		student_list=[]
+		for record in records_for_option:
+			if record.student != None:
+				student_id=record.student.student_id
+				print student_id
+				if student_id not in student_list:
+					student_list.append(student_id)
+		sd.append({option.content:times_chosen,'students':student_list})
+	selected_data['question']=question_text
+	selected_data['data']=sd
+	print sd
+	return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")	
 def update_time_graph(request):
 	"""
 	If no student ID is passed, then you produce data for an group average graph.
@@ -675,14 +684,14 @@ def update_time_graph(request):
 		selected_data["question_steps"]=question_steps
 
 	return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")
-
-
-### Checks added. Hardcoded ###
-def update_graph_class_steps(request):
+	
+### Checks added. ###
+def update_class_steps_graph(request):
 	try:
 		app_name=request.GET['app_name']
 		group_name=request.GET['group']
-		year = request.GET['year']		
+		year = request.GET['year']
+		step_num=request.GET['step']
 	except KeyError:
 		print "error"
 		return HttpResponse(simplejson.dumps({'error':'Bad input supplied'}), content_type="application/json")
@@ -694,59 +703,20 @@ def update_graph_class_steps(request):
 		academic_year = AcademicYear.objects.filter(start=year)[0]
 		selected_group = Group.objects.filter(name = group_name,teacher=teacher,academic_year=academic_year)[0]
 		selected_application=Application.objects.filter(name=app_name)[0]
+		step = Step.objects.filter(application=application, order = step_num)[0]
 	except IndexError:
 		print "error"
 		return HttpResponse(simplejson.dumps({'error':'Bad input supplied'}), content_type="application/json")
 		
 	selected_data=[]
-	usage_records = UsageRecord.objects.filter(application=selected_application,teacher=teacher,group=selected_group)
-
-	usage_records=usage_records.filter(step=1) #######   HARDCODED   CHANGE   #############
-
-	for record in usage_records:
-		selected_data.append({record.student.student_id:record.time_on_step})
-	print selected_data, "SELECTED DATA!!!!"
-
-	return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")	
-
-
-
-### Refactored Checks added Looks ok ###
-def get_step_data(request):
-
-	try:
-		application=request.GET['application']
-		year=request.GET['year']
-		group_name=request.GET['group']
-		step_num=request.GET['step']
-	except KeyError:
-		print "error"
-		return HttpResponse(simplejson.dumps({'error':'Bad input supplied'}), content_type="application/json")
-	teacher_username = request.user
-
-	try:
-		user=User.objects.filter(username=teacher_username)[0]
-		teacher=Teacher.objects.filter(user=user)[0]
-		academic_year = AcademicYear.objects.filter(start=year)[0]
-		selected_application=Application.objects.filter(name=application)[0]
-		selected_group = Group.objects.filter(name = group_name,teacher=teacher,academic_year = academic_year)[0]
-		step = Step.objects.filter(application=application, order = step_num)[0]
-
-
-	except IndexError:
-		print "error"
-		return HttpResponse(simplejson.dumps({'error':'Bad input supplied'}), content_type="application/json")
-
-	selected_data=[]
-
 	usage_records = UsageRecord.objects.filter(application=selected_application,teacher=teacher,group=selected_group,step=step)
 
 	for record in usage_records:
 		if record.student != None:
 			selected_data.append({record.student.student_id:record.time_on_step})
-	print selected_data, "SELECTED DATA"
-		
-	return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")	
+	print selected_data, "SELECTED DATA!!!!"
+
+	return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")
 
 
 ### Refactored Checks added Looks ok ###
