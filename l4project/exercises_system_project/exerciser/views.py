@@ -711,7 +711,7 @@ def update_graph_class_steps(request):
 
 
 
-### Refactored Checks added Looks ok###
+### Refactored Checks added Looks ok ###
 def get_step_data(request):
 
 	try:
@@ -749,126 +749,71 @@ def get_step_data(request):
 	return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")	
 
 
-### Refactored ###
+### Refactored Checks added Looks ok ###
 def populate_summary_table(request):
-
-	application=request.GET['application']
-	academic_year=request.GET['year']
-	group_name=request.GET['group']
+	try:
+		application=request.GET['application']
+		academic_year=request.GET['year']
+		group_name=request.GET['group']
+	except KeyError:
+		print "error"
+		return HttpResponse(simplejson.dumps({'error':'Bad input supplied'}), content_type="application/json")
 	teacher_username = request.user
-	
-	user=User.objects.filter(username=teacher_username)
-	selected_data={}
-	selected_application=Application.objects.filter(name=application)
-	if len(selected_application)>0:
-		total_steps=selected_application.aggregate(num_steps=Count('step'))['num_steps']
-	else:
-		total_steps=0
-	if len(user) > 0:
+	try:
+		user=User.objects.filter(username=teacher_username)[0]
 		teacher=Teacher.objects.filter(user=user)[0]
-	
 		year=AcademicYear.objects.filter(start=academic_year)[0]
-	
-		group = Group.objects.filter(name = group_name,teacher=teacher,academic_year=year)
-		if len(group) > 0:
-			group = group[0]
-			students=Student.objects.filter(teacher=teacher,group=group)
-	
+		selected_application=Application.objects.filter(name=application)
+		total_steps=selected_application.aggregate(num_steps=Count('step'))['num_steps']
+		selected_application = selected_application[0]
+		group = Group.objects.filter(name = group_name,teacher=teacher,academic_year=year)[0]
 
+	except IndexError:
+		print "error"
+		return HttpResponse(simplejson.dumps({'error':'Bad input supplied'}), content_type="application/json")
+	selected_data={}
 
+	students=Student.objects.filter(teacher=teacher,group=group)
 
-			if len(selected_application) > 0:
+	for student in students:
+		student_id=student.student_id
 
-				total_steps=selected_application.aggregate(num_steps=Count('step'))['num_steps']
-				selected_application = selected_application[0]
+		student_records=UsageRecord.objects.filter(application=selected_application,teacher=teacher,group=group,student=student)
+		last_step_reached=student_records.aggregate(last_step=Max('step'))
+		if last_step_reached['last_step'] == None:
+			last_step_reached = 0
+		else:
+			last_step_reached = last_step_reached['last_step']
 
-				for student in students:
+		total_app_time=student_records.aggregate(time_on_step=Sum('time_on_step'))
+		if total_app_time['time_on_step'] == None:
+			total_app_time = 0
+		else: 
+			total_app_time = total_app_time['time_on_step']
 
-					student_id=student.student_id
+		revisited_steps_count=student_records.filter(direction='back').aggregate(count_revisits=Count('id'))['count_revisits']
+		print student_id, last_step_reached,total_app_time,revisited_steps_count
 
-					student_records=UsageRecord.objects.filter(application=selected_application,teacher=teacher,group=group,student=student)
-					
-					last_step_reached=student_records.aggregate(last_step=Max('step'))
-					
-					if last_step_reached['last_step'] == None:
-						last_step_reached = 0
-					else:
-						last_step_reached = last_step_reached['last_step']
-						
-					total_app_time=student_records.aggregate(time_on_step=Sum('time_on_step'))
-					
-					if total_app_time['time_on_step'] == None:
-						total_app_time = 0
-					else: 
-						total_app_time = total_app_time['time_on_step']
-						
-					revisited_steps_count=student_records.filter(direction='back').aggregate(count_revisits=Count('id'))['count_revisits']
-					print student_id, last_step_reached,total_app_time,revisited_steps_count
-					
-					selected_data[student_id]={'last_step':last_step_reached,'total_time':total_app_time,'num_steps_revisited':revisited_steps_count}
+		selected_data[student_id]={'last_step':last_step_reached,'total_time':total_app_time,'num_steps_revisited':revisited_steps_count}
 	print selected_data
 	return HttpResponse(simplejson.dumps({"selected_data":selected_data,"total_steps":total_steps}), content_type="application/json")	
-	
-	
-### Refactored ###
-@login_required		
-def get_question_data(request):
 
-		app_name=request.GET['app_name']
-		year=request.GET['year']
-		group_name=request.GET['group']
-		step_num=request.GET['step']
-		teacher_username = request.user
-		
-		# get teacher
-		user=User.objects.filter(username=teacher_username)
+def get_application_questions(request):
+	try:
+		application = request.GET['application']
+	except KeyError:
+		print "error"
+		return HttpResponse(simplejson.dumps({'error':'Bad input supplied'}), content_type="application/json")
+	try:
+		selected_application = Application.objects.filter(name=application)[0]
+	except IndexError:
+		print "error"
+		return HttpResponse(simplejson.dumps({'error':'Bad input supplied'}), content_type="application/json")
+	questions = Question.objects.filter(application=application)
+	questions = map(str, questions)
+	print questions, "questions"
+	return HttpResponse(simplejson.dumps(questions), content_type="application/json")
 
-		if len(user) > 0:
-			teacher=Teacher.objects.filter(user=user)[0]
-			academic_year=AcademicYear.objects.filter(start=year)[0]
-			#get group
-			group = Group.objects.filter(teacher = teacher, name = group_name,academic_year=academic_year)
-			
-			#get application
-			application=Application.objects.filter(name=app_name)
-
-			#get step
-			step=Step.objects.filter(application=application,order=step_num)
-
-			selected_data={}
-			question_text=""
-			if len(group)>0 and len(application)>0 and len(step)>0:
-				group = group[0]
-				application = application[0]
-				step=step[0]
-
-				question=Question.objects.filter(application=application,step=step)
-				if len(question)>0:
-					question=question[0]
-					question_text=question.question_text
-					all_options=Option.objects.filter(question=question)
-					question_records = QuestionRecord.objects.filter(application=application, question=question, teacher=teacher,group=group)
-					answers=question_records.values('answer').annotate(count=Count('answer')).order_by('answer')
-					
-					sd=[]
-
-					for option in all_options:
-						records_for_option=question_records.filter(answer=option)
-						times_chosen=len(records_for_option)
-						student_list=[]
-						for record in records_for_option:
-							if record.student != None:
-								student_id=record.student.student_id
-								print student_id
-								if student_id not in student_list:
-									student_list.append(student_id)
-						sd.append({option.content:times_chosen,'students':student_list})
-					selected_data['question']=question_text
-					selected_data['data']=sd
-					print sd
-		return HttpResponse(simplejson.dumps(selected_data), content_type="application/json")	
-
-	
 ### Refactored. Ask if I have to check if request was get/post ###
 @requires_csrf_token
 def teacher_interface(request):
@@ -1015,11 +960,14 @@ def statistics(request):
 
 	context = RequestContext(request)
 	teacher_username = request.user
-	
-	user = User.objects.filter(username=teacher_username)
-	teacher = Teacher.objects.filter (user=user)
-
+	try:
+		user = User.objects.filter(username=teacher_username)[0]
+		teacher = Teacher.objects.filter (user=user)[0]
+	except IndexError:
+		print "error"
+		return HttpResponse(simplejson.dumps({'error':'Bad input supplied'}), content_type="application/json")
 	applications = Application.objects.all();
+	academic_years=AcademicYear.objects.all()
 	application_names=[]
 	questions={}
 	for application in applications:
@@ -1032,7 +980,7 @@ def statistics(request):
 				questions_text.append(app_question.question_text)
 			questions[application.name]=questions_text
 
-	academic_years=AcademicYear.objects.all()
+
 	context_dict = {'application_names' : application_names, 'app_questions_dict' : simplejson.dumps(questions), 'academic_years': academic_years}
 	return render_to_response('exerciser/graph_viewer.html', context_dict, context)
 

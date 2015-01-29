@@ -65,6 +65,9 @@ class Question(models.Model):
     def __unicode__(self):
         return self.question_text
 
+    def __repr__(self):
+        return self.__unicode__()
+
 class Change(models.Model):
 	step = models.ForeignKey(Step)
 	fragment = models.ForeignKey(Fragment, blank=True, null=True)

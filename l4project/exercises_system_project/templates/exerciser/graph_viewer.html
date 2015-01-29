@@ -166,7 +166,8 @@ function getStepData(step){
 			// Logic for handling selection of requested information
 			$('#statistics_options').on('change', function() {
 			
-				selected_option = document.getElementById("statistics_options").value; 
+				selected_option = document.getElementById("statistics_options").value;
+//				selectedApplication=$("#application").val();				
 				console.log("sel opt" + selected_option);
 				// Apply logic specific to the answers selection
 				if (this.value=="answers"){
@@ -174,15 +175,14 @@ function getStepData(step){
 					$( "#application" ).autocomplete('option', 'source', Object.keys(app_questions_dict)); // Change the autocomplete list to the relevant applications only ( i.e. the ones that have questions)
 					$("#question_list").show(); // Show the selection for the questions
 					$("#student_list").hide(); // Hide the selection for the students
+/*					if(){
+						addQuestions();
+					}
+*/
 				}
 				else if (selected_option=="student_time"){
 					$("#student_list").show(); // Show the selection for the students
 					$("#question_list").hide(); // Hide the questions selection -no interest in being there
-					selectedGroup=document.getElementById("group_list").value;
-					selectedYear = document.getElementById("group_year").value;
-					if(selectedGroup!="" && selectedYear !=""){
-						addStudents(selectedYear, selectedGroup);
-					}
 				}	
 				// Apply logic specific for any selection apart from answers
 				else{
@@ -193,15 +193,20 @@ function getStepData(step){
 				}
 			});
 
-			// Update the question selection to the questions for the selected application
-			$( "#application" ).blur(function() {
-				selected_option = document.getElementById("statistics_options").value; 
-				if (selected_option=="answers"){
-					selected_application=$("#application").val();
-					addQuestions(selected_application);
-				}
-			});
 
+			// Update the question selection to the questions for the selected application
+			$("#question_list").on('mouseover', function() {
+				selectedApplication=$("#application").val();
+				addQuestions(selectedApplication);
+			});	
+
+			// Update the student selection to the students for the selected academic year and group
+			$("#student_list").on('mouseover', function() {
+				selectedGroup=document.getElementById("group_list").value;
+				selectedYear = document.getElementById("group_year").value;
+				addStudents(selectedYear, selectedGroup);
+
+			});
 			// Update the student selection to the students for the selected group and year
 			/*$( "#statistics_options" ).blur(function() {
 				selected_option = document.getElementById("statistics_options").value; 
@@ -629,14 +634,21 @@ function getStepData(step){
 		// Refactor make it like add students
 		// A function to populate the question selection with questions specific for the selected application
 		function addQuestions(selectedApplication){
+			var request = $.get('/exerciser/get_application_questions/', {application:selectedApplication});
+			console.log("request....");
+			request.done(function(questions) {
+				if (!("error" in questions)){
+					for (var question_index in questions){
+						var question = questions[question_index];
+						var option="<option value='" + question +"' >"+question + "</option>";
+						console.log(question);
+						$("#question_list").append(option);
+					}
+				}
+			});
 
-			for (var question_index in app_questions_dict[selectedApplication]){
-				var question = app_questions_dict[selectedApplication][question_index];
-				var option="<option value='" + question +"' >"+question + "</option>";
-				console.log(question);
-				$("#question_list").append(option);
-			}
 		}
+
 
 		// A function to populate the student selection with students specific for the selected group and year
 		function addStudents(selectedYear,selectedGroup){
