@@ -848,8 +848,9 @@ def teacher_interface(request):
 				group_names.append(str(group.name))
 			groups[academic_year.start]= group_names
 
+	questionnaire_form = SampleQuestionnaireForm()
 
-	context_dict = {'applications' : application_list,'user_form': user_form, 'group_form': group_form,'groups': groups,'academic_years':academic_years}
+	context_dict = {'applications' : application_list,'user_form': user_form, 'group_form': group_form,'groups': groups,'academic_years':academic_years,'questionnaire_form':questionnaire_form}
 	
 	
 	# Return a rendered response to send to the client.
