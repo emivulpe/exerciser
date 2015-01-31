@@ -55,6 +55,9 @@
 	<select id="student_list" class="choice_selector" style="max-width:200px;display:none;">
 		<option id="student_info" value="" disabled selected style="display:none;">Select student...</option>
 	</select>
+	<select id="step_list" class="choice_selector" style="max-width:200px;display:none;">
+		<option id="step_info" value="" disabled selected style="display:none;">Select step...</option>
+	</select>
 	<!--
 	<select id="s1" multiple="multiple">
 		<option value="a">Alice</option>
@@ -65,6 +68,8 @@
 	<button id="set_data_button" class="autocompare choice_selector">View data</button>
 	<i class="fa fa-info-circle"></i><span class="landing-text">Please select!</span>
 </div>
+	<button id="prev_step_button" style="display:none;" onclick="getPrevStepData()">Prev</button>
+	<button id="next_step_button" style="display:none;" onclick="getNextStepData()">Next</button>
 	<div id="container" style="display:none;width:100%; min-height:80vh; text-align: center;font-size: 12pt; font-weight: bold;"> </div>
 	
 	<table id="summary_data" border="1" style="display:none;margin: 0 auto">
@@ -134,34 +139,49 @@ function getStepData(step){
        chart.series[0].setData(option_data);
 	});
 }
-		var chart_num=0; // uniquely identifies generated charts
-		
-		
-		/*
-			TODO Maybe refactor
-		*/
-		
-		var step=0; // IMPORTANT! Maybe refactor
-		
-		
-		function getNextStepData() {
-			step++;
-			console.log(step);
-			getStepData(step);
-		};
-		
-		function getPrevStepData() {
-			step--;
-			console.log(step);
-			getStepData(step);
-		};
-		
+
+			var chart_num=0; // uniquely identifies generated charts
+			
+			
+			/*
+				TODO Maybe refactor
+			*/
+			
+			var step=0; // IMPORTANT! Maybe refactor
+			
+			
+			function getNextStepData() {
+				step++;
+				selectedYear = document.getElementById("group_year").value // Get the selected year
+				selectedApplication=$("#application").val(); // Get the selected application
+				selectedGroup = document.getElementById("group_list").value; // Get the selected group
+				selectedOption = document.getElementById("statistics_options").value; 
+				url='/exerciser/update_class_steps_graph/';
+				console.log("STEPPPPPPPPPPPPPP " + step);
+				var selectedItems={application:selectedApplication,group:selectedGroup,year:selectedYear,step:step};
+				var chartDetails={xAxisTitle:"Students",yAxisTitle:"Time",seriesName:"Time","chartType":"column",selectedOption:"class_steps",chartSubtitle:""}
+				drawChartMerged(selectedItems,chartDetails,selectedOption,url,"container");
+			};
+			
+			function getPrevStepData() {
+				step--;
+				selectedYear = document.getElementById("group_year").value // Get the selected year
+				selectedApplication=$("#application").val(); // Get the selected application
+				selectedGroup = document.getElementById("group_list").value; // Get the selected group
+				selectedOption = document.getElementById("statistics_options").value; 
+				url='/exerciser/update_class_steps_graph/';
+				console.log("STEPPPPPPPPPPPPPP " + step);
+				var selectedItems={application:selectedApplication,group:selectedGroup,year:selectedYear,step:step};
+				var chartDetails={xAxisTitle:"Students",yAxisTitle:"Time",seriesName:"Time","chartType":"column",selectedOption:"class_steps",chartSubtitle:""}
+				drawChartMerged(selectedItems,chartDetails,selectedOption,url,"container");
+			};
+			
 		
 		/*
 			ENDTODO
 		*/
 		
-		$(function () {
+
 
 			// Logic for handling selection of requested information
 			$('#statistics_options').on('change', function() {
@@ -175,16 +195,24 @@ function getStepData(step){
 					$( "#application" ).autocomplete('option', 'source', Object.keys(app_questions_dict)); // Change the autocomplete list to the relevant applications only ( i.e. the ones that have questions)
 					$("#question_list").show(); // Show the selection for the questions
 					$("#student_list").hide(); // Hide the selection for the students
+					$("#step_list").hide();
 				}
 				else if (selected_option=="student_time"){
 					$("#student_list").show(); // Show the selection for the students
 					$("#question_list").hide(); // Hide the questions selection -no interest in being there
+					$("#step_list").hide();
+				}
+				else if (selected_option=="class_steps"){
+					$("#student_list").hide(); // Show the selection for the students
+					$("#question_list").hide(); // Hide the questions selection -no interest in being there
+					$("#step_list").show();
 				}	
-				// Apply logic specific for any selection apart from answers
+				// Apply logic specific for any other selection
 				else{
 					$( "#application" ).autocomplete('option', 'source', applications); // Change the autocomplete list to all applications
 					$("#question_list").hide(); // Hide the questions selection -no interest in being there
 					$("#student_list").hide(); // Hide the selection for the students
+					$("#step_list").hide();
 
 				}
 			});
@@ -193,6 +221,7 @@ function getStepData(step){
 			// Update the question selection to the questions for the selected application
 			$("#application").focus(function() {
 				$("#question_list").bind('mouseover',function(){addQuestions()});
+				$("#step_list").bind('mouseover',function(){addSteps()});
 			});	
 			// Update the question selection to the questions for the selected application
 		/*	$("#question_list").on('mouseover',function() {
@@ -242,7 +271,7 @@ function getStepData(step){
 			
 			function seriesFormat(el,selectedOption){
 				console.log(selectedOption+"SEL OPTION SERIES");
-				if (selectedOption == "time"){
+				if (selectedOption == "time" || selectedOption=="student_time"){
 					return Highcharts.numberFormat(el.y,1) + ' s (' + el.point.revisited_count + ')' 
 				}
 				else if(selectedOption == "answers"){
@@ -259,9 +288,9 @@ function getStepData(step){
 			
 			function tooltipFormat(el,selectedOption) {
 				console.log(selectedOption+"SEL OPTION TOOLTIP");
-				if(selectedOption=="time"){
+				if(selectedOption=="time" || selectedOption=="student_time"){
 					return ' ' +
-						'Average time: ' + Highcharts.numberFormat(el.point.y, 1) +' s<br />';
+						'Average time: ' + Highcharts.numberFormat(el.point.y, 1) +' s<br />'+
 						'Revisited: ' + el.point.revisited_count + ' times<br />' +
 						'Explanation: ' + el.point.explanation_start + '<br />';
 				}
@@ -276,158 +305,23 @@ function getStepData(step){
 					return el.point.y;
 				}
 			}
-			// A function to show a graph for a chosen question
-			function drawQuestionsChart(selectedItems,container){
 
-					xAxisTitle="Choices";
-					yAxisTitle="Times chosen";
-					seriesName="Times chosen";
-					chartType="column";
-					selectedOption="answers";
-					chartSubtitle="";
-					//seriesFormat = this.y + ' times';
-					//tooltipFormat ='Times Chosen: ' + this.point.y + '<br/>' +
-					//				'Students: ' + this.point.students;
-					question=document.getElementById("question_list").value;
-				var request = $.get('/exerciser/get_question_data/', selectedItems);
 
-					request.done(function(selected_data) {
-
-					if(Object.getOwnPropertyNames(selected_data).length != 0){ // If something was returned
-						sel_data=selected_data["data"]; // Get the data
-						questionText=selected_data["question"]; // Get the question text
-
-						var option_categories=[]; // List for the categories
-						var option_data=[]; // List for the data
-						
-						// Populating the categories and the data
-						for (i = 0; i < sel_data.length; i++) { 
-
-								for (var option in sel_data[i]) {
-									console.log(option+"OPTION");
-									if ((typeof option)=="string" && option!="students"){
-										option_categories.push(option);
-										option_data.push({"y":sel_data[i][option],"students":sel_data[i]["students"]});
-									}
-								}
-							}
-							sel_data=option_data;
-							categories=option_categories;
-							drawChart(container,selectedOption,chartType,selectedApplication,selectedGroup,chartSubtitle,categories,xAxisTitle,yAxisTitle,seriesFormat,chartClickHandler,"", seriesName,sel_data,tooltipFormat,selectedYear);
-						}
-						else{
-							$('#container').find('.highcharts-container').hide();
-							$('#container').html("<div class='no_stats_info'><br\><br\><br\><br\><br\><br\><i class='fa fa-asterisk' style='color:red'></i><span style='color:red'>There are no statistics for the current selection</span><div>");
-						}
-					});
-			}	
-			
-			function drawTimeChart(selectedItems){
-				chartType="line";
-				selectedOption="time";
-				var categories=[];
-				var sel_data=[];
-				var chartSubtitle="";
-				var xAxisTitle="Steps";
-				var yAxisTitle="Seconds";
-				var seriesName="Average time";
-
-				var request = $.get('/exerciser/update_time_graph/', selectedItems)
-				
-				request.done(function(selected_data) {
-					if ("error" in selected_data){
-						alert("Bad input");
-					}
-					
-					else{
-						if(Object.getOwnPropertyNames(selected_data).length != 0){
-							sel_data=selected_data["data"]; // SELECTED DATA IS NOT EMPTY BUT Y IS NONE! REFACTOR
-							console.log(sel_data.length+"LEN SEL DATA");
-							console.log(sel_data.length + "LEN");
-							questionSteps=selected_data["question_steps"];
-							if(sel_data.length>0){
-								for (i = 0; i < sel_data.length; i++) { 
-									if(questionSteps.indexOf(i)  != -1){
-										categories[i]="? " + (i+1);
-									}
-									else{
-										categories[i]=(i+1);
-									}
-								}
-								drawChart("container",selectedOption,chartType,selectedApplication,selectedGroup,chartSubtitle,categories,xAxisTitle,yAxisTitle,seriesFormat,chartClickHandler,questionSteps, seriesName,sel_data,tooltipFormat,selectedYear);
-							}
-						}
-						else{
-							$('#container').find('.highcharts-container').hide();
-							$('#container').html("<div class='no_stats_info'><br\><br\><br\><br\><br\><br\><i class='fa fa-asterisk' style='color:red'></i><span style='color:red'>There are no statistics for the current selection</span><div>");
-						}
-					}
-				});
-			}
-			
-			function drawClassStepsChart(selectedApplication,selectedGroup,selectedYear){
-				xAxisTitle="Students";
-				yAxisTitle="Time";
-				seriesName="Time";
-				chartType="column";
-				selectedOption="class_steps";
-				chartSubtitle="";
-				//seriesFormat = Highcharts.numberFormat(this.y,1) + ' s';
-				//tooltipFormat = "Time: " + Highcharts.numberFormat(this.point.y,1) + " s";;
-
-				$("#container").before("<button id='prev_step_button' onclick='getPrevStepData()'>Prev</button>");
-				$("#container").before("<button id='next_step_button' onclick='getNextStepData()'>Next</button>");
-				
-				var request = $.get('/exerciser/update_class_steps_graph/', {app_name:selectedApplication, group:selectedGroup, year:selectedYear})
-				
-				request.done(function(selected_data) {
-
-					if(selected_data.length != 0){
-						sel_data=selected_data;
-
-						var option_categories=[];
-						var option_data=[];
-						for (i = 0; i < sel_data.length; i++) { 
-							console.log(sel_data[i]+"SELDI");
-							for (var option in sel_data[i]) {
-								console.log(option+"OPTION");
-								if ((typeof option)=="string" && option!="students"){
-									option_categories.push(option);
-									option_data.push({"y":sel_data[i][option],"students":sel_data[i]["students"]});
-								}
-							}
-						}
-						sel_data=option_data;
-						categories=option_categories;
-						drawChart("container",selectedOption,chartType,selectedApplication,selectedGroup,chartSubtitle,categories,xAxisTitle,yAxisTitle,seriesFormat,chartClickHandler,"", seriesName,sel_data,tooltipFormat,selectedYear);
-					}
-					else{
-						$('#container').find('.highcharts-container').hide();
-						$('#container').html("<div class='no_stats_info'><br\><br\><br\><br\><br\><br\><i class='fa fa-asterisk' style='color:red'></i><span style='color:red'>There are no statistics for the current selection</span><div>");
-					}
-				});
-			}
 			function drawChartMerged(selectedItems,chartDetails,selectedOption,url,chartContainer){
-			/*	chartType="line";
-				selectedOption="time";
-				var categories=[];
-				var sel_data=[];
-				var chartSubtitle="";
-				var xAxisTitle="Steps";
-				var yAxisTitle="Seconds";
-				var seriesName="Average time";
-				*/
-				
+
+				console.log("TREWTERTEgreagra " + url + selectedOption);
 				chartType=chartDetails["chartType"];
 				var chartSubtitle=chartDetails["chartSubtitle"];
 				var xAxisTitle=chartDetails[xAxisTitle];
 				var yAxisTitle=chartDetails[yAxisTitle];
 				var seriesName=chartDetails[seriesName];
 				questionSteps=[];
-				//var request = $.get('/exerciser/update_time_graph/', selectedItems)
+				categories=[];
 				var request = $.get(url, selectedItems)
-				
+				console.log(url+"url");
+				alert(selectedOption);
 				request.done(function(selected_data) {
+					console.log(selected_data+"DAA");
 					if ("error" in selected_data){
 						alert("Bad input");
 					}
@@ -437,11 +331,11 @@ function getStepData(step){
 							sel_data=selected_data["data"]; // SELECTED DATA IS NOT EMPTY BUT Y IS NONE! REFACTOR
 							console.log(sel_data.length+"LEN SEL DATA");
 							console.log(sel_data.length + "LEN");
-							if(selectedOption=="time"){
+							if(selectedOption=="time" || selectedOption=="student_time"){
 								questionSteps=selected_data["question_steps"];
 								if(sel_data.length>0){
 									for (i = 0; i < sel_data.length; i++) { 
-										if(questionSteps.indexOf(i)  != -1){
+										if(questionSteps.indexOf(i+1)  != -1){
 											categories[i]="? " + (i+1);
 										}
 										else{
@@ -452,8 +346,8 @@ function getStepData(step){
 							}
 							else if(selectedOption=="answers" || selectedOption=="class_steps"){
 								sel_data=selected_data["data"]; // Get the data
-								questionText=selected_data["question"]; // Get the question text
-
+								chartSubtitle=selected_data["question"]; // Get the question text
+								alert(chartSubtitle);
 								var option_categories=[]; // List for the categories
 								var option_data=[]; // List for the data
 								
@@ -470,6 +364,7 @@ function getStepData(step){
 								}
 								sel_data=option_data;
 								categories=option_categories;
+								
 							}
 						drawChart(chartContainer,selectedOption,chartType,selectedApplication,selectedGroup,chartSubtitle,categories,xAxisTitle,yAxisTitle,seriesFormat,chartClickHandler,questionSteps, seriesName,sel_data,tooltipFormat,selectedYear);
 							//}
@@ -500,6 +395,7 @@ function getStepData(step){
 						}
 					},
 					yAxis: {
+						min : 0,
 						allowDecimals: false,
 						title:{
 							text: yAxisTitle
@@ -534,23 +430,27 @@ function getStepData(step){
 			}
 			
 			function chartClickHandler(e,questionSteps,selectedOption,el,selectedApplication,selectedYear,selectedGroup){
-				if(selectedOption=="time"){
-					if(questionSteps.indexOf(el.x)!=-1){
+				if(selectedOption=="time" || selectedOption=="student_time"){
+					if(questionSteps.indexOf(el.x+1)!=-1){
 						hs.htmlExpand(null, {
 							pageOrigin: {
 								x: e.pageX || e.clientX,
 								y: e.pageY || e.clientY
 							},
 							headingText: el.series.name,
-							maincontentText: "	<div id='cont_"+chart_num+"'> </div><br/> ",
-							width: 600,
-							height:330
+							maincontentText: "	<div id='cont_"+chart_num+"'style='height:300px;width:400px;'> </div><br/> "
 						});
-						var selectedItems={app_name:selectedApplication, group:selectedGroup,year:selectedYear,step:el.x};
-						var chartDetails={xAxisTitle:"Choices",yAxisTitle:"Times chosen",seriesName:"Times chosen","chartType":"column",selectedOption:"answers",chartSubtitle:""};
+						var selectedItems={app_name:selectedApplication, group:selectedGroup,year:selectedYear,step:el.x+1};
+						if(selectedOption=="student_time"){
+							selectedStudent = document.getElementById("student_list").value; 
+							console.log(selectedStudent+"STUDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEENT");
+							selectedItems["student"]=selectedStudent;
+						}
+						var chartOption="answers";
+						var chartDetails={xAxisTitle:"Choices",yAxisTitle:"Times chosen",seriesName:"Times chosen","chartType":"column",selectedOption:chartOption,chartSubtitle:""};
 						var url = '/exerciser/get_question_data/';
-						//drawQuestionsChart(selectedItems,"cont_"+chart_num);
-						drawChartMerged(selectedItems,chartDetails,selectedOption,url,"cont_"+chart_num);
+						drawChartMerged(selectedItems,chartDetails,chartOption,url,"cont_"+chart_num);
+						chart_num++;
 					}
 					else{
 						hs.htmlExpand(null, {
@@ -575,7 +475,8 @@ function getStepData(step){
 				selectedApplication=$("#application").val(); // Get the selected application
 				selectedGroup = document.getElementById("group_list").value; // Get the selected group
 				selectedOption = document.getElementById("statistics_options").value; 
-
+				$("#prev_step_button").hide();
+				$("#next_step_button").hide();
 				if(selectedOption=="summary_data"){
 					$("#container").hide();
 					$("#summary_data").show();
@@ -589,7 +490,6 @@ function getStepData(step){
 						var chartDetails={"chartType":"line",chartSubtitle:"",
 xAxisTitle:"Steps",yAxisTitle:"Seconds",seriesName:"Average time"};
 						var url='/exerciser/update_time_graph/';
-						//drawTimeChart(selectedItems);
 						drawChartMerged(selectedItems,chartDetails,selectedOption,url,"container");
 					}
 					else if (selectedOption=="answers"){
@@ -597,15 +497,16 @@ xAxisTitle:"Steps",yAxisTitle:"Seconds",seriesName:"Average time"};
 						var selectedItems={app_name:selectedApplication, group:selectedGroup,year:selectedYear,question:question};
 						var chartDetails={xAxisTitle:"Choices",yAxisTitle:"Times chosen",seriesName:"Times chosen","chartType":"column",selectedOption:"answers",chartSubtitle:""};
 						var url = '/exerciser/get_question_data/';
-						//drawQuestionsChart(selectedItems,"cont_"+chart_num);
 						drawChartMerged(selectedItems,chartDetails,selectedOption,url,"container");
-						//drawQuestionsChart(selectedItems,"container");
 					}
 					else if (selectedOption=="class_steps"){
+						$("#prev_step_button").show();
+						$("#next_step_button").show();
 						url='/exerciser/update_class_steps_graph/';
-						var selectedItems={application:selectedApplication,group:selectedGroup,year:selectedYear};
+						step = parseInt(document.getElementById("step_list").value);
+						console.log("STEPPPPPPPPPPPPPP " + step);
+						var selectedItems={application:selectedApplication,group:selectedGroup,year:selectedYear,step:step};
 						var chartDetails={xAxisTitle:"Students",yAxisTitle:"Time",seriesName:"Time","chartType":"column",selectedOption:"class_steps",chartSubtitle:""}
-						//drawClassStepsChart(selectedApplication,selectedGroup,selectedYear);
 						drawChartMerged(selectedItems,chartDetails,selectedOption,url,"container");
 					}
 					
@@ -617,9 +518,7 @@ xAxisTitle:"Steps",yAxisTitle:"Seconds",seriesName:"Average time"};
 						var chartDetails={"chartType":"line",chartSubtitle:"",
 xAxisTitle:"Steps",yAxisTitle:"Seconds",seriesName:"Average time"};
 						var url='/exerciser/update_time_graph/';
-						//drawTimeChart(selectedItems);
 						drawChartMerged(selectedItems,chartDetails,selectedOption,url,"container");
-						//drawTimeChart(selectedItems);
 					}
 				}
 			});
@@ -650,9 +549,6 @@ xAxisTitle:"Steps",yAxisTitle:"Seconds",seriesName:"Average time"};
 			$("#summary_data").show();
 		}
 
-
-	
-});
 		// Refactor make it like add students
 		// A function to populate the question selection with questions specific for the selected application
 		function addQuestions(){
@@ -692,6 +588,26 @@ xAxisTitle:"Steps",yAxisTitle:"Seconds",seriesName:"Average time"};
 						var option="<option value='" + student+"' >"+student + "</option>";
 						console.log(student);
 						$("#student_list").append(option);
+					}
+				}
+			});
+		}
+
+		// A function to populate the student selection with students specific for the selected group and year
+		function addSteps(){
+			selectedApplication=$("#application").val();
+			$("#step_list").unbind('mouseover');
+			$("#step_info").prop("selected",true);
+			$("#step_list").children().not(':first').remove();
+			var request = $.get('/exerciser/get_steps/', {app_name:selectedApplication});
+			console.log("request....");
+			request.done(function(steps) {
+
+				if (!("error" in steps)){
+					for (var step_index in steps){
+						var step = steps[step_index];
+						var option="<option value='" + step+"' >"+step + "</option>";
+						$("#step_list").append(option);
 					}
 				}
 			});

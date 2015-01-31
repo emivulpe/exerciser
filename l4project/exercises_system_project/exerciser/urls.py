@@ -35,6 +35,7 @@ urlpatterns = patterns('',
 #		url(r'^get_step_data', views.get_step_data, name='get_step_data'),
 		url(r'^get_students', views.get_students, name='get_students'),
 		url(r'^get_groups/$', views.get_groups, name='get_groups'),
+		url(r'^get_steps/$', views.get_steps, name='get_steps'),
 		url(r'^get_groups_for_year/$', views.get_groups_for_year, name='get_groups_for_year'),
 		url(r'^get_application_questions/$', views.get_application_questions, name='get_application_questions'),
 		) 
