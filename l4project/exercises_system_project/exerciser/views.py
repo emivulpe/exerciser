@@ -10,7 +10,7 @@ import random
 from random import randint
 from django.views.decorators.csrf import requires_csrf_token
 import django.conf as conf
-from exerciser.forms import UserForm, GroupForm, SampleQuestionnaireForm
+from exerciser.forms import UserForm, SampleQuestionnaireForm
 from django.contrib.auth import authenticate, login
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
@@ -283,7 +283,8 @@ def register_group_with_session(request):
 def save_session_ids(request):
 	request.session['registered']=True
 	print "saving..."
-	return HttpResponse("{}",content_type = "application/json")
+	#return HttpResponse("{}",content_type = "application/json")
+	return HttpResponseRedirect('/exerciser/')
 
 ### Refactored. Checks added. Looks Fine ###
 @requires_csrf_token
@@ -401,7 +402,9 @@ def reset_session(request):
 	
 	request.session.delete()
 	request.session.modified = True
-	return HttpResponse("{}",content_type = "application/json")
+	#return HttpResponse("{}",content_type = "application/json")
+	
+	return HttpResponseRedirect('/exerciser/')
 	
 
 ### Refactored ###
@@ -536,7 +539,7 @@ def get_students(request):
 	
 ### Checks added. Looks fine ###
 def get_groups(request):
-	print "in get students!"
+	print "in get groups!"
 	try:
 		year = request.GET['year']
 	except KeyError:
@@ -832,7 +835,7 @@ def teacher_interface(request):
 	academic_years = AcademicYear.objects.all()
 
 	user_form = UserForm()
-	group_form = GroupForm()
+	#group_form = GroupForm()
 
 	groups={}
 
@@ -850,7 +853,7 @@ def teacher_interface(request):
 
 	questionnaire_form = SampleQuestionnaireForm()
 
-	context_dict = {'applications' : application_list,'user_form': user_form, 'group_form': group_form,'groups': groups,'academic_years':academic_years,'questionnaire_form':questionnaire_form}
+	context_dict = {'applications' : application_list,'user_form': user_form, 'groups': groups,'academic_years':academic_years,'questionnaire_form':questionnaire_form}
 	
 	
 	# Return a rendered response to send to the client.
@@ -861,7 +864,7 @@ def teacher_interface(request):
 
 ### Refactored. Ask if I have to check if request was get/post ###
 def register(request):
-
+    print "in register"
     # Like before, get the request's context.
     context = RequestContext(request)
 
@@ -871,10 +874,11 @@ def register(request):
 
     # If it's a HTTP POST, we're interested in processing form data.
     if request.method == 'POST':
+        print "was post"
         # Attempt to grab information from the raw form information.
         # Note that we make use of both UserForm and UserProfileForm.
         user_form = UserForm(data=request.POST)
-        group_form = GroupForm(data=request.POST)
+        #group_form = GroupForm(data=request.POST)
 
         # If the form is valid...
         if user_form.is_valid():
@@ -885,15 +889,17 @@ def register(request):
             # Once hashed, we can update the user object.
             user.set_password(user.password)
             user.save()
-            
+            teacher=Teacher(user=user,can_analyse=bool(request.POST['can_analyse']))
+            teacher.save()
+            print teacher,"teacher"
             # Now sort out the GroupProfile instance.
             # Since we need to set the user attribute ourselves, we set commit=False.
             # This delays saving the model until we're ready to avoid integrity problems.
-            group = group_form.save(commit=False)
-            group.user = user
+            #group = group_form.save(commit=False)
+           # group.user = user
 
             # Now we save the UserProfile model instance.
-            group.save()
+           # group.save()
 
             # Update our variable to tell the template registration was successful.
             registered = True
@@ -902,7 +908,7 @@ def register(request):
         # Print problems to the terminal.
         # They'll also be shown to the user.
         else:
-            print user_form.errors, group_form.errors
+            print user_form.errors #, group_form.errors
 
     print registered,"registered"
     request.session['registered'] = registered

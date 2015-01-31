@@ -168,11 +168,22 @@
 							<!-- Display each form. The as_p method wraps each element in a paragraph
 							(<p>) element. This ensures each element appears on a new line,
 							making everything look neater. -->
-							{{ user_form.as_p }}
-							{{ group_form.as_p }}
+							<table border="1" style="margin-left:auto; margin-right:auto;">
+								{% for field in user_form %}
+									<tr>
+										<td style="vertical-align:top;text-align:right;">
+											{{ field.label_tag }}
+										</td>
+										<td style="padding-left:5px;">
+											{{ field }}
+										</td>
+									</tr>
+								{% endfor %}
+							</table>
+							<input type="hidden" name="can_analyse" id="consent_value" value="-1" />
 
 							<!-- Provide a button to click to submit the form. -->
-							<input id="register_user_button" type="submit" name="submit" value="Register" />
+							<input id="register_user_button" type="submit" value="Register" />
 						</form><br/>
 						<div style="font-size: 12pt; font-weight: bold;"> 
 							<i class="fa fa-close success" style="color:red;"></i>
@@ -180,18 +191,33 @@
 						</div>
 					{% else %}
 						<h1>Register here!</h1><br />
-
+						
 						<form id="user_form" method="post" action="/exerciser/register/" enctype="multipart/form-data">
 							{% csrf_token %}
 
 							<!-- Display each form. The as_p method wraps each element in a paragraph
 							(<p>) element. This ensures each element appears on a new line,
 							making everything look neater. -->
-							{{ user_form.as_p }}
-							{{ group_form.as_p }}
+							
+							<table style="margin-left:auto; margin-right:auto;">
+								{% for field in user_form %}
+									<tr>
+										<td style="vertical-align:top;text-align:right;">
+											{{ field.label_tag }}
+										</td>
+										<td style="padding-left:5px;">
+											<p>
+											{{ field }}
+											</p>
+										</td>
+									</tr>
+								{% endfor %}
+							</table>
+							
+							<input type="hidden" name="can_analyse" id="consent_value" value="-1" />
 
 							<!-- Provide a button to click to submit the form. -->
-							<input id="register_user_button" type="submit" name="submit" value="Register" />
+							<input id="register_user_button" type="submit" value="Register" />
 						</form>
 						<button onclick="$('#consent_dialog').dialog('open');">Click me</button>
 					{% endif %}
@@ -538,11 +564,18 @@ This study adheres to the BPS ethical guidelines, and has been approved by the F
       buttons: {
         "I agree": function() {
           $( this ).dialog( "close" );
-		  location.reload(); // Reload the page to reflect the new changes
+		  $("#consent_value").val("1");
+		  //$('#user_form').trigger('submit', [true]);
+		  $("#user_form").submit();
+		  //location.reload(); // Reload the page to reflect the new changes
         },
         "Don't record data": function() {
           $( this ).dialog( "close" );
-		  location.reload(); // Reload the page to reflect the new changes
+		  $("#consent_value").val("0");
+		  //console.log("disagree");
+		  //$('#user_form').trigger('submit', [true]);
+		  $("#user_form").submit();
+		  //location.reload(); // Reload the page to reflect the new changes
         }
       }
 	});
@@ -562,6 +595,30 @@ This study adheres to the BPS ethical guidelines, and has been approved by the F
       }
     });
   });
+
+$(document).ready(function() {
+	
+	$('#user_form').submit(function(e) {
+		var consent_value = $('#consent_value').val();
+		
+		if (consent_value == '-1') {
+			e.preventDefault();
+			$('#consent_dialog').dialog('open');
+		}
+		
+		console.log(consent_value);
+		
+	});
+	
+	
+	/*$('#register_user_button').click(function(e){
+		var consent_value = $('#consent_value').val();
+		if (consent_value == '-1') {
+			e.preventDefault();
+			$('#consent_dialog').dialog('open');
+		}
+	});*/
+});
 
 // A function to ensure that only numbers are accepted when entering the number of students to add to a group 
 function isNumber(evt){

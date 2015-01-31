@@ -4,6 +4,10 @@ from django import forms
 
 class UserForm(forms.ModelForm):
 	password = forms.CharField(widget=forms.PasswordInput())
+	password2 = forms.CharField(widget=forms.PasswordInput())
+	password2.label = "Verify password"
+	
+	print dir(password2)
 
 	class Meta:
 		model = User
@@ -14,12 +18,20 @@ class UserForm(forms.ModelForm):
 
 		for fieldname in ['username']:
 			self.fields[fieldname].help_text = None
-		
+	def clean(self):
+		password1 = self.cleaned_data.get('password')
+		password2 = self.cleaned_data.get('password2')
+
+		if password1 and password1 != password2:
+			raise forms.ValidationError("Passwords don't match")
+
+		return self.cleaned_data
+"""		
 class GroupForm(forms.ModelForm):
     class Meta:
         model = Teacher
-        fields = ('can_analyse',)
-		
+        
+"""
 		
 class SampleQuestionnaireForm(forms.ModelForm):
 	"""

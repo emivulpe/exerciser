@@ -150,9 +150,10 @@
 		});
 		
 		function resetRegistration(){
-			$.post("/exerciser/reset_session/",{csrfmiddlewaretoken : csrftoken});
-			location.reload(true);
-			console.log("in");
+			window.location='/exerciser/reset_session/';
+			//$.post("/exerciser/reset_session/",{csrfmiddlewaretoken : csrftoken, reload: true});
+			//location.reload(true);
+			//console.log("in");
 		}
 		
 		
@@ -160,8 +161,8 @@
 			$(".details").hide();
 			$("#application_list").show();
 			console.log("in store details");
-			$.post("/exerciser/save_session_ids/",{csrfmiddlewaretoken : csrftoken});
-			
+			//$.post("/exerciser/save_session_ids/",{csrfmiddlewaretoken : csrftoken});
+			window.location='/exerciser/save_session_ids/';
 			message = "You are using the application ";
 			
 			if(teacher_name != ""){
@@ -180,7 +181,7 @@
 			}
 			message += ".";
 
-			location.reload();
+			location.reload(true);
 
 
 		}
