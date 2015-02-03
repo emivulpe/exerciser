@@ -49,6 +49,9 @@
 							<td>
 								<input id = "delete_group"type="radio" name="action" value="delete"><label for="delete_group">Delete</label>
 							</td>
+							<td style="padding-left:10px;">
+								<i class="fa fa-question-circle" title="Select the corresponding option depending on whether you want to register a group, add students to a group or delete a group."></i>
+							</td>
 						</tr>
 						<tr>
 							<td style="text-align:right;padding:10px;">
@@ -61,6 +64,9 @@
 									{% endfor %}
 								</select>
 							</td>
+							<td style="padding-left:10px;">
+								<i class="fa fa-question-circle" title="Select the academic year to which the selected group belongs/will belong."></i>
+							</td>
 						</tr>
 						<tr class="register_group_specific" style="display:none;">
 							<td style="text-align:right;padding-right:10px;">
@@ -69,13 +75,17 @@
 							<td colspan="3">
 								<input id="group_id_entry" type="text" name="group_id_entry">
 							</td>
+							<td style="padding-left:10px;">
+								<i class="fa fa-question-circle" title="Choose a name for the group."></i>
+							</td>
 						</tr>
 						<tr class="register_group_specific">
 							<td style="text-align:right; padding-right:10px;">
 								<span id="existing_groups">Existing groups: </span>
 							</td>
-							<td colspan="3"class="existing_groups_list" style="text-align:left;">
+							<td colspan="4"class="existing_groups_list" style="text-align:left;">
 							</td>
+
 						</tr>
 						<tr id ="group_id_select" style="display:none;">
 							<td style="text-align:right;padding-right:10px;">
@@ -83,6 +93,9 @@
 							</td>
 							<td colspan="3" >
 								<select id="group_entry" class="group" style = "width:100%;"></select>
+							</td>
+							<td style="padding-left:10px;">
+								<i class="fa fa-question-circle" title="Choose the name of the group you want to update/delete."></i>
 							</td>
 						</tr>
 						<tr class="update_group_specific">
@@ -92,13 +105,15 @@
 							<td colspan="3">
 								<input id="num_students" type="number" min="0" name="num_students" onkeypress="return isNumber(event)">
 							</td> 
+							<td style="padding-left:10px;">
+								<i class="fa fa-question-circle" title="Enter the number of students you would like to add ids for in the selected group."></i>
+							</td>
 						</tr>
 						<tr>
 							<td></td>
-							<td>	
+							<td colspan="4">	
 								<input id="save_group_button" type="reset" value="Register">
 							</td>
-							<td></td>
 						</tr>
 					</table>
 
@@ -122,6 +137,9 @@
 									{% endfor %}
 									</select>
 								</td>
+								<td style="padding-left:10px;">
+									<i class="fa fa-question-circle" title="Select the academic year for the group."></i>
+								</td>
 							</tr>
 							<tr>
 								<td style="text-align:right;padding-right:10px;">
@@ -130,9 +148,12 @@
 								<td style="text-align:left;">
 									<select id="group" class="group" style="width:100%;"></select>
 								</td>
+								<td style="padding-left:10px;">
+									<i class="fa fa-question-circle" title="Select the group you would like to see ids for."></i>
+								</td>
 							</tr>
 							<tr>
-								<td colspan="2">
+								<td colspan="3" style="padding-top:10px;">
 									<input id="view_group_list" type="reset" value="View">
 								</td>
 							</tr>

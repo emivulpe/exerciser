@@ -3,9 +3,12 @@ from django.contrib.auth.models import User
 from django import forms
 
 class UserForm(forms.ModelForm):
+	username = forms.CharField()
 	password = forms.CharField(widget=forms.PasswordInput())
 	password2 = forms.CharField(widget=forms.PasswordInput())
-	password2.label = "Verify password"
+	username.label = "Username:"
+	password.label = "Password:"
+	password2.label = "Confirm password:"
 	
 	print dir(password2)
 
