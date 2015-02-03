@@ -1,5 +1,5 @@
 {% extends 'exerciser/base.html' %}
-
+{% load static %}
 {% block title %}Exercise!{% endblock %}
 
 {% block style %}
@@ -24,15 +24,20 @@
 				<br/><br/>
 				{% if request.session.registered %}
 					
-					<strong>You are registered 
+					<strong>You are registered
 					{% if request.session.teacher %} 
-						with teacher id {{request.session.teacher}} 
+						 with teacher id {{request.session.teacher}}
 					
 						{% if request.session.group %} 
-							with group id {{request.session.group}} 
+							 with group id {{request.session.group}}
+							 {% if request.session.year %} 
+								 ({{request.session.year}}/{{request.session.year|add:"1"}})
 					
-							{% if request.session.student %} 
-								with student id {{request.session.student}} 
+								{% if request.session.student %} 
+									 with student id {{request.session.student}}.
+								{% else %}
+									. 
+								{% endif %}
 							{% else %}
 								. 
 								
@@ -41,7 +46,7 @@
 							.
 						{% endif %}
 					{% else %}
-						anonymously.
+						 anonymously.
 					{% endif %}
 					
 					<br/><br/>
@@ -57,7 +62,7 @@
 
 						<ul class="navList" style=" list-style-type: none; ">
 						{% for application in applications %}
-						<li><a href="/exerciser/application/{{ application.url }}">{{ application.name }}</a></li>
+						<li><a href="/exerciser/application/{{ application.url }}" style="color:gray;">{{ application.name }}</a></li>
 						{% endfor %}
 						</ul>
 						</td>
@@ -125,7 +130,16 @@
 			</div>
 				
 			<div class="col-md-6 text-center">
-				<h1 class="brand-heading"><a href="#"><i class="fa fa-info landing-icon fa-lg fa-5x"></i><br><br><span class="landing-text">About Info</span></a></h1>
+				<br/><br/>
+				<strong id="tutorial_intro_text">Weave will help you improve your skills in solving problems. Click on the Next arrow below for a short tutorial on how to use it!</strong>
+				<ul>
+					<li id = "prev_step" style="display: none;float:left;"><a id="btn_prev_step" href="#" style="position: relative; top: 2px;color:gray;"><i id="prev_step_arrow"class="fa fa-step-backward fa-lg landing-icon fa"></i>&nbsp;<label for="prev_step_arrow">Previous</label></a></li>
+					<li id = "next_step" style="display: inline;float:right;"><a id="btn_next_step" href="#" style="position: relative; top: 2px;color:gray;"><label for="next_step_arrow">Next</label>&nbsp;<i id="next_step_arrow" class="fa fa-step-forward fa-lg landing-icon fa"></i></a></li>
+				</ul>
+				<br/><br/>
+					<strong id="tutorial_text"></strong>
+				<br/><br/><img id = "tutorial_screenshot" style="display:none;" src=" {% static 'media/specify details.jpg' %}"/>
+
 			</div>
 		</div>			
 	</div>
@@ -133,8 +147,86 @@
 
 
 {% block javascripts %}
-	<script type="text/javascript" src="/static/js/cookieAccessor.js"></script>
+	<script type="text/javascript" src="{% static 'js/cookieAccessor.js' %}"></script>
 	<script> 
+	var tutorialStep = 0;
+	$('#btn_prev_step').click(function() {
+	if(tutorialStep > 0){
+		tutorialStep--;
+		console.log("prev clicked");
+		goToTutorialStep(tutorialStep);
+	}
+});
+
+$('#btn_next_step').click(function() {
+	if (tutorialStep < 9){
+		tutorialStep++;
+		console.log("next clicked");
+		goToTutorialStep(tutorialStep);
+	}
+});
+
+function goToTutorialStep(tutorialStep){
+	console.log("in tutorial step");
+	console.log(tutorialStep);
+	
+	switch(tutorialStep) {
+		case 0:
+			$("#tutorial_text").text("");
+			$("#tutorial_screenshot").hide();
+			$("#prev_step").css("display","none");
+			break;
+		case 1:
+			$("#prev_step").css("display","inline");
+			$("#tutorial_screenshot").show();
+			$("#tutorial_text").text("To start using Weave, enter any details given by your teacher and press the respective button. If none given click on No teacher ID, etc.");
+			$("#tutorial_screenshot").attr("src","{% static 'media/specify details.jpg' %}");
+			break;
+		case 2:
+			$("#prev_step").css("display","inline");
+			$("#tutorial_screenshot").show();
+			$("#tutorial_text").text("You can reset your details by clicking on Reset Details button on the top right corner of the page.");
+			$("#tutorial_screenshot").attr("src","{% static 'media/reset details.jpg' %}");
+			break;
+		case 3:
+			$("#tutorial_text").text("An application selector will appear both on the toolbar next to the Home icon, and on the left of this tutorial. You can search for an example by typing in the text box.");
+			$("#tutorial_screenshot").attr("src","{% static 'media/select application.jpg' %}");
+			break;
+		case 4:
+			$("#tutorial_text").text("Start by clicking on the Start button on the top right of the page. ");
+			$("#tutorial_screenshot").attr("src","{% static 'media/start.jpg' %}");
+			break;
+		case 5:
+			$("#tutorial_text").text("You can go back and forward through the steps, as well as reset the example by the buttons on the top right of the page.");
+			$("#tutorial_screenshot").attr("src","{% static 'media/controls.jpg' %}");
+			break;
+		case 6:
+			$("#tutorial_text").text("Note the explanation panel.");
+			$("#tutorial_screenshot").attr("src","{% static 'media/explanation.jpg' %}");
+			break;
+		case 7:
+			$("#tutorial_text").text("You can resize the panels left to right, top to bottom.");
+			$("#tutorial_screenshot").attr("src","{% static 'media/resize.jpg' %}");
+			break;
+		case 8:
+			$("#tutorial_text").text("Questions may appear to check your knowledge.");
+			$("#tutorial_screenshot").attr("src","{% static 'media/question.jpg' %}");
+			$("#next_step").css("display","inline");
+			$("#tutorial_screenshot").show();
+			break;
+		case 9:
+			$("#tutorial_text").text("Enjoy!");
+			$("#tutorial_screenshot").hide();
+			$("#next_step").css("display","none");
+			break;
+		default:
+			$("#tutorial_text").text("");
+			$("#tutorial_screenshot").hide();
+			break;
+	}
+}
+
+
 		console.log("Teacher {{request.session.teacher}},{{applications}}");
 		var csrftoken = getCookie('csrftoken');
 		var teacher_name="";
@@ -158,18 +250,19 @@
 		
 		
 		function storeDetails(){
+			console.log("in store details ");
 			$(".details").hide();
 			$("#application_list").show();
-			console.log("in store details");
+			console.log("in store details" + academic_year);
 			//$.post("/exerciser/save_session_ids/",{csrfmiddlewaretoken : csrftoken});
 			window.location='/exerciser/save_session_ids/';
 			message = "You are using the application ";
-			
+			console.log({{request.session.teacher}}+"TEST TEACHER");
 			if(teacher_name != ""){
-				message += "registered with teacher id " + teacher_name;
+				message += "registered with teacher id" + teacher_name;
 				
 				if (group_name != ""){
-					message += ", group id " + group_name + " (" + academic_year + ") "; // TODO (year) is not printed
+					message += " , group id " + group_name + " (" + academic_year + ")"; // TODO (year) is not printed
 					
 					if (student_name != "") {
 						message += " and student id " + student_name;
@@ -177,17 +270,18 @@
 				}
 			}
 			else {
-				message += "anonymously";
+				message += " anonymously";
 			}
 			message += ".";
 
-			location.reload(true);
+			//location.reload(true);
 
 
 		}
 		
 
 		function chooseTeacherStep(){
+		
 			teacher_name="";
 			academic_year="";
 			group_name="";
@@ -208,12 +302,13 @@
 		function chooseGroupStep(){
 			group_name="";
 			student_name="";
+			academic_year="";
 			$("#teacher_details").hide();
 			$("#year_details").hide();
 			$("#group_details").show();
 			$("#student_details").hide();
 			$("#back_button").show();
-			$("#back_button").attr('onclick', 'chooseYearStep()');
+			$("#back_button").attr("onclick", "deleteGroup()");
 			$("#submit_button").val("Next");
 			$("#submit_button").attr('onclick', 'saveGroup()');
 			$("#no_id").val('No group ID');
@@ -227,7 +322,7 @@
 			$("#year_details").hide();
 			$("#student_details").show();
 			$("#back_button").show();
-			$("#back_button").attr('onclick', 'chooseGroupStep()');
+			$("#back_button").attr('onclick', 'deleteStudent()');
 			$("#submit_button").val("Submit");
 			$("#submit_button").prop("type", "submit");
 			$("#submit_button").attr('onclick', 'saveStudent()');
@@ -237,23 +332,35 @@
 		
 		function chooseYearStep(){
 			teacher_name="";
+			academic_year="";
 			$("#teacher_details").hide();
 			$("#group_details").hide();
 			$("#year_details").show();
 			$("#student_details").hide();
 			$("#group_list").empty();
 			$("#back_button").show();
-			$("#back_button").attr('onclick', 'chooseTeacherStep()');
+			$("#back_button").attr('onclick', 'deleteYear()');
 			$("#submit_button").val("Next");
 			$("#submit_button").attr('onclick', 'saveYear()');
 			$("#no_id").val('No year');
 			$("#success_message").text('');
 		}
-
+		function deleteGroup(){
+			$.post('/exerciser/del_session_variable/',{csrfmiddlewaretoken : csrftoken, to_delete: 'group'});
+			chooseYearStep();
+		}
+		function deleteStudent(){
+			$.post('/exerciser/del_session_variable/',{csrfmiddlewaretoken : csrftoken, to_delete: 'student'});
+			chooseGroupStep();
+		}
+		function deleteYear(){
+			$.post('/exerciser/del_session_variable/',{csrfmiddlewaretoken : csrftoken, to_delete: 'year'});
+			chooseTeacherStep();
+		}
 		function saveStudent(){
 
 			var student = $("#student").val();
-
+			console.log("in student save ");
 			var request = $.post("/exerciser/register_student_with_session/",
 			{
 				student : student,
@@ -263,6 +370,7 @@
 			request.done(function(success) {
 
 				if(success){
+					console.log("in student save " + success);
 					student_name=student;
 					storeDetails();
 				}
@@ -275,6 +383,7 @@
 		};
 		
 		function saveTeacher (){
+			console.log("in teacher save ");
 			var teacher = $("#teacher").val();
 
 			$("#buttons").hide();
@@ -304,7 +413,7 @@
 		}
 		
 		function saveGroup(){
-
+			console.log("in group save ");
 			$("#buttons").hide();
 			var group=document.getElementById("group_list").value;
 
@@ -366,10 +475,10 @@
 		}
 */	
 		function saveYear(){
-
+			console.log("in year save ");
 			$("#buttons").hide();
 			var year=document.getElementById("academic_year_select").value;
-
+			console.log(year + "year");
 			var request = $.post("/exerciser/register_year_with_session/",
 			{
 			year : year,

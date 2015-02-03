@@ -38,4 +38,6 @@ urlpatterns = patterns('',
 		url(r'^get_steps/$', views.get_steps, name='get_steps'),
 		url(r'^get_groups_for_year/$', views.get_groups_for_year, name='get_groups_for_year'),
 		url(r'^get_application_questions/$', views.get_application_questions, name='get_application_questions'),
+#		url(r'^questionnaire_asked/$', views.questionnaire_asked, name='questionnaire_asked'),
+		url(r'^del_session_variable/$', views.del_session_variable, name='del_session_variable'),
 		) 

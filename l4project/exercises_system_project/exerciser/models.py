@@ -4,30 +4,68 @@ from django.contrib.auth.models import User
 
 
 class Application(models.Model):
-    name = models.CharField(max_length = 128, primary_key = True)
-    layout = models.CharField(max_length = 128)
+	name = models.CharField(max_length = 128, primary_key = True)
+	layout = models.CharField(max_length = 128)
 
-    def __unicode__(self):
-        return self.name
+	def __unicode__(self):
+		return self.name
+		
+class DocumentType(models.Model):
+	name = models.CharField(max_length=128,unique=True,primary_key=True)
+	kind = models.CharField(max_length=128)
+
+class FragmentType(models.Model):
+	name = models.CharField(max_length=128)
+	kind = models.CharField(max_length=128)
+	#style = models.ForeignKey(FragmentStyle, blank=True, null=True)
+	document_type = models.ForeignKey(DocumentType, blank=True, null=True)
+	
+
+class FragmentStyle(models.Model):
+	font = models.CharField(max_length=50)
+	bold = models.BooleanField(default=False)
+	italic = models.BooleanField(default=False)
+	underlined = models.BooleanField(default=False)
+	font_size = models.SmallIntegerField()
+	type = models.ForeignKey(FragmentType, blank=True, null=True)
+	def __unicode__(self):
+		style=""
+		if self.font != None:
+			style += "font-family:"+self.font + ";"
+		if self.bold != None and self.bold:
+			style += "font-weight: bold;"
+		if self.italic != None and self.italic:
+			style += "font-style: italic;"
+		if self.underlined != None and self.underlined:
+			style += "text-decoration: underline;"
+		if self.font_size != None:
+			style += "font-size:" + str(self.font_size) + "px;"
+		return style
+		
 
 class Document(models.Model):
-    name = models.CharField(max_length=128, unique=True, primary_key = True)
-    type = models.CharField(max_length=128)
-    kind = models.CharField(max_length=128)
-    fixOrder = models.BooleanField()
+	id = models.CharField(max_length=128,unique=True,primary_key=True)
+	document_type = models.ForeignKey(DocumentType, blank=True, null=True)
+	name = models.CharField(max_length=128)
+#	type = models.ForeignKey(DocumentType, blank=True, null=True)
+	fixOrder = models.BooleanField()
 
-    def __unicode__(self):
-        return self.name
+	def __unicode__(self):
+		return self.name
+
+		
+		
 
 class Fragment(models.Model):
-    document = models.ForeignKey(Document)
-    id = models.CharField(max_length=128,unique=True,primary_key=True)
-    text = models.TextField()
-    type = models.CharField(max_length=128)
-    order = models.IntegerField()
+	document = models.ForeignKey(Document)
+	style = models.ForeignKey(FragmentStyle, blank=True, null=True)
+	id = models.CharField(max_length=128,unique=True,primary_key=True)
+	text = models.TextField()
+	type = models.ForeignKey(FragmentType, blank=True, null=True)
+	order = models.IntegerField()
 
-    def __unicode__(self):
-        return " ".join((self.text, self.id))
+	def __unicode__(self):
+		return " ".join((self.text, self.id))
 		
 	def __init__(self, *args, **kwargs):
 		super(Fragment, self).__init__(*args, **kwargs)
@@ -37,36 +75,36 @@ class Fragment(models.Model):
 	def reset(self):
 		self.visible = False
 		self.highlighted = False
-		
-class UserProfile(models.Model):
-    user = models.OneToOneField(User)
-    type = models.CharField(max_length=128)
 
-    # Override the __unicode__() method to return out something meaningful!
-    def __unicode__(self):
-        return self.user.username
+class UserProfile(models.Model):
+	user = models.OneToOneField(User)
+	type = models.CharField(max_length=128)
+
+	# Override the __unicode__() method to return out something meaningful!
+	def __unicode__(self):
+		return self.user.username
 
 
 class Step(models.Model):
-    application = models.ForeignKey(Application)
-    order = models.IntegerField()
+	application = models.ForeignKey(Application)
+	order = models.IntegerField()
 
-    def __unicode__(self):
-        return str(self.order)
+	def __unicode__(self):
+		return str(self.order)
 
-    class Meta:
-        ordering = ['order']
+	class Meta:
+		ordering = ['order']
 
 class Question(models.Model):
-    application = models.ForeignKey(Application)
-    step = models.ForeignKey(Step)
-    question_text = models.TextField()
+	application = models.ForeignKey(Application)
+	step = models.ForeignKey(Step)
+	question_text = models.TextField()
 
-    def __unicode__(self):
-        return self.question_text
+	def __unicode__(self):
+		return self.question_text
 
-    def __repr__(self):
-        return self.__unicode__()
+	def __repr__(self):
+		return self.__unicode__()
 
 class Change(models.Model):
 	step = models.ForeignKey(Step)
@@ -102,21 +140,21 @@ class Change(models.Model):
 		return " ".join(("Document: ", self.document.name," | Step: ", str(self.step.order), " | Text: ",self.fragment.text, " | Operation:", self.operation ))
 
 class Explanation(models.Model):
-    step = models.ForeignKey(Step)
-    text = models.TextField()
+	step = models.ForeignKey(Step)
+	text = models.TextField()
 
-    def __unicode__(self):
-        return self.text
+	def __unicode__(self):
+		return self.text
 		
 
 class Option(models.Model):
-    question = models.ForeignKey(Question)
-    number = models.IntegerField()
-    content = models.CharField(max_length = 256)
+	question = models.ForeignKey(Question)
+	number = models.IntegerField()
+	content = models.CharField(max_length = 256)
 
 
-    def __unicode__(self):
-        return " ".join(("ID",str(self.id),"Option: ", str(self.number), ". ", self.content))
+	def __unicode__(self):
+		return " ".join(("ID",str(self.id),"Option: ", str(self.number), ". ", self.content))
 
 		
 class Panel(models.Model):
@@ -147,20 +185,28 @@ class Panel(models.Model):
 
 class AcademicYear(models.Model):
 	start = models.IntegerField(primary_key=True)
+	
+	def __unicode__(self):
+		return str(self.start)
 		
 class Teacher(models.Model):
 	user = models.OneToOneField(User)
-	can_analyse = models.BooleanField(default=False)
+	can_analyse = models.BooleanField(default=False) ### TODO maybe make it int insted? ###
+	
+	def __unicode__(self):
+		return " ".join((self.user.username ,str(self.can_analyse)))
 		
 class Group(models.Model):
 	teacher = models.ForeignKey(Teacher)
 	academic_year = models.ForeignKey(AcademicYear)
-	name = models.CharField(max_length=100, unique=True)
-	
+	name = models.CharField(max_length=100)
+	class Meta:
+		unique_together = ('academic_year', 'name',)
 	def __unicode__(self):
 		return self.name
 	def __repr__(self):
 		return self.__unicode__()
+
 		
 class Student(models.Model):
 	teacher = models.ForeignKey(Teacher)
@@ -213,9 +259,11 @@ class QuestionRecord(models.Model):
 	group = models.ForeignKey(Group, blank=True, null=True)
 	student = models.ForeignKey(Student, blank=True, null=True)
 	session_id = models.CharField(max_length=100)
-	answer = models.ForeignKey(Option)
+	answer = models.ForeignKey(Option, blank=True, null=True) # TODO Maybe remove
+	answer_text=models.TextField()
 
 class SampleQuestionnaire(models.Model):
+	teacher=models.ForeignKey(Teacher, blank=True, null=True)
 	FRESHMAN = 'FR'
 	SOPHOMORE = 'SO'
 	JUNIOR = 'JR'

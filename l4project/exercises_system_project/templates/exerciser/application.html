@@ -1,4 +1,5 @@
 {% extends 'exerciser/base.html' %}
+{% load static %}
 {% block style %}
 html, body {
     max-width: 100%;
@@ -37,7 +38,6 @@ html, body {
 
 	#north{
 		z-index: 90;
-		background:red;
 	}
 
 	.question{
@@ -74,7 +74,7 @@ html, body {
 							<div class="panel" style="font-size:0;float: left;word-wrap:break-word;padding:2px;">
 							{% for fragment in panel.getFragments %}
 								{% autoescape off %}
-								<span id = fragment_{{fragment.id}} class = "fragment" style="font-size:14px;">{{fragment.text}}</span>
+								<span id = fragment_{{fragment.id}} class = "fragment" style="{{fragment.style}}">{{fragment.text}}</span>
 								{% endautoescape %}
 							{% endfor %}
 							</div>
@@ -135,9 +135,9 @@ html, body {
 {% endblock %}
 
 {% block javascripts %}
-	<script type="text/javascript" src="/static/js/change.js"></script>
-	<script type="text/javascript" src="/static/js/colResizable-1.4.min.js"></script>
-	<script type="text/javascript" src="/static/js/jquery-ui.js"></script>
+	<script type="text/javascript" src="{% static 'js/change.js' %}"></script>
+	<script type="text/javascript" src="{% static 'js/colResizable-1.4.min.js' %}"></script>
+	<script type="text/javascript" src="{% static 'js/jquery-ui.js' %}"></script>
 
 	<script type="text/javascript">
 		// Steps - Stores the sequence of events - nested arrays. Each nested array is [FRAG_ID, STATE]. So [1,'show'] means show fragment with ID 1. Two levels of nesting - the first one is the actual step, and each subsequent array is an action to perform (in the form above).

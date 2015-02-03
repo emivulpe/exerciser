@@ -85,18 +85,18 @@
 {% endblock %}
 
 {% block javascripts %}
-	<script src="/static/js/highcharts.js"></script>
-	<script src="/static/js/exporting.js"></script>
-	<script src="/static/js/customEvents.js"></script>
+	<script src="{% static 'js/highcharts.js' %}"></script>
+	<script src="{% static 'js/exporting.js' %}"></script>
+	<script src="{% static 'js/customEvents.js' %}"></script>
 
 <script src="http://code.highcharts.com/modules/data.js"></script>
 
 
-<!-- Additional files for the Highslide popup effect -->
+<!-- Additional files for the Highslide popup effect TODO download these --> 
 <script type="text/javascript" src="http://www.highcharts.com/media/com_demo/highslide-full.min.js"></script>
 <script type="text/javascript" src="http://www.highcharts.com/media/com_demo/highslide.config.js" charset="utf-8"></script>
-<script type="text/javascript" src="/static/js/jquery-ui.js"></script>
-<script type="text/javascript" src="/static/js/ui.dropdownchecklist-1.1-min.js"></script>
+<script type="text/javascript" src="{% static 'js/jquery-ui.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/ui.dropdownchecklist-1.1-min.js' %}"></script>
 <link rel="stylesheet" type="text/css" href="http://www.highcharts.com/media/com_demo/highslide.css" />
 
 	<script>

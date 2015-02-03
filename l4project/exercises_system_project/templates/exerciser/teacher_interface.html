@@ -168,14 +168,16 @@
 							<!-- Display each form. The as_p method wraps each element in a paragraph
 							(<p>) element. This ensures each element appears on a new line,
 							making everything look neater. -->
-							<table border="1" style="margin-left:auto; margin-right:auto;">
+							<table style="margin-left:auto; margin-right:auto;">
 								{% for field in user_form %}
 									<tr>
 										<td style="vertical-align:top;text-align:right;">
 											{{ field.label_tag }}
 										</td>
 										<td style="padding-left:5px;">
-											{{ field }}
+											<p>
+												{{ field }}
+											</p>
 										</td>
 									</tr>
 								{% endfor %}
@@ -207,7 +209,7 @@
 										</td>
 										<td style="padding-left:5px;">
 											<p>
-											{{ field }}
+												{{ field }}
 											</p>
 										</td>
 									</tr>
@@ -219,7 +221,6 @@
 							<!-- Provide a button to click to submit the form. -->
 							<input id="register_user_button" type="submit" value="Register" />
 						</form>
-						<button onclick="$('#consent_dialog').dialog('open');">Click me</button>
 					{% endif %}
 				</div>
 				<div class="col-md-6 text-center">
@@ -228,9 +229,9 @@
 						{% csrf_token %}
 						<p><label for="id_username">Username:</label> <input id="id_username" maxlength="30" name="username" type="text"></p>
 						<p><label for="id_password">Password:</label> <input id="id_password" name="password" type="password"></p>
+						<input type="hidden" name="questionnaire" id="questionnaire_value" value="-1" />
 						<input id="login_button" type="submit" value="Log in"/>
 					</form>
-					<button onclick="$('#questionnaire_dialog').dialog('open');">Click me</button>
 					{% if request.session.successful_login = False %}
 						<br/>
 						<div style="font-size: 12pt; font-weight: bold;"> 
@@ -247,8 +248,9 @@
 <div id="success_dialog" title="Success message" style="display:none;">
   <span id = "success_message"></span>
 </div>
-<div id="questionnaire_dialog" title="Questionnaire" style="display:none;">
-	<form action="/exerciser/submit_questionnaire/" method="post">
+{% if user.is_authenticated and not request.session.questionnaire_asked %}
+<div id="questionnaire_dialog" title="Questionnaire">
+	<form id="questionnaire_form" action="/exerciser/submit_questionnaire/" method="post">
 		{% csrf_token %}
 		<table border="1" style="margin-left:auto; margin-right:auto;">
 			{% for field in questionnaire_form %}
@@ -262,9 +264,11 @@
 				</tr>
 			{% endfor %}
 		</table>
+		
 		<!--<input type="submit" value="Submit" />-->
 	</form>
 </div>
+{% endif %}
 <div id="consent_dialog" title="Consent form" style="margin:20px;display:none;">
   <div id = "consent_message">
   <strong>Information Sheet: Testing the extent to which a new educational tool fits the current educational process in schools</strong>
@@ -343,7 +347,7 @@ This study adheres to the BPS ethical guidelines, and has been approved by the F
 			console.log("request....");
 			request.done(function(groups) { // Extract a list of the relevant groups
 				if ("error" in groups){
-					alert("Bad input");
+					alert("Bad input groups" + groups["error"]);
 				}
 
 				else{
@@ -369,9 +373,11 @@ This study adheres to the BPS ethical guidelines, and has been approved by the F
 		
 		
 		$(function () {
+			{% if user.is_authenticated %}
 			populateGroupList("group_year","group");
 			populateGroupList("year","group_entry");
 			setGroupChoice();
+			{% endif %}
 		});
 		
 		
@@ -564,14 +570,14 @@ This study adheres to the BPS ethical guidelines, and has been approved by the F
       buttons: {
         "I agree": function() {
           $( this ).dialog( "close" );
-		  $("#consent_value").val("1");
+		  $("#consent_value").val("true");
 		  //$('#user_form').trigger('submit', [true]);
 		  $("#user_form").submit();
 		  //location.reload(); // Reload the page to reflect the new changes
         },
         "Don't record data": function() {
           $( this ).dialog( "close" );
-		  $("#consent_value").val("0");
+		  $("#consent_value").val("");
 		  //console.log("disagree");
 		  //$('#user_form').trigger('submit', [true]);
 		  $("#user_form").submit();
@@ -582,15 +588,18 @@ This study adheres to the BPS ethical guidelines, and has been approved by the F
 	$( "#questionnaire_dialog" ).dialog({
 		width: $(window).width()*0.9,
       modal: true,
-	  autoOpen: false,
+	  //autoOpen: false,
       buttons: {
         "Submit": function() {
-          $( this ).dialog( "close" );
-		  location.reload(); // Reload the page to reflect the new changes
+			$("#questionnaire_form").submit();
         },
         "Not now": function() {
-          $( this ).dialog( "close" );
-		  location.reload(); // Reload the page to reflect the new changes
+          
+		  request = $.post("/exerciser/submit_questionnaire/",{
+				csrfmiddlewaretoken : csrftoken,
+				skipped : 1
+			});
+			$( this ).dialog( "close" );
         }
       }
     });
@@ -609,8 +618,22 @@ $(document).ready(function() {
 		console.log(consent_value);
 		
 	});
+	/*$('#login_form').submit(function(e) {
+		var consent_value = $('#consent_value').val();
+		
+		if (consent_value == '-1') {
+			e.preventDefault();
+			$('#consent_dialog').dialog('open');
+		}
+		
+		console.log(consent_value);
+		
+	});
 	
-	
+	$('#login_button').click(function () {
+		$('#questionnaire_dialog').dialog('open');
+        console.log("login button clicked");
+    });*/
 	/*$('#register_user_button').click(function(e){
 		var consent_value = $('#consent_value').val();
 		if (consent_value == '-1') {

@@ -1,7 +1,7 @@
 from django.template import RequestContext
 from django.shortcuts import render
 from django.shortcuts import render_to_response
-from exerciser.models import Application, Panel, Document, Change, Step, Explanation, UsageRecord, QuestionRecord, Group, Teacher, Question, Option, Student, AcademicYear
+from exerciser.models import Application, Panel, Document, Change, Step, Explanation, UsageRecord, QuestionRecord, Group, Teacher, Question, Option, Student, AcademicYear, SampleQuestionnaire
 import json 
 import simplejson 
 import datetime
@@ -104,14 +104,18 @@ def log_question_info_db(request):
 	session_id = request.session.session_key
 	application_name = request.POST['example_name']
 	answer_text = request.POST['answer']
+	multiple_choice_question = request.POST['multiple_choice']
 	teacher_name=request.session.get("teacher",None)
 
 	application = Application.objects.filter(name=application_name)[0]
 	step = Step.objects.filter(application=application, order=current_step)[0]
 	question = Question.objects.filter(step=step)[0]
-	answer = Option.objects.filter(question=question,content=answer_text)[0]
+	question_record=QuestionRecord(application=application,question=question, answer_text=answer_text)
+	if multiple_choice_question=="true":
+		answer = Option.objects.filter(question=question,content=answer_text)[0]
+		question_record.answer=answer
 	
-	question_record=QuestionRecord(application=application,question=question,answer=answer)
+
 
 	if teacher_name != None:
 		user=User.objects.filter(username=teacher_name)
@@ -254,6 +258,7 @@ def update_group(request):
 ### Refactored. Checks added. Looks Fine ###
 @requires_csrf_token
 def register_group_with_session(request):
+	print "in reg group"
 	success=False
 	try:
 		teacher_username = request.session['teacher']
@@ -281,6 +286,7 @@ def register_group_with_session(request):
 ### Refactored. Do I really need it? ###
 @requires_csrf_token
 def save_session_ids(request):
+	print "in save"
 	request.session['registered']=True
 	print "saving..."
 	#return HttpResponse("{}",content_type = "application/json")
@@ -289,6 +295,7 @@ def save_session_ids(request):
 ### Refactored. Checks added. Looks Fine ###
 @requires_csrf_token
 def register_teacher_with_session(request):
+	print "in reg teacher"
 	success=False
 	try:
 		teacher_username = request.POST['teacher']
@@ -311,6 +318,7 @@ def register_teacher_with_session(request):
 ### Refactored ### similar to register_teacher_with_session, etc... Refactor Checks added. Looks Fine ###
 @requires_csrf_token
 def register_student_with_session(request):
+	print "in reg student"
 	success=False
 	try:
 		student_name = request.POST['student']
@@ -406,6 +414,23 @@ def reset_session(request):
 	
 	return HttpResponseRedirect('/exerciser/')
 	
+### Refactored ###
+@requires_csrf_token
+def del_session_variable(request):
+	try:
+		to_delete=request.POST['to_delete']
+	except KeyError:
+		return HttpResponseRedirect('/exerciser/')
+	print "in reset"
+	if to_delete in request.session:
+		del request.session[to_delete]
+		print "t"
+	#request.session.delete()
+	#request.session.modified = True
+	#return HttpResponse("{}",content_type = "application/json")
+	
+	return HttpResponseRedirect('/exerciser/')
+	
 
 ### Refactored ###
 def index(request):
@@ -432,86 +457,105 @@ def index(request):
 ### Refactored ###
 @requires_csrf_token
 def submit_questionnaire(request):
+	print "in submit questionnaire"
+	
+	if 'skipped' not in request.POST:
+		# do what you need to do to say that a 
+	
+		context = RequestContext(request)
 
-	context = RequestContext(request)
+		saved = False
 
-	saved = False
+		# If it's a HTTP POST, we're interested in processing form data.
+		if request.method == 'POST':
 
-	# If it's a HTTP POST, we're interested in processing form data.
-	if request.method == 'POST':
+			questionnaire_form = SampleQuestionnaireForm(data=request.POST)
 
-		questionnaire_form = SampleQuestionnaireForm(data=request.POST)
+			# If the form is valid...
+			if questionnaire_form.is_valid():
+				# Save the user's form data to the database.
+				questionnaire = questionnaire_form.save()
+				teacher_username = request.user
+				try:
+					user=User.objects.filter(username=teacher_username)[0]
+					teacher=Teacher.objects.filter(user=user)[0]
+					questionnaire.teacher=teacher
+				except IndexError:
+					pass
+				questionnaire.save()
+				saved = True
 
-		# If the form is valid...
-		if questionnaire_form.is_valid():
-			# Save the user's form data to the database.
-			questionnaire = questionnaire_form.save()
-			questionnaire.save()
-			saved = True
-
-		# Invalid form - mistakes or something else?
-		# Print problems to the terminal.
-		# They'll also be shown to the user.
+			# Invalid form - mistakes or something else?
+			# Print problems to the terminal.
+			# They'll also be shown to the user.
+			else:
+				print questionnaire_form.errors
 		else:
-			print questionnaire_form.errors
-	else:
-		form = SampleQuestionnaireForm()
-
-	print saved,"form saved"
-	return HttpResponseRedirect('/exerciser/teacher_interface')
+			form = SampleQuestionnaireForm()
+		
+		print saved,"form saved"
+		request.session['questionnaire_asked'] = True
+		return HttpResponseRedirect('/exerciser/teacher_interface')
+	
+	# Skipped is in; this should be an AJAX call
+	request.session['questionnaire_asked'] = True
+	return HttpResponse('{}', content_type='application/json')
 
 
 ### Refactored ###
 def application(request, application_name_url):
-
 	context = RequestContext(request)
-
-	# Change underscores in the category name to spaces.
-	# URLs don't handle spaces well, so we encode them as underscores.
-	# We can then simply replace the underscores with spaces again to get the name.
-	application_name = application_name_url.replace('_', ' ')
-
-	# Create a context dictionary which we can pass to the template rendering engine.
-	# We start by containing the name of the category passed by the user.
-	context_dict = {'application_name': application_name}
-	
-	
-
-	try:
-
-		application = Application.objects.get(name=application_name)
-		context_dict['application'] = application
+	if 'registered' in request.session:
 		
-		panels = Panel.objects.filter(application = application)
-		context_dict['panels'] = panels
 
-		steps = Step.objects.filter(application=application)
-		stepChanges = []
-		explanations = []
-		for step in steps:
-			changesToAdd = []
-			changes = Change.objects.filter(step = step)
-			for change in changes:
-				changesFound = change.getChanges()
-				for c in changesFound:
-					changesToAdd.append(c)
-			stepChanges.append(changesToAdd)
-			expl = Explanation.objects.filter(step = step)
-			for explanation in expl:
-				explanations.append(json.dumps((explanation.text).replace('"',"&quot")))
+		# Change underscores in the category name to spaces.
+		# URLs don't handle spaces well, so we encode them as underscores.
+		# We can then simply replace the underscores with spaces again to get the name.
+		application_name = application_name_url.replace('_', ' ')
+
+		# Create a context dictionary which we can pass to the template rendering engine.
+		# We start by containing the name of the category passed by the user.
+		context_dict = {'application_name': application_name}
+		
+		
+
+		try:
+
+			application = Application.objects.get(name=application_name)
+			context_dict['application'] = application
 			
+			panels = Panel.objects.filter(application = application).order_by('number')
+			context_dict['panels'] = panels
 
-		context_dict['steps'] = json.dumps(stepChanges)
-		context_dict['explanations'] = explanations
-		size_panels = (100/len(panels))
-		context_dict['panel_size'] = str(size_panels)
-	except Application.DoesNotExist:
-		# We get here if we didn't find the specified category.
-		# Don't do anything - the template displays the "no category" message for us.
-		pass
+			steps = Step.objects.filter(application=application)
+			stepChanges = []
+			explanations = []
+			for step in steps:
+				changesToAdd = []
+				changes = Change.objects.filter(step = step)
+				for change in changes:
+					changesFound = change.getChanges()
+					for c in changesFound:
+						changesToAdd.append(c)
+				stepChanges.append(changesToAdd)
+				expl = Explanation.objects.filter(step = step)
+				for explanation in expl:
+					explanations.append(json.dumps((explanation.text).replace('"',"&quot")))
+				
 
-	# Go render the response and return it to the client.
-	return render_to_response('exerciser/application.html', context_dict, context)
+			context_dict['steps'] = json.dumps(stepChanges)
+			context_dict['explanations'] = explanations
+			size_panels = (100/len(panels))
+			context_dict['panel_size'] = str(size_panels)
+		except Application.DoesNotExist:
+			# We get here if we didn't find the specified category.
+			# Don't do anything - the template displays the "no category" message for us.
+			pass
+
+		# Go render the response and return it to the client.
+		return render_to_response('exerciser/application.html', context_dict, context)
+	else:
+		return render_to_response('exerciser/index.html', {}, context)
 
 
 
@@ -543,7 +587,12 @@ def get_groups(request):
 	try:
 		year = request.GET['year']
 	except KeyError:
-		return HttpResponse(simplejson.dumps({'error':'Bad input supplied'}), content_type="application/json")
+		return HttpResponse(simplejson.dumps({'error':'Bad input supplied in get groups'}), content_type="application/json")
+	try:
+		year = int(year)
+	except ValueError:
+		print "value error"
+		return HttpResponse(simplejson.dumps({'error':'Bad input supplied Value'}), content_type="application/json")
 	
 	teacher_username = request.user
 	try:
@@ -861,59 +910,62 @@ def teacher_interface(request):
 	# Note that the first parameter is the template we wish to use.
 	return render_to_response('exerciser/teacher_interface.html', context_dict, context)
 
+#def questionnaire_asked(request):
 
 ### Refactored. Ask if I have to check if request was get/post ###
 def register(request):
-    print "in register"
-    # Like before, get the request's context.
-    context = RequestContext(request)
+	print "in register"
+	# Like before, get the request's context.
+	context = RequestContext(request)
 
-    # A boolean value for telling the template whether the registration was successful.
-    # Set to False initially. Code changes value to True when registration succeeds.
-    registered = False
+	# A boolean value for telling the template whether the registration was successful.
+	# Set to False initially. Code changes value to True when registration succeeds.
+	registered = False
 
-    # If it's a HTTP POST, we're interested in processing form data.
-    if request.method == 'POST':
-        print "was post"
-        # Attempt to grab information from the raw form information.
-        # Note that we make use of both UserForm and UserProfileForm.
-        user_form = UserForm(data=request.POST)
-        #group_form = GroupForm(data=request.POST)
+	# If it's a HTTP POST, we're interested in processing form data.
+	if request.method == 'POST':
+		print "was post"
+		# Attempt to grab information from the raw form information.
+		# Note that we make use of both UserForm and UserProfileForm.
+		user_form = UserForm(data=request.POST)
+		#group_form = GroupForm(data=request.POST)
 
-        # If the form is valid...
-        if user_form.is_valid():
-            # Save the user's form data to the database.
-            user = user_form.save()
+		# If the form is valid...
+		if user_form.is_valid():
+			# Save the user's form data to the database.
+			user = user_form.save()
 
-            # Now we hash the password with the set_password method.
-            # Once hashed, we can update the user object.
-            user.set_password(user.password)
-            user.save()
-            teacher=Teacher(user=user,can_analyse=bool(request.POST['can_analyse']))
-            teacher.save()
-            print teacher,"teacher"
-            # Now sort out the GroupProfile instance.
-            # Since we need to set the user attribute ourselves, we set commit=False.
-            # This delays saving the model until we're ready to avoid integrity problems.
-            #group = group_form.save(commit=False)
-           # group.user = user
+			# Now we hash the password with the set_password method.
+			# Once hashed, we can update the user object.
+			user.set_password(user.password)
+			user.save()
+			teacher=Teacher(user=user)
+			try:
+				can_analyse=bool(request.POST['can_analyse'])
+				teacher.can_analyse=can_analyse
+				print "can ",can_analyse,request.POST['can_analyse']
+			except KeyError:
+				print "KeyERROR"
+				pass
+			except ValueError:
+				print "VALUE ERROR"
+				pass
+			teacher.save()
+			print teacher,"teacher"
 
-            # Now we save the UserProfile model instance.
-           # group.save()
+			# Update our variable to tell the template registration was successful.
+			registered = True
 
-            # Update our variable to tell the template registration was successful.
-            registered = True
+		# Invalid form - mistakes or something else?
+		# Print problems to the terminal.
+		# They'll also be shown to the user.
+		else:
+			print user_form.errors #, group_form.errors
 
-        # Invalid form - mistakes or something else?
-        # Print problems to the terminal.
-        # They'll also be shown to the user.
-        else:
-            print user_form.errors #, group_form.errors
-
-    print registered,"registered"
-    request.session['registered'] = registered
-    # Render the template depending on the context.
-    return HttpResponseRedirect('/exerciser/teacher_interface')
+	print registered,"registered"
+	request.session['registered'] = registered
+	# Render the template depending on the context.
+	return HttpResponseRedirect('/exerciser/teacher_interface')
 	
 
 ### Looks OK ###
@@ -938,35 +990,42 @@ def questionnaire(request):
 	
 ### Looks OK ###
 def user_login(request):
-    # Like before, obtain the context for the user's request.
-    context = RequestContext(request)
-    # If the request is a HTTP POST, try to pull out the relevant information.
-    successful_login = False
+	# Like before, obtain the context for the user's request.
+	context = RequestContext(request)
+	# If the request is a HTTP POST, try to pull out the relevant information.
+	successful_login = False
 
-    if request.method == 'POST':
-        # Gather the username and password provided by the user.
-        # This information is obtained from the login form.
-        username = request.POST['username']
-        password = request.POST['password']
+	if request.method == 'POST':
+		# Gather the username and password provided by the user.
+		# This information is obtained from the login form.
+		username = request.POST['username']
+		password = request.POST['password']
 
-        # Use Django's machinery to attempt to see if the username/password
-        # combination is valid - a User object is returned if it is.
-        user = authenticate(username=username, password=password)
+		# Use Django's machinery to attempt to see if the username/password
+		# combination is valid - a User object is returned if it is.
+		user = authenticate(username=username, password=password)
 
-        # If we have a User object, the details are correct.
-        # If None (Python's way of representing the absence of a value), no user
-        # with matching credentials was found.
-        if user:
-            # Is the account active? It could have been disabled.
-            if user.is_active:
-                # If the account is valid and active, we can log the user in.
-                # We'll send the user back to the homepage.
-                login(request, user)
-                successful_login = True
+		# If we have a User object, the details are correct.
+		# If None (Python's way of representing the absence of a value), no user
+		# with matching credentials was found.
+		if user:
+			# Is the account active? It could have been disabled.
+			if user.is_active:
+				# If the account is valid and active, we can log the user in.
+				# We'll send the user back to the homepage.
+				login(request, user)
+				successful_login = True
+				try:
+					teacher=Teacher.objects.filter(user=user)[0]
+					questionnaire=SampleQuestionnaire.objects.filter(teacher=teacher)
+					if len(questionnaire)>0:
+						request.session['questionnaire_asked'] = True
+				except IndexError:
+					pass
+					
 
-
-    request.session['successful_login'] = successful_login
-    return HttpResponseRedirect('/exerciser/teacher_interface')
+	request.session['successful_login'] = successful_login
+	return HttpResponseRedirect('/exerciser/teacher_interface')
 
 ### Refactored ###
 @login_required

@@ -8,7 +8,9 @@ var explanation_dict={}
 var totalSteps = 1;
 var last_direction="next";
 $("#btn_prev").css('visibility','hidden');
-
+$("#btn_reset").css('visibility','hidden');
+var multipleChoiceQuestion=false;
+var textareaNum=0;
 
 function goToStep(direction) {
 
@@ -49,6 +51,7 @@ function goToStep(direction) {
 	else {
 		$("#btn_prev").css('visibility','visible');
 		$("#btn_next").css('visibility','visible');
+		$("#btn_reset").css('visibility','visible');
 	}
 
 	if(currentStep >= 0 && currentStep < totalSteps){	
@@ -138,6 +141,7 @@ function doReset() {
 	$('#explanation').html('');
 	$("#btn_prev").css('visibility','hidden');
 	$("#btn_next").css('visibility','visible');
+	$("#btn_reset").css('visibility','hidden');
 	$("#forward_button_label").text('Start');
 	$("#forward_button_label").css('cursor','pointer');
 	$("#forward_button_label").css('color','red');
@@ -176,15 +180,20 @@ function doAction(fragment, action) {
 function askQuestion(questionText, options){
 	$('#question_text').text(questionText);
 	$("#options").empty();
-	for (var option_num = 0; option_num < options.length; option_num++){
-		var option = options[option_num];
-		var option_elem = "<input  class = 'option' id='option" + option_num + "'style = 'display: inline-block; vertical-align: middle; ' name='option' type='radio' value = '" + option + "' />" +  "<label style = 'display: inline-block; vertical-align: middle; ' for='option" + option_num +"'>" + option + "</label><br>";		
-		$("#options").append(option_elem);
-	}
+
 	//if no options provided, add a text box for answers
 	if (options.length == 0){
-		var textAreaElement = "<textarea style = 'width:95%;height:150px' name='answer' form='usrform'>Enter text here...</textarea>";
+		multipleChoiceQuestion=false;
+		var textAreaElement = "<textarea id='textarea_"+textareaNum+"' placeholder='Enter text here...' style = 'width:95%;height:150px' name='answer' form='usrform'></textarea>";
 		$("#options").append(textAreaElement);
+	}
+	else{
+		multipleChoiceQuestion=true;
+		for (var option_num = 0; option_num < options.length; option_num++){
+			var option = options[option_num];
+			var option_elem = "<input  class = 'option' id='option" + option_num + "'style = 'display: inline-block; vertical-align: middle; ' name='option' type='radio' value = '" + option + "' />" +  "<label style = 'display: inline-block; vertical-align: middle; ' for='option" + option_num +"'>" + option + "</label><br>";		
+			$("#options").append(option_elem);
+		}
 	}
 	ShowDialog();
 }
@@ -194,7 +203,7 @@ $('#btn_next').click(function() {
 	goToStep("next");
 });
 
-// And again, bind an event to the previous button.
+// Bind an event to the previous button.
 $('#btn_prev').click(function() {
 	goToStep("back");
 });
@@ -211,7 +220,14 @@ $(document).ready(function ()
 	});
 
 	$("#btnSubmit").click(function (e){
-		answer = $(".options input:checked + label").text();
+		if(multipleChoiceQuestion){
+			answer = $(".options input:checked + label").text();
+		}
+		else{
+			answer = $("#textarea_"+textareaNum).val();
+			textareaNum++;
+		}
+		console.log(answer+"ANSWER TEST");
 		explanation_dict[currentStep-1] = " You answered: " + answer + "<br>" + explanation_dict[currentStep-1];
 		HideDialog();
 		e.preventDefault();
@@ -222,7 +238,8 @@ $(document).ready(function ()
 				step : currentStep,
 				answer : answer,
 				example_name : app_name,
-				csrfmiddlewaretoken : csrftoken
+				csrfmiddlewaretoken : csrftoken,
+				multiple_choice:multipleChoiceQuestion
 			});
 		}
 		lastTime = now;

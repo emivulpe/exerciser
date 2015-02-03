@@ -42,10 +42,6 @@
 						<li>
 							<a href="/exerciser/logout/"><i class="fa fa-lock fa-lg landing-icon fa-2x"></i><class="landing-text">Logout</span></a>
 						</li>
-
-						<li>
-							<a href="/exerciser/questionnaire/"><i class="fa fa-pencil-square-o fa-lg landing-icon fa-2x"></i><class="landing-text">Questionnaire</span></a>
-						</li>
 						
 					</ul>
 					{% endif %}
@@ -62,8 +58,8 @@
 		{% endblock %}
 		</div>
 	</header>
-	<script type="text/javascript" src="/static/js/jquery-2.1.1.js"></script>
-	<script type="text/javascript" src="/static/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="{% static 'js/jquery-2.1.1.js' %}"></script>
+	<script type="text/javascript" src="{% static 'js/bootstrap.min.js' %}"></script>
 	<script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
 	<script>
 		$("#content_container").css("padding-top",$("#teacher_navbar").height());
