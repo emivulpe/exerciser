@@ -1,5 +1,6 @@
 Weave will help you improve your skills in solving problems.
-To start using Weave, enter any details given by your teacher and press the respective button.
+To start using Weave, enter any details given by your teacher and press the respective button. If none given click on No teacher ID, etc.
+You can reset your details by clicking on Reset Details button on the top right corner of the page.
 An application selector will appear both on the toolbar next to the Home icon,
 and on the left of this tutorial. You can search for an example by typing in the text box.
 Select the desired example to work on.

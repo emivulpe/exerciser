@@ -96,7 +96,7 @@
 										<option value="{{year.start}}" >{{ year.start}}/{{ year.start|add:"1" }}</option>
 									{% endfor %}
 								</select>
-								<i class="fa fa-question-circle" title="Enter the teacher id provided by your teacher or click on <No teacher ID> button to proceed."></i>
+								<i class="fa fa-question-circle" title="Enter the academic year your group belongs to or click on the <No year> button to proceed."></i>
 							</td>
 						</tr>
 						<tr id="group_details" class="details" style="display:none">
@@ -243,9 +243,6 @@ function goToTutorialStep(tutorialStep){
 		
 		function resetRegistration(){
 			window.location='/exerciser/reset_session/';
-			//$.post("/exerciser/reset_session/",{csrfmiddlewaretoken : csrftoken, reload: true});
-			//location.reload(true);
-			//console.log("in");
 		}
 		
 		

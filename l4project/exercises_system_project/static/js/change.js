@@ -227,36 +227,32 @@ $(document).ready(function ()
 			answer = $("#textarea_"+textareaNum).val();
 			textareaNum++;
 		}
-		console.log(answer+"ANSWER TEST");
-		explanation_dict[currentStep-1] = " You answered: " + answer + "<br>" + explanation_dict[currentStep-1];
-		HideDialog();
-		e.preventDefault();
-		var now = new Date().getTime();
-		if(currentStep>0){
-			$.post("/exerciser/log_question_info_db/",
-			{	time : (now - lastTime) / 1000,
-				step : currentStep,
-				answer : answer,
-				example_name : app_name,
-				csrfmiddlewaretoken : csrftoken,
-				multiple_choice:multipleChoiceQuestion
-			});
+		if (answer!="" && answer != undefined){
+			console.log(answer+"ANSWER TEST");
+			explanation_dict[currentStep-1] = " You answered: " + answer + "<br>" + explanation_dict[currentStep-1];
+			HideDialog();
+			e.preventDefault();
+			var now = new Date().getTime();
+			if(currentStep>0){
+				$.post("/exerciser/log_question_info_db/",
+				{	time : (now - lastTime) / 1000,
+					step : currentStep,
+					answer : answer,
+					example_name : app_name,
+					csrfmiddlewaretoken : csrftoken,
+					multiple_choice:multipleChoiceQuestion
+				});
+			}
+			lastTime = now;
+			answer = " You answered: " + answer + "<br>";
+			goToStep("next");
 		}
-		lastTime = now;
-		answer = " You answered: " + answer + "<br>";
-		goToStep("next");
 	});
 
 });
 
 function ShowDialog(){
 	$("#overlay").show();
-	 /*   $("#overlay").css({
-        "position": "absolute",
-        "top": ((($(window).height() - $("#overlay").outerHeight()) / 2) + $(window).scrollTop() + "px"),
-        "left": ((($(window).width() - $("#overlay").outerWidth()) / 2) + $(window).scrollLeft() + "px"),
-		"margin-top":(-($("#overlay").height()/2)+"px"),
-		"margin-left":(-($("#overlay").width()/2)+"px")});*/
 		$("#dialog").css({
 		"position": "absolute",
 		"top": ((($(window).height() - $("#dialog").outerHeight()) / 2) + $(window).scrollTop() + "px"),

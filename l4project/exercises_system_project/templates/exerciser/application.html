@@ -52,15 +52,17 @@ html, body {
 		width: 100%;
 		border: 0px;
 	}
-
+	.caret{
+		color:gray;
+	}
 {% endblock %}
 
 
 {% block app_name %}{{application_name}}{% endblock %}
 {% block app_controls %}
-	<li><a id="btn_prev" href="#" style="position: relative; top: 2px;"><i class="fa fa-step-backward fa-lg landing-icon fa"></i>&nbsp;Previous</a></li>
+	<li><a id="btn_prev" href="#" style="position: relative; top: 2px; visibility:hidden;"><i class="fa fa-step-backward fa-lg landing-icon fa"></i>&nbsp;Previous</a></li>
 	<li><a id="btn_next" href="#" style="position: relative; top: 2px;"><label id="forward_button_label" style="color:red;font-size:24px;cursor:pointer;">Start</label>&nbsp;<i id="next_arrow" class="fa fa-step-forward fa-lg landing-icon fa" style="display:none;"></i></a></li>
-	<li><a id="btn_reset" href="#" style="position: relative; top: 2px;">Reset&nbsp;<i class="fa fa-refresh fa-lg landing-icon fa"></i></a></li>
+	<li><a id="btn_reset" href="#" style="position: relative; top: 2px;visibility:hidden;">Reset&nbsp;<i class="fa fa-refresh fa-lg landing-icon fa"></i></a></li>
 {% endblock %}
 
 {% block body_block %}
