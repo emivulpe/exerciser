@@ -41,7 +41,7 @@
 			<div class="collapse navbar-collapse" id="bs-navbar-collapse-1">
 				<ul class="nav navbar-nav navbar-left">
 					<li>
-						<a class="navbar-brand" href="/exerciser/">
+						<a class="navbar-brand" href="/weave/">
 						<i class="fa fa-home fa-lg landing-icon fa"></i>&nbsp;<span class="landing-text" style="position: relative; top: 2px;">Home</span>
 						</a>
 					</li>
@@ -55,7 +55,7 @@
 								{% if applications %}
 								<ul class="dropdown-menu" id="application_list">
 									{% for application in applications %}
-									<li><a href="/exerciser/application/{{ application.url }}">{{ application.name }}</a></li>
+									<li><a href="/weave/application/{{ application.url }}">{{ application.name }}</a></li>
 									{% endfor %}
 								</ul>
 							{% endif %}

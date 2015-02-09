@@ -116,7 +116,7 @@ function getStepData(step){
 	console.log(selected_application+"TEST APPP");
 	selected_group=document.getElementById("group_list").value;
 	var selected_year = document.getElementById("group_year").value
-	var request = $.get('/exerciser/update_class_steps_graph/',
+	var request = $.get('/weave/update_class_steps_graph/',
 	{	
 		application:selected_application,
 		group:selected_group, 
@@ -156,7 +156,7 @@ function getStepData(step){
 				selectedApplication=$("#application").val(); // Get the selected application
 				selectedGroup = document.getElementById("group_list").value; // Get the selected group
 				selectedOption = document.getElementById("statistics_options").value; 
-				url='/exerciser/update_class_steps_graph/';
+				url='/weave/update_class_steps_graph/';
 				console.log("STEPPPPPPPPPPPPPP " + step);
 				var selectedItems={application:selectedApplication,group:selectedGroup,year:selectedYear,step:step};
 				var chartDetails={xAxisTitle:"Students",yAxisTitle:"Time",seriesName:"Time","chartType":"column",selectedOption:"class_steps",chartSubtitle:""}
@@ -169,7 +169,7 @@ function getStepData(step){
 				selectedApplication=$("#application").val(); // Get the selected application
 				selectedGroup = document.getElementById("group_list").value; // Get the selected group
 				selectedOption = document.getElementById("statistics_options").value; 
-				url='/exerciser/update_class_steps_graph/';
+				url='/weave/update_class_steps_graph/';
 				console.log("STEPPPPPPPPPPPPPP " + step);
 				var selectedItems={application:selectedApplication,group:selectedGroup,year:selectedYear,step:step};
 				var chartDetails={xAxisTitle:"Students",yAxisTitle:"Time",seriesName:"Time","chartType":"column",selectedOption:"class_steps",chartSubtitle:""}
@@ -448,7 +448,7 @@ function getStepData(step){
 						}
 						var chartOption="answers";
 						var chartDetails={xAxisTitle:"Choices",yAxisTitle:"Times chosen",seriesName:"Times chosen","chartType":"column",selectedOption:chartOption,chartSubtitle:""};
-						var url = '/exerciser/get_question_data/';
+						var url = '/weave/get_question_data/';
 						drawChartMerged(selectedItems,chartDetails,chartOption,url,"cont_"+chart_num);
 						chart_num++;
 					}
@@ -489,20 +489,20 @@ function getStepData(step){
 						var selectedItems={app_name:selectedApplication, group:selectedGroup, year:selectedYear};
 						var chartDetails={"chartType":"line",chartSubtitle:"",
 xAxisTitle:"Steps",yAxisTitle:"Seconds",seriesName:"Average time"};
-						var url='/exerciser/update_time_graph/';
+						var url='/weave/update_time_graph/';
 						drawChartMerged(selectedItems,chartDetails,selectedOption,url,"container");
 					}
 					else if (selectedOption=="answers"){
 						question=document.getElementById("question_list").value;
 						var selectedItems={app_name:selectedApplication, group:selectedGroup,year:selectedYear,question:question};
 						var chartDetails={xAxisTitle:"Choices",yAxisTitle:"Times chosen",seriesName:"Times chosen","chartType":"column",selectedOption:"answers",chartSubtitle:""};
-						var url = '/exerciser/get_question_data/';
+						var url = '/weave/get_question_data/';
 						drawChartMerged(selectedItems,chartDetails,selectedOption,url,"container");
 					}
 					else if (selectedOption=="class_steps"){
 						$("#prev_step_button").show();
 						$("#next_step_button").show();
-						url='/exerciser/update_class_steps_graph/';
+						url='/weave/update_class_steps_graph/';
 						step = parseInt(document.getElementById("step_list").value);
 						console.log("STEPPPPPPPPPPPPPP " + step);
 						var selectedItems={application:selectedApplication,group:selectedGroup,year:selectedYear,step:step};
@@ -517,7 +517,7 @@ xAxisTitle:"Steps",yAxisTitle:"Seconds",seriesName:"Average time"};
 						var selectedItems={app_name:selectedApplication, group:selectedGroup, year:selectedYear, student:selectedStudent};
 						var chartDetails={"chartType":"line",chartSubtitle:"",
 xAxisTitle:"Steps",yAxisTitle:"Seconds",seriesName:"Average time"};
-						var url='/exerciser/update_time_graph/';
+						var url='/weave/update_time_graph/';
 						drawChartMerged(selectedItems,chartDetails,selectedOption,url,"container");
 					}
 				}
@@ -528,7 +528,7 @@ xAxisTitle:"Steps",yAxisTitle:"Seconds",seriesName:"Average time"};
 			$(".student_info").remove();
 			$("#summary_data_caption").empty();
 
-			var request = $.get('/exerciser/populate_summary_table/', {application:selectedApplication, group:selectedGroup, year:selectedYear})
+			var request = $.get('/weave/populate_summary_table/', {application:selectedApplication, group:selectedGroup, year:selectedYear})
 
 			request.done(function(summary_data) {
 
@@ -556,7 +556,7 @@ xAxisTitle:"Steps",yAxisTitle:"Seconds",seriesName:"Average time"};
 			$("#question_list").unbind('mouseover');
 			$("#question_info").prop("selected",true);
 			$("#question_list").children().not(':first').remove();
-			var request = $.get('/exerciser/get_application_questions/', {application:selectedApplication});
+			var request = $.get('/weave/get_application_questions/', {application:selectedApplication});
 			console.log("request....");
 			request.done(function(questions) {
 				if (!("error" in questions)){
@@ -576,7 +576,7 @@ xAxisTitle:"Steps",yAxisTitle:"Seconds",seriesName:"Average time"};
 		function addStudents(selectedYear,selectedGroup){
 			$("#student_info").prop("selected",true);
 			$("#student_list").children().not(':first').remove();
-			var request = $.get('/exerciser/get_students/', {group:selectedGroup,year:selectedYear});
+			var request = $.get('/weave/get_students/', {group:selectedGroup,year:selectedYear});
 			console.log("request....");
 			request.done(function(students) {
 				console.log("request dones....");
@@ -599,7 +599,7 @@ xAxisTitle:"Steps",yAxisTitle:"Seconds",seriesName:"Average time"};
 			$("#step_list").unbind('mouseover');
 			$("#step_info").prop("selected",true);
 			$("#step_list").children().not(':first').remove();
-			var request = $.get('/exerciser/get_steps/', {app_name:selectedApplication});
+			var request = $.get('/weave/get_steps/', {app_name:selectedApplication});
 			console.log("request....");
 			request.done(function(steps) {
 
@@ -653,7 +653,7 @@ function populateGroupList(year_element,group_element) {
 	var selectedYear=$("#"+year_element).val(); // Get the selected year
 	
 	
-	var request = $.get('/exerciser/get_groups/', {year:selectedYear});
+	var request = $.get('/weave/get_groups/', {year:selectedYear});
 	console.log("request....");
 	request.done(function(groups) { // Extract a list of the relevant groups
 		if (!("error" in groups)){

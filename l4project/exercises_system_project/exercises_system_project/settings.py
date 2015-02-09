@@ -7,6 +7,8 @@ PROJECT_PATH = os.path.abspath(PROJECT_PATH)
 TEMPLATE_PATH = os.path.join(PROJECT_PATH, 'templates')
 STATIC_PATH = os.path.join(PROJECT_PATH,'static')
 
+DEPLOYED = True
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -74,7 +76,10 @@ STATIC_ROOT = ''
 
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
-STATIC_URL = '/static/'
+if DEPLOYED:
+    STATIC_URL = '/weave/static/'
+else:
+    STATIC_URL = '/static/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (

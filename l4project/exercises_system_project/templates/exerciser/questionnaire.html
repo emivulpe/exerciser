@@ -2,7 +2,7 @@
 
 
 {% block body_block %}
-	<!--<form id="questionnaire_form" method="post" action="/exerciser/submit_questionnaire/" name="questionnaire"><br>
+	<!--<form id="questionnaire_form" method="post" action="/weave/submit_questionnaire/" name="questionnaire"><br>
 		{% csrf_token %}
 			<p><label for="teacher_name">Name:</label> <input id="teacher_name" maxlength="30" name="name" type="text"></p>
 			<p><label for="school_name">School:</label> <input id="school_name" name="school" type="text"></p>
@@ -25,7 +25,7 @@
 			<div class="row">
 				<div class="col-md-12r">
 
-	<form action="/exerciser/submit_questionnaire/" method="post">
+	<form action="/weave/submit_questionnaire/" method="post">
 		{% csrf_token %}
 		<table border="1" style="margin-left:auto; margin-right:auto;">
 			{% for field in form %}

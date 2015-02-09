@@ -62,7 +62,7 @@
 
 						<ul class="navList" style=" list-style-type: none; ">
 						{% for application in applications %}
-						<li><a href="/exerciser/application/{{ application.url }}" style="color:gray;">{{ application.name }}</a></li>
+						<li><a href="/weave/application/{{ application.url }}" style="color:gray;">{{ application.name }}</a></li>
 						{% endfor %}
 						</ul>
 						</td>
@@ -242,7 +242,7 @@ function goToTutorialStep(tutorialStep){
 		});
 		
 		function resetRegistration(){
-			window.location='/exerciser/reset_session/';
+			window.location='/weave/reset_session/';
 		}
 		
 		
@@ -251,8 +251,8 @@ function goToTutorialStep(tutorialStep){
 			$(".details").hide();
 			$("#application_list").show();
 			console.log("in store details" + academic_year);
-			//$.post("/exerciser/save_session_ids/",{csrfmiddlewaretoken : csrftoken});
-			window.location='/exerciser/save_session_ids/';
+			//$.post("/weave/save_session_ids/",{csrfmiddlewaretoken : csrftoken});
+			window.location='/weave/save_session_ids/';
 			message = "You are using the application ";
 			console.log({{request.session.teacher}}+"TEST TEACHER");
 			if(teacher_name != ""){
@@ -343,22 +343,22 @@ function goToTutorialStep(tutorialStep){
 			$("#success_message").text('');
 		}
 		function deleteGroup(){
-			$.post('/exerciser/del_session_variable/',{csrfmiddlewaretoken : csrftoken, to_delete: 'group'});
+			$.post('/weave/del_session_variable/',{csrfmiddlewaretoken : csrftoken, to_delete: 'group'});
 			chooseYearStep();
 		}
 		function deleteStudent(){
-			$.post('/exerciser/del_session_variable/',{csrfmiddlewaretoken : csrftoken, to_delete: 'student'});
+			$.post('/weave/del_session_variable/',{csrfmiddlewaretoken : csrftoken, to_delete: 'student'});
 			chooseGroupStep();
 		}
 		function deleteYear(){
-			$.post('/exerciser/del_session_variable/',{csrfmiddlewaretoken : csrftoken, to_delete: 'year'});
+			$.post('/weave/del_session_variable/',{csrfmiddlewaretoken : csrftoken, to_delete: 'year'});
 			chooseTeacherStep();
 		}
 		function saveStudent(){
 
 			var student = $("#student").val();
 			console.log("in student save ");
-			var request = $.post("/exerciser/register_student_with_session/",
+			var request = $.post("/weave/register_student_with_session/",
 			{
 				student : student,
 				csrfmiddlewaretoken : csrftoken
@@ -385,7 +385,7 @@ function goToTutorialStep(tutorialStep){
 
 			$("#buttons").hide();
 			
-			var request = $.post("/exerciser/register_teacher_with_session/",
+			var request = $.post("/weave/register_teacher_with_session/",
 			{
 				teacher : teacher,
 				csrfmiddlewaretoken : csrftoken
@@ -414,7 +414,7 @@ function goToTutorialStep(tutorialStep){
 			$("#buttons").hide();
 			var group=document.getElementById("group_list").value;
 
-			var request = $.post("/exerciser/register_group_with_session/",
+			var request = $.post("/weave/register_group_with_session/",
 			{
 			group : group,
 			csrfmiddlewaretoken : csrftoken
@@ -443,7 +443,7 @@ function goToTutorialStep(tutorialStep){
 			$("#buttons").hide();
 			var year=document.getElementById("academic_year_select").value;
 
-			var request = $.post("/exerciser/register_year_with_session/",
+			var request = $.post("/weave/register_year_with_session/",
 			{
 			year : year,
 			csrfmiddlewaretoken : csrftoken
@@ -476,7 +476,7 @@ function goToTutorialStep(tutorialStep){
 			$("#buttons").hide();
 			var year=document.getElementById("academic_year_select").value;
 			console.log(year + "year");
-			var request = $.post("/exerciser/register_year_with_session/",
+			var request = $.post("/weave/register_year_with_session/",
 			{
 			year : year,
 			csrfmiddlewaretoken : csrftoken
@@ -486,7 +486,7 @@ function goToTutorialStep(tutorialStep){
 
 				if(success){
 					// Is if post?
-					groups_request=$.post("/exerciser/get_groups_for_year/",
+					groups_request=$.post("/weave/get_groups_for_year/",
 					{
 					year : year,
 					csrfmiddlewaretoken : csrftoken

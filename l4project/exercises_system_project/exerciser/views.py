@@ -290,7 +290,7 @@ def save_session_ids(request):
 	request.session['registered']=True
 	print "saving..."
 	#return HttpResponse("{}",content_type = "application/json")
-	return HttpResponseRedirect('/exerciser/')
+	return HttpResponseRedirect('/weave/')
 
 ### Refactored. Checks added. Looks Fine ###
 @requires_csrf_token
@@ -412,7 +412,7 @@ def reset_session(request):
 	request.session.modified = True
 	#return HttpResponse("{}",content_type = "application/json")
 	
-	return HttpResponseRedirect('/exerciser/')
+	return HttpResponseRedirect('/weave/')
 	
 ### Refactored ###
 @requires_csrf_token
@@ -420,7 +420,7 @@ def del_session_variable(request):
 	try:
 		to_delete=request.POST['to_delete']
 	except KeyError:
-		return HttpResponseRedirect('/exerciser/')
+		return HttpResponseRedirect('/weave/')
 	print "in reset"
 	if to_delete in request.session:
 		del request.session[to_delete]
@@ -429,7 +429,7 @@ def del_session_variable(request):
 	#request.session.modified = True
 	#return HttpResponse("{}",content_type = "application/json")
 	
-	return HttpResponseRedirect('/exerciser/')
+	return HttpResponseRedirect('/weave/')
 	
 
 ### Refactored ###
@@ -495,7 +495,7 @@ def submit_questionnaire(request):
 		
 		print saved,"form saved"
 		request.session['questionnaire_asked'] = True
-		return HttpResponseRedirect('/exerciser/teacher_interface')
+		return HttpResponseRedirect('/weave/teacher_interface')
 	
 	# Skipped is in; this should be an AJAX call
 	request.session['questionnaire_asked'] = True
@@ -965,7 +965,7 @@ def register(request):
 	print registered,"registered"
 	request.session['registered'] = registered
 	# Render the template depending on the context.
-	return HttpResponseRedirect('/exerciser/teacher_interface')
+	return HttpResponseRedirect('/weave/teacher_interface')
 	
 
 ### Looks OK ###
@@ -979,7 +979,7 @@ def questionnaire(request):
             # process the data in form.cleaned_data as required
             # ...
             # redirect to a new URL:
-            return HttpResponseRedirect('/exerciser/teacher_interface')
+            return HttpResponseRedirect('/weave/teacher_interface')
 
     # if a GET (or any other method) we'll create a blank form
     else:
@@ -1025,7 +1025,7 @@ def user_login(request):
 					
 
 	request.session['successful_login'] = successful_login
-	return HttpResponseRedirect('/exerciser/teacher_interface')
+	return HttpResponseRedirect('/weave/teacher_interface')
 
 ### Refactored ###
 @login_required
@@ -1066,4 +1066,4 @@ def user_logout(request):
     logout(request)
 
     # Take the user back to the homepage.
-    return HttpResponseRedirect('/exerciser/teacher_interface')
+    return HttpResponseRedirect('/weave/teacher_interface')

@@ -163,7 +163,7 @@
 					<strong id="student_success_message"></strong>
 				</div>
 				<div class="col-md-4 text-center">
-					<h1 class="brand-heading"><a href="/exerciser/statistics/"><i class="fa fa-bar-chart landing-icon fa-lg fa-5x"></i><br><br><span class="landing-text">View Statistics</span></a></h1>
+					<h1 class="brand-heading"><a href="/weave/statistics/"><i class="fa fa-bar-chart landing-icon fa-lg fa-5x"></i><br><br><span class="landing-text">View Statistics</span></a></h1>
 				</div>
 			</div>			
 		</div>
@@ -183,7 +183,7 @@
 
 						<h1>Register here!</h1><br />
 						
-						<form id="user_form" method="post" action="/exerciser/register/" enctype="multipart/form-data">
+						<form id="user_form" method="post" action="/weave/register/" enctype="multipart/form-data">
 							{% csrf_token %}
 
 							<!-- Display each form. The as_p method wraps each element in a paragraph
@@ -215,7 +215,7 @@
 					{% else %}
 						<h1>Register here!</h1><br />
 						
-						<form id="user_form" method="post" action="/exerciser/register/" enctype="multipart/form-data">
+						<form id="user_form" method="post" action="/weave/register/" enctype="multipart/form-data">
 							{% csrf_token %}
 
 							<!-- Display each form. The as_p method wraps each element in a paragraph
@@ -246,7 +246,7 @@
 				</div>
 				<div class="col-md-6 text-center">
 					<h1>Login to Exerciser</h1>
-					<form id="login_form" method="post" action="/exerciser/login/"><br>
+					<form id="login_form" method="post" action="/weave/login/"><br>
 						{% csrf_token %}
 						<p><label for="id_username">Username:</label> <input id="id_username" maxlength="30" name="username" type="text"></p>
 						<p><label for="id_password">Password:</label> <input id="id_password" name="password" type="password"></p>
@@ -271,7 +271,7 @@
 </div>
 {% if user.is_authenticated and not request.session.questionnaire_asked %}
 <div id="questionnaire_dialog" title="Questionnaire">
-	<form id="questionnaire_form" action="/exerciser/submit_questionnaire/" method="post">
+	<form id="questionnaire_form" action="/weave/submit_questionnaire/" method="post">
 		{% csrf_token %}
 		<table border="1" style="margin-left:auto; margin-right:auto;">
 			{% for field in questionnaire_form %}
@@ -364,7 +364,7 @@ This study adheres to the BPS ethical guidelines, and has been approved by the F
 			$("#"+group_element).empty();
 			var selectedYear=$("#"+year_element).val();
 			
-			var request = $.get('/exerciser/get_groups/', {year:selectedYear});
+			var request = $.get('/weave/get_groups/', {year:selectedYear});
 			console.log("request....");
 			request.done(function(groups) { // Extract a list of the relevant groups
 				if ("error" in groups){
@@ -468,7 +468,7 @@ This study adheres to the BPS ethical guidelines, and has been approved by the F
 			var chosenGroup = $('input:text[name=group_id_entry]').val(); //Get the chosen group
 
 			// Send a request to register a group
-			request = $.post("/exerciser/create_group/",{
+			request = $.post("/weave/create_group/",{
 				csrfmiddlewaretoken : csrftoken,
 				teacher : "{{ user.username }}",
 				group : chosenGroup,
@@ -487,7 +487,7 @@ This study adheres to the BPS ethical guidelines, and has been approved by the F
 			var chosenGroup = $('#group_entry').val(); //Get the chosen group
 
 			// Send a request to update a group
-			request = $.post("/exerciser/update_group/",{
+			request = $.post("/weave/update_group/",{
 				csrfmiddlewaretoken : csrftoken,
 				teacher : "{{ user.username }}",
 				group : chosenGroup,
@@ -506,7 +506,7 @@ This study adheres to the BPS ethical guidelines, and has been approved by the F
 			var chosenGroup = $('#group_entry').val(); //Get the chosen group
 
 			// Send a request to update a group
-			request = $.post("/exerciser/delete_group/",{
+			request = $.post("/weave/delete_group/",{
 				csrfmiddlewaretoken : csrftoken,
 				teacher : "{{ user.username }}",
 				group : chosenGroup,
@@ -570,7 +570,7 @@ This study adheres to the BPS ethical guidelines, and has been approved by the F
 			var chosen_group = document.getElementById("group").value;
 			var selected_year=$("#group_year").val();
 			var variables="?group="+chosen_group+"&teacher={{ user.username }}&year="+selected_year;
-			window.location="/exerciser/get_group_list"+variables;
+			window.location="/weave/get_group_list"+variables;
 		});
 
   $(function() {
@@ -616,7 +616,7 @@ This study adheres to the BPS ethical guidelines, and has been approved by the F
         },
         "Not now": function() {
           
-		  request = $.post("/exerciser/submit_questionnaire/",{
+		  request = $.post("/weave/submit_questionnaire/",{
 				csrfmiddlewaretoken : csrftoken,
 				skipped : 1
 			});
