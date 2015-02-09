@@ -5,18 +5,32 @@ from django.conf import settings
 from django.contrib import admin
 admin.autodiscover()
 
-urlpatterns = patterns('',
-    # Examples:
-    # url(r'^$', 'exercises_system_project.views.home', name='home'),
-    # url(r'^exercises_system_project/', include('exercises_system_project.foo.urls')),
+if settings.DEPLOYED:
+    urlpatterns = patterns('',
+        # Examples:
+        # url(r'^$', 'exercises_system_project.views.home', name='home'),
+        # url(r'^exercises_system_project/', include('exercises_system_project.foo.urls')),
 
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+        # Uncomment the admin/doc line below to enable admin documentation:
+        # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
-    # Uncomment the next line to enable the admin:
-    url(r'^admin/', include(admin.site.urls)),
-	url(r'^weave/', include('exerciser.urls')),
-)
+        # Uncomment the next line to enable the admin:
+        url(r'^admin/', include(admin.site.urls)),
+    	url(r'^', include('exerciser.urls')),
+    )
+else:
+    urlpatterns = patterns('',
+        # Examples:
+        # url(r'^$', 'exercises_system_project.views.home', name='home'),
+        # url(r'^exercises_system_project/', include('exercises_system_project.foo.urls')),
+
+        # Uncomment the admin/doc line below to enable admin documentation:
+        # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+
+        # Uncomment the next line to enable the admin:
+        url(r'^admin/', include(admin.site.urls)),
+    	url(r'^weave/', include('exerciser.urls')),
+    )
 
 
 # UNDERNEATH your urlpatterns definition, add the following two lines:
